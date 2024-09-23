@@ -24,7 +24,6 @@
             font-weight: bold;
         }
 
-
         .container {
             width: 50%;
             margin: 50px auto;
@@ -56,6 +55,11 @@
             border-radius: 4px;
         }
 
+        input[readonly] {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+
         input[type="submit"] {
             background-color: #6e1c0f;
             color: white;
@@ -76,58 +80,81 @@
             color: green;
             margin-bottom: 10px;
         }
+
+        .section-title {
+            font-size: 1.2em;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            color: #6e1c0f;
+        }
     </style>
 </head>
 <body>
+
     <div class="navbar">
         <a href="{% url 'user_home' %}" class="back-home">Back to Home</a>
     </div>
-<div class="container">
-    <h2>Update User Profile</h2>
-    <form method="POST" action="{% url 'update_user_profile' %}">
-        {% csrf_token %}
-        <div class="error">{{ errors.name }}</div>
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" value="{{ name }}" required>
 
-        <div class="error">{{ errors.email }}</div>
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" value="{{ email }}" required>
+    <div class="container">
+        <h2>Profile Update</h2>
+        <form method="POST" action="{% url 'update_user_profile' %}">
+            {% csrf_token %}
+            
+            <!-- User Profile Section -->
+            <div class="section-title">Update User Profile</div>
 
-        <div class="error">{{ errors.phone }}</div>
-        <label for="phone">Phone</label>
-        <input type="tel" id="phone" name="phone" value="{{ phone }}" required>
+            <div class="error">{{ errors.name }}</div>
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" value="{{ name }}" readonly required>
 
-        <div class="error">{{ errors.wedding_date }}</div>
-        <label for="wedding_date">Wedding Date</label>
-        <input type="date" id="wedding_date" name="wedding_date" value="{{ profile.wedding_date }}" required>
+            <div class="error">{{ errors.email }}</div>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" value="{{ email }}" required>
 
-        <label for="event_held">Event Held (Location)</label>
-        <input type="text" id="event_held" name="event_held" value="{{ event_held }}">
+            <div class="error">{{ errors.phone }}</div>
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" value="{{ phone }}" readonly required>
+
+            <label for="country">Country</label>
+            <select id="country" name="country" required>
+                {% for country_code, country_name in countries %}
+                    <option value="{{ country_code }}" {% if country == country_code %} selected {% endif %}>{{ country_name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="state">State</label>
+            <input type="text" id="state" name="state" value="{{ state }}" required>
+
+            <label for="place">Place</label>
+            <input type="text" id="place" name="place" value="{{ place }}" required>
 
 
-        <label for="country">Country</label>
-        <select id="country" name="country" required>
-            {% for country_code, country_name in countries %}
-                <option value="{{ country_code }}" {% if country == country_code %} selected {% endif %}>{{ country_name }}</option>
-            {% endfor %}
-        </select>
+            
 
-        <label for="state">State</label>
-        <input type="text" id="state" name="state" value="{{ state }}" required>
+            <!-- Additional Details Section -->
+            <div class="section-title">Additional Details</div>
 
-        <label for="place">Place</label>
-        <input type="text" id="place" name="place" value="{{ place }}" required>
+            
+            <label for="wedding_date">Wedding Date</label>
+            <input type="date" id="wedding_date" name="wedding_date" value="{{ wedding_date|date:'Y-m-d' }}" required>
+            <div class="error">{{ errors.wedding_date }}</div>
 
-        <label for="new_password">New Password</label>
-        <input type="password" id="new_password" name="new_password">
+            <label for="event_held">Event Held (Location)</label>
+            <input type="text" id="event_held" name="event_held" value="{{ event_held }}">
 
-        <label for="confirm_password">Confirm Password</label>
-        <input type="password" id="confirm_password" name="confirm_password">
+            
+          <!-- Password Section -->
+             <!-- <div class="section-title">Change Password</div>
+            
+            <label for="new_password">New Password</label>
+            <input type="password" id="new_password" name="new_password">
 
-        <input type="submit" value="Update Profile">
-    </form>
-</div>
+            <label for="confirm_password">Confirm Password</label>
+            <input type="password" id="confirm_password" name="confirm_password">-->
+
+            <input type="submit" value="Update Profile">
+        </form>
+    </div>
 
 </body>
 </html>

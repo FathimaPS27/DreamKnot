@@ -350,7 +350,7 @@ def update_user_profile(request):
         'name': user.name,
         'email': user.email,
         'phone': user.phone,
-        'wedding_date': user_profile.wedding_date,
+        'wedding_date': user_profile.wedding_date ,
         'event_held': user_profile.event_held,  # Pre-populate event_held status
         'country': user.country,  # Pre-populate country
         'state': user.state,      # Pre-populate state
