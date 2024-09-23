@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/signup.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <title>Signup Page - Dream Knot</title>
+</head>
+<body style="background-image: url('{% static 'images/bg1.png' %}');">
+    
+    <!-- Header Section -->
+    <header>
+        <div class="logo">
+            <img src="{% static 'images/logo1.png' %}" alt="Dream Knot Logo">
+        </div>
+        <nav class="navbar1">
+            <a href="#">Dream Knot</a>
+        </nav>
+    </header>
+    
+    <!-- Main Wrapper -->
+    <div class="wrapper">
+        <div class="container main">
+            <div class="row">
+                
+                <!-- Left Side Image -->
+                <div class="col-md-6 side-image" style="background-image: url('{% static 'images/logincp.jpg' %}');">
+                    <div class="text">
+                        <p>Join us and let’s craft your perfect day together <i>- Dream Knot</i></p>
+                    </div>
+                </div>
+
+                <!-- Right Side Form -->
+                <div class="col-md-6 right">
+                    <div class="input-box">
+                        <h4>Signup with us</h4>
+                        <form method="post" action="{% url 'signup' %}">
+                            {% csrf_token %}
+                            
+                            <!-- Display Errors -->
+                            {% if messages %}
+                                <div class="alert alert-danger">
+                                    {% for message in messages %}
+                                        <p>{{ message }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Social Login Buttons -->
+                            <div class="social-login">
+                                <button type="button" class="social-btn google-btn">
+                                    <img src="{% static 'images/google.png' %}" alt="Google"> 
+                                    Sign up with Google
+                                </button>
+                            </div>
+                            
+                            <!-- Divider Text -->
+                            <div class="signin">
+                                <span>Or Signup with your email</span>
+                            </div>
+                            
+                            <!-- Name Input -->
+                            <div class="input-field">
+                                <input type="text" class="input" id="name" name="name" value="{{ request.POST.name }}" required>
+                                <label for="name">Name</label>
+                            </div>
+                        
+                            <!-- Email Input -->
+                            <div class="input-field">
+                                <input type="email" class="input" id="email" name="email" value="{{ request.POST.email }}" required autocomplete="off">
+                                <label for="email">Email</label>
+                                {% if not email_is_valid %}
+                                    <div class="invalid-feedback">Please enter a valid Gmail address.</div>
+                                {% endif %}
+                            </div>
+                        
+                            <!-- Password Input -->
+                            <div class="input-field">
+                                <input type="password" class="input" id="password" name="password" value="{{ request.POST.password }}" required>
+                                <label for="password">Password</label>
+                                <i class="fa fa-eye" id="togglePassword1" style="cursor: pointer; position: absolute; right: 10px; top: 10px;"></i> <!-- Eye Icon -->
+                            </div>
+
+                            <!-- Re-Password Input -->
+                            <div class="input-field">
+                                <input type="password" class="input" id="re-password" name="re_password" value="{{ request.POST.re_password }}" required>
+                                <label for="re-password">Re-Password</label>
+                                <i class="fa fa-eye" id="togglePassword2" style="cursor: pointer; position: absolute; right: 10px; top: 10px;"></i> <!-- Eye Icon -->
+                                
+                                <!-- Error Message for Mismatching Passwords -->
+                                {% if passwords_do_not_match %}
+                                    <div class="invalid-feedback">Passwords do not match.</div>
+                                {% endif %}
+
+                                <!-- Password Guidelines -->
+                                <div class="form-text" style="margin-bottom: 5px; font-size: 10px;">
+                                    <li>Password must be at least 8 characters long</li>
+                                    <li>Contain at least one uppercase letter, one lowercase letter, one digit, and one special character</li>
+                                </div>
+                            </div>
+
+                            <!-- Event Location and Place -->
+                            <div class="row custom-row">
+                                <div class="col-md-6">
+                                    <div class="input-field">
+                                        <select id="country" class="input" name="country" required>
+                                            <option value=""></option>
+                                            {% for country_code, country_name in countries %}
+                                                <option value="{{ country_code }}" {% if request.POST.country == country_code %}selected{% endif %}>{{ country_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="country">Country</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-field">
+                                        <input type="text" class="input" id="state" name="state" value="{{ request.POST.state }}" required>
+                                        <label for="state">State</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Event place and Phone Number -->
+                            <div class="row custom-row">
+                                <div class="col-md-6">
+                                    <div class="input-field">
+                                        <input type="text" class="input" id="place" name="place" value="{{ request.POST.place }}" required>
+                                        <label for="place">Place</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-field">
+                                        <input type="tel" class="input" id="phone" name="phone" value="{{ request.POST.phone }}" required>
+                                        <label for="phone">Phone Number</label>
+                                        {% if phone_is_invalid %}
+                                            <div class="invalid-feedback">Enter a valid 10 digit phone number.</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <!-- Role Selection -->
+                            <label for="role" style="display: block; margin-bottom: 5px; font-size: 13px;">Select Role:</label>
+                            <select id="role" name="role" required style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; margin-bottom: 20px;font-size: 13px;">
+                                <option value="">Select Role</option>
+                                <option value="user" {% if request.POST.role == 'user' %}selected{% endif %}>User</option>
+                                <option value="vendor" {% if request.POST.role == 'vendor' %}selected{% endif %}>Vendor</option>
+                            </select>
+
+                            <!-- Submit Button -->
+                            <div class="input-field">
+                                <input type="submit" class="submit" value="Signup">
+                            </div>
+                        </form>
+                    
+                        <!-- Signup Link -->
+                        <div class="signin">
+                            <span>Already have an account? <a href="{% url 'login' %}">Login here</a></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS and Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Toggle visibility for the first password field
+    const togglePassword1 = document.querySelector('#togglePassword1');
+    const password1 = document.querySelector('#password');
+    
+    togglePassword1.addEventListener('click', function () {
+        const type = password1.getAttribute('type') === 'password' ? 'text' : 'password';
+        password1.setAttribute('type', type);
+        this.classList.toggle('fa-eye-slash');  // Toggle between eye and eye-slash
+    });
+
+    // Toggle visibility for the re-password field
+    const togglePassword2 = document.querySelector('#togglePassword2');
+    const password2 = document.querySelector('#re-password');
+    
+    togglePassword2.addEventListener('click', function () {
+        const type = password2.getAttribute('type') === 'password' ? 'text' : 'password';
+        password2.setAttribute('type', type);
+        this.classList.toggle('fa-eye-slash');  // Toggle between eye and eye-slash
+    });
+</script>
+
+</body>
+</html>

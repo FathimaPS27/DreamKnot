@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Dashboard - To-Do List</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .container {
+            display: flex;
+        }
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            height: 100vh;
+        }
+        .sidebar h2 {
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .sidebar ul li {
+            margin-bottom: 15px;
+        }
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            background-color: #444;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .sidebar ul li a:hover {
+            background-color: #4CAF50;
+        }
+        /* Main content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+        h2 {
+            margin-top: 30px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        h3{
+            margin-bottom: 20px;
+        }
+        .todo-list {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            
+        }
+        .todo-item {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .checkbox {
+            margin-right: 10px;
+        }
+        a.add-task-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a.add-task-btn:hover {
+            background-color: #45a049;
+        }
+        form {
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .delete-btn {
+            color: red;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+        .delete-btn:hover {
+            text-decoration: underline;
+        }
+        .navbar {
+            margin: 20px;
+            text-align: left;
+            padding-top: 30px;
+        }
+
+        .navbar a {
+            text-decoration: none;
+            color: #6e1c0f;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="navbar">
+                <a href="{% url 'user_home' %}" class="back-home">Back to Home</a>
+            </div>
+            <h2>Wedding Planner</h2>
+            <ul>
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">To-Do List</a></li>
+                <li><a href="#">Vendors</a></li>
+                <li><a href="#">Bookings</a></li>
+                <li><a href="#">Calendar</a></li>
+                <li ><a href="#Custom To-Do List">Custom To-Do List</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1>Wedding Preparation To-Do List</h1>
+
+            <!-- Static pre-made tasks -->
+            <div class="todo-list">
+                <h2>Pre-Made To-Do List</h2>
+                <h3>6-12 Months Before the Wedding</h3>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Set a Budget
+                    <p>Determine overall budget and allocate funds for different aspects.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Create a Guest List
+                    <p>Draft a preliminary guest list for invitations.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Choose a Date and Venue
+                    <p>Select a wedding date and book the venue for the ceremony and reception.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Hire a Wedding Planner (if desired)
+                    <p>Consider hiring a planner to assist with logistics.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Select Wedding Theme/Style
+                    <p>Decide on a theme, colors, and overall style.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Start Researching Vendors
+                    <p>Look for caterers, photographers, florists, and entertainment options.</p>
+                </div>
+
+                <h3>4-6 Months Before the Wedding</h3>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Book Vendors
+                    <p>Finalize contracts with key vendors (caterer, photographer, etc.).</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Choose Attire
+                    <p>Shop for wedding dress/tuxedo and schedule fittings.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Plan the Ceremony
+                    <p>Decide on officiant and ceremony details (readings, music).</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Send Save-the-Dates
+                    <p>Mail out save-the-date cards to guests.</p>
+                </div>
+
+                <h3>2-4 Months Before the Wedding</h3>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Order Invitations
+                    <p>Design and order wedding invitations and other stationery.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Plan the Menu
+                    <p>Work with caterer to finalize the menu.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Arrange Transportation
+                    <p>Book transportation for the wedding day (limos, shuttles).</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Plan Honeymoon
+                    <p>Research and book honeymoon destination and travel arrangements.</p>
+                </div>
+
+                <h3>1-2 Months Before the Wedding</h3>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Send Invitations
+                    <p>Mail out wedding invitations to guests.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Finalize Details with Vendors
+                    <p>Confirm details and timelines with all vendors.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Purchase Wedding Rings
+                    <p>Shop for and purchase wedding bands.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Create a Wedding Day Timeline
+                    <p>Draft a schedule for the wedding day, including vendor arrival times.</p>
+                </div>
+
+                <h3>1-2 Weeks Before the Wedding</h3>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Confirm RSVP
+                    <p>Follow up with guests who haven’t responded.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Prepare Payments and Tips
+                    <p>Prepare payment envelopes for vendors to be distributed on the wedding day.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Pack for Honeymoon
+                    <p>Organize and pack items for the honeymoon trip.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Practice Vows
+                    <p>Review and practice vows if writing your own.</p>
+                </div>
+
+                <h3>Final Days Before the Wedding</h3>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Final Dress Fitting
+                    <p>Have the final fitting for wedding attire.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Delegate Tasks
+                    <p>Assign tasks to trusted friends or family for the wedding day.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Relax and Pamper Yourself
+                    <p>Schedule time for relaxation or pampering (spa, manicure).</p>
+                </div>
+
+                <h3>Wedding Day</h3>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Eat Breakfast
+                    <p>Remember to eat a good breakfast to keep your energy up.</p>
+                </div>
+                <div class="todo-item">
+                    <input type="checkbox" class="checkbox"> Enjoy Your Day!
+                    <p>Take a moment to breathe and enjoy every moment of your special day.</p>
+                </div>
+            </div>
+<section id="Custom To-Do List">
+            <!-- Dynamic To-Do List -->
+            <div class="todo-list">
+                <h2>Your Custom To-Do List</h2>
+                <a href="{% url 'add_task' %}" class="add-task-btn">Add New Task</a>
+                <ul>
+                    {% for task in tasks %}
+                        <li class="todo-item">
+                            <form method="POST" action="{% url 'update_task' task.id %}" class="form-inline">
+                                {% csrf_token %}
+                                <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
+                                {{ task.description }}
+                            </form>
+                            <a href="{% url 'delete_task' task.id %}" class="delete-btn">Delete</a>
+                        </li>
+                    {% empty %}
+                        <li>No tasks available.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+        </div>
+    </div>
+
+</body>
+</html>

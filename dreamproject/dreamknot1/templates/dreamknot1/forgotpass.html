@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password</title>
+ <link rel="stylesheet" href="{% static 'css/forgotpassstyle.css' %}"> 
+</head>
+<body>
+    <div class="navbar">
+        <a href="{% url 'index' %}" class="back-home">Back to Home</a>
+    </div>
+
+    <div class="forgot-password-container">
+        <h2>Forgot Password</h2>
+         <!-- Display Messages -->
+         {% if messages %}
+         <div class="alert alert-danger">
+             {% for message in messages %}
+                 <p>{{ message }}</p>
+             {% endfor %}
+         </div>
+     {% endif %}
+        <p>Please enter your email address. We will send you a link to reset your password.</p>
+        <!-- Add method="POST" and csrf_token -->
+        <form id="forgotPasswordForm" method="POST" action="{% url 'forgotpass' %}">
+            {% csrf_token %}
+            <div class="input-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="input-group">
+                <button type="submit">Send Reset Link</button>
+            </div>
+        </form>
+    </div>
+
+   {% comment %}  <script src="{% static 'js/scriptf.js' %}"></script> {% endcomment %}
+</body>
+</html>

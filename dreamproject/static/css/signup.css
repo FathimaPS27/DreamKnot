@@ -1,0 +1,385 @@
+/* POPPINS FONT */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+* {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow-x: hidden;
+}
+
+/* Header Styles */
+header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 9px;
+    background-color: transparent;
+    margin-bottom: 0;
+}
+
+/* Logo */
+.logo img {
+    height: 80px;
+    width: 80px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+/* Navigation Bar */
+.navbar1 {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Navigation Links */
+.navbar1 a {
+    text-decoration: none;
+    background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 30px;
+    font-weight: 600;
+    font-family: 'Lucida Handwriting', cursive;
+    transition: background 0.3s ease;
+    padding-top: 20px;
+}
+
+.navbar1 a:hover {
+    background: #e1b73a;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Main Section */
+.main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 90vh;
+    margin-top: 10px;
+}
+
+/* Side Image */
+.side-image {
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    border-radius: 10px 0 0 10px;
+    position: relative;
+    width: 50%;
+}
+
+@media (max-width: 768px) {
+    .side-image {
+        border-radius: 10px 10px 0 0;
+        width: 100%;
+    }
+}
+
+/* Row Container */
+.row {
+    display: flex;
+    width: 1000px;
+    height: auto;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 5px 5px 10px 1px rgba(0, 0, 0, 0.2);
+    padding: 0;
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+        max-width: 420px;
+        width: 100%;
+    }
+}
+
+/* Centered Text */
+.text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    text-align: center;
+}
+
+.text p {
+    font-size: 20px;
+}
+
+.text i {
+    font-weight: 400;
+    font-size: 15px;
+}
+
+@media (max-width: 768px) {
+    .text {
+        top: 70%;
+    }
+
+    .text p,
+    .text i {
+        font-size: 16px;
+    }
+}
+
+/* Right Section */
+.right {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    padding: 40px;
+}
+
+@media (max-width: 768px) {
+    .right {
+        padding: 20px;
+        width: 100%;
+    }
+}
+
+.custom-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+    background-color: transparent;
+    font-size: 12px;
+}
+
+.custom-row .input-field {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.custom-row .input-field:last-child {
+    margin-right: 0;
+}
+
+/* Date Input Field */
+.input-field input[type="date"] {
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    color: #40414a;
+    background: transparent;
+    height: 45px;
+    transition: border 0.3s ease;
+}
+
+/* Input Field Label */
+.input-field2 label {
+    padding-bottom: 10px; /* add space between labels */
+    padding-left: 9px;
+}
+
+/* Social Login Buttons */
+.social-login {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px 0;
+    font-size: 16px;
+    border: 1px solid #000;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #000;
+    background-color: #fff;
+    transition: background-color 0.3s, color 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.social-btn img {
+    height: 18px;
+    margin-right: 10px;
+}
+
+.fb-btn:hover,
+.google-btn:hover {
+    background-color: rgba(70, 12, 15, 0.937);
+    color: #fff;
+}
+
+/* Input Box */
+/* Existing styles */
+
+/* Input Box */
+.input-box {
+    width: 100%;
+    max-width: 330px;
+}
+
+@media (max-width: 768px) {
+    .input-box {
+        width: 100%;
+    }
+}
+
+h4 {
+    text-align: center;
+    padding-bottom: 22px;
+    color: #472830;
+}
+
+.input-box header {
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 45px;
+}
+
+.input-field {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: 0 10px;
+}
+
+.input {
+    height: 45px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    outline: none;
+    margin-bottom: 20px;
+    color: #40414a;
+    padding: 5px;
+}
+
+.input-box .input-field label {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    pointer-events: none;
+    transition: 0.5s;
+}
+
+.input-field input:focus ~ label,
+.input-field input:valid ~ label,
+.input-field select:focus ~ label,
+.input-field select:valid ~ label {
+    top: -10px;
+    font-size: 13px;
+    color: #5d5076;
+}
+
+.input-field .input:focus,
+.input-field .input:valid,
+.input-field select:focus,
+.input-field select:valid {
+    border-bottom: 1px solid #472830;
+}
+
+/* Select Dropdowns - Event Location and Place */
+.input-field select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: transparent;
+    height: 45px;
+    width: 100%;
+    color: #40414a;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    outline: none;
+    margin-bottom: 20px;
+    padding: 5px;
+}
+
+.input-field select:focus {
+    border-bottom: 1px solid #472830;
+}
+
+.input-field select option {
+    color: #40414a;
+}
+
+.input-field2 {
+    margin-bottom: 20px;
+}
+
+/* Submit Button */
+.submit {
+    border: none;
+    outline: none;
+    height: 45px;
+    background: #ececec;
+    border-radius: 5px;
+    transition: background 0.4s, color 0.4s;
+    width: 100%;
+    cursor: pointer;
+}
+
+.submit:hover {
+    background: rgba(70, 12, 15, 0.937);
+    color: #fff;
+}
+
+/* Forgot Password Link */
+.forgetpswd {
+    text-align: center;
+    font-size: 10px;
+    margin-top: 20px;
+}
+
+/* Sign In Link */
+.signin {
+    text-align: center;
+    font-size: small;
+    margin-top: 25px;
+}
+
+span a {
+    text-decoration: none;
+    font-weight: 700;
+    color: #616166;
+    transition: 0.5s;
+}
+
+span a:hover {
+    text-decoration: underline;
+    color: #000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .navbar1 {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+        margin-top: 10px;
+    }
+
+    .logo img {
+        width: 35px;
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}

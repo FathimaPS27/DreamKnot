@@ -1,0 +1,212 @@
+/* Global Styles */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Open Sans', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f9f9f9;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    color: #222;
+    margin-bottom: 10px;
+  }
+  
+  p {
+    margin-bottom: 20px;
+  }
+  
+  a {
+    text-decoration: none;
+    color: #337ab7;
+  }
+  
+  a:hover {
+    color: #23527c;
+  }
+  
+  /* Header Styles */
+  
+  header {
+    background-color: #333;
+    padding: 20px;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+  
+  .logo {
+    margin: 0 auto;
+  }
+  
+  .logo img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 20px;
+  }
+  
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px;
+  }
+  
+  .navbar a {
+    color: #fff;
+    margin: 0 20px;
+    transition: color 0.2s ease;
+  }
+  
+  .navbar a:hover {
+    color: #ccc;
+  }
+  
+  /* Hero Section Styles */
+  
+  .hero {
+    background-image: linear-gradient(to bottom, #333, #444);
+    background-size: 100% 300px;
+    background-position: 0% 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .hero h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+  }
+  
+  .hero p {
+    font-size: 24px;
+    margin-bottom: 40px;
+  }
+  
+  .filters {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px;
+  }
+  
+  .filters select {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    margin: 0 10px;
+  }
+  
+  .filters button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #337ab7;
+    color: #fff;
+    cursor: pointer;
+  }
+  
+  .filters button:hover {
+    background-color: #23527c;
+  }
+  
+  /* Gallery Section Styles */
+  
+  .gallery {
+    padding: 20px;
+  }
+  
+  .filter-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px;
+  }
+  
+  .filter-options select {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    margin: 0 10px;
+  }
+  
+  .filter-options input[type="range"] {
+    width: 100px;
+    margin: 0 10px;
+  }
+  
+  .filter-options button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #337ab7;
+    color: #fff;
+    cursor: pointer;
+  }
+  
+  .filter-options button:hover {
+    background-color: #23527c;
+  }
+  
+  .cake-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 20px;
+  }
+  
+  .cake-card {
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .cake-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px 10px 0 0;
+  }
+  
+  .cake-card p {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+  .cake-card span {
+    font-size: 14px;
+    color: #337ab7;
+  }
+  
+  /* Mission Section Styles */
+  
+  .mission {
+    padding: 20px;
+    background-color: #f7f7f7;
+  }
+  
+  .mission-box {
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+  }
+  
