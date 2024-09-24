@@ -2,16 +2,16 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.hashers import make_password, check_password
-from .models import UserSignup, UserProfile, VendorProfile
+from .models import UserSignup, UserProfile, VendorProfile,WeddingTask
 from django_countries import countries
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from django.urls import reverse
 from datetime import timedelta
+from datetime import datetime
 from datetime import date
 from django.contrib.auth.decorators import login_required
-from .models import WeddingTask
 from django.shortcuts import get_object_or_404
 import re
 from django.contrib.auth import logout
@@ -471,10 +471,18 @@ def todo_list(request):
     user_instance = get_object_or_404(UserSignup, id=user_id)
 
     # Query the tasks associated with the current user
-    user_tasks = WeddingTask.objects.filter(user=user_instance)
+    user_tasks = WeddingTask.objects.filter(user=user_instance).order_by('-created_at')
 
-    # Render tasks
-    return render(request, 'dreamknot1/todo_list.html', {'tasks': user_tasks})
+    # Calculate completed and pending task counts
+    completed_count = user_tasks.filter(is_completed=True).count()
+    pending_count = user_tasks.filter(is_completed=False).count()
+
+    # Render tasks with counts
+    return render(request, 'dreamknot1/todo_list.html', {
+        'tasks': user_tasks,
+        'completed_count': completed_count,
+        'pending_count': pending_count,
+    })
 
 def add_task(request):
     # Check if the user is logged in
@@ -484,14 +492,18 @@ def add_task(request):
         return redirect('login')
 
     if request.method == 'POST':
-        task_description = request.POST.get('task')
+        task_description = request.POST.get('task_description')
+        task_month = request.POST.get('task_month')
+        
         if task_description:  # Ensure the task description is not empty
             user_instance = get_object_or_404(UserSignup, id=user_id)
-            WeddingTask.objects.create(user=user_instance, description=task_description)
-        return redirect('todo_list')
-    
-    return render(request, 'dreamknot1/add_task.html')
+            WeddingTask.objects.create(user=user_instance, description=task_description, task_month=task_month)
+            messages.success(request, "Task added successfully.")
+            return redirect('todo_list')
+        else:
+            messages.error(request, "Task description cannot be empty.")
 
+    return render(request, 'dreamknot1/add_task.html')
 
 def update_task(request, task_id):
     # Check if the user is logged in
@@ -506,6 +518,7 @@ def update_task(request, task_id):
     if request.method == 'POST':
         task.is_completed = not task.is_completed  # Toggle completion status
         task.save()
+        messages.success(request, "Task updated successfully.")
         return redirect('todo_list')
 
     return render(request, 'dreamknot1/update_task.html', {'task': task})
@@ -521,4 +534,5 @@ def delete_task(request, task_id):
     task = get_object_or_404(WeddingTask, id=task_id, user__id=user_id)
     
     task.delete()
+    messages.success(request, "Task deleted successfully.")
     return redirect('todo_list')

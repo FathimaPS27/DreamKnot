@@ -43,11 +43,24 @@ class VendorProfile(models.Model):
     def __str__(self):
         return self.company_name if self.company_name else self.user.name
 
+TASK_MONTH_CHOICES = [
+    ('6-12', '6-12 Months Before'),
+    ('4-6', '4-6 Months Before'),
+    ('2-4', '2-4 Months Before'),
+    ('1-2', '1-2 Months Before'),
+    ('1-2 Weeks', '1-2 Weeks Before'),
+    ('Final Days', 'Final Days'),
+    ('Wedding Day', 'Wedding Day'),
+]
+
 class WeddingTask(models.Model):
     user = models.ForeignKey(UserSignup, on_delete=models.CASCADE)
-    description = models.TextField()
+    description = models.CharField(max_length=255)
+    task_month = models.CharField(max_length=20, choices=TASK_MONTH_CHOICES, default='6-12')
     is_completed = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    is_predefined = models.BooleanField(default=False)  # To differentiate predefined vs custom tasks
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)  # Auto-updates on every save
 
     def __str__(self):
         return self.description

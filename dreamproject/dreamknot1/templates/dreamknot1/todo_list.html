@@ -3,38 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Dashboard - To-Do List</title>
+    <title>Wedding Planner Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
+        /* Global Styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
             margin: 0;
             padding: 0;
         }
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-        }
+        /* Container */
         .container {
             display: flex;
+            max-width: auto;
+            margin: auto;
         }
         /* Sidebar */
         .sidebar {
             width: 250px;
-            background-color: #333;
-            color: white;
+            background-color: #3a3a3a;
+            color: #fff;
             padding: 20px;
+            position: fixed;
             height: 100vh;
-            position: fixed; /* Makes the sidebar static */
-            top: 0;
-            left: 0;
+            overflow-y: auto;
         }
         .sidebar h2 {
-            color: #d6bbbb;
             text-align: center;
-            margin-bottom: 20px;
+            color: #d6bbbb;
         }
         .sidebar ul {
-            list-style-type: none;
+            list-style: none;
             padding: 0;
         }
         .sidebar ul li {
@@ -45,63 +46,69 @@
             text-decoration: none;
             display: block;
             padding: 10px;
-            background-color: #444;
             border-radius: 5px;
             transition: background-color 0.3s;
         }
         .sidebar ul li a:hover {
             background-color: #4d0b0b;
         }
-        /* Main content */
+        /* Main Content */
         .main-content {
-            flex: 1;
+            margin-left: 270px; /* Adjust margin if sidebar width changes */
             padding: 20px;
+            flex: 1;
         }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
+        .main-content h1 {
             color: #930404;
+            text-align: center;
         }
-        h2 {
-            margin-top: 30px;
-            color: #333;
-            margin-bottom: 20px;
+        /* Task Section */
+        .task-section h2{
+            margin-left: 40px;
         }
-        h3{
-            margin-bottom: 20px;
+        .task-section {
+            margin-bottom: 30px;
         }
         .todo-list {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
             background: #fff;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            
+            padding: 20px;
+            margin-bottom: 20px;
+            margin-left: 20px;
         }
         .todo-item {
             margin-bottom: 15px;
             border-bottom: 1px solid #e0e0e0;
             padding-bottom: 10px;
+            display: flex;
+            align-items: center;
         }
         .checkbox {
             margin-right: 10px;
         }
-        a.add-task-btn {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 10px 15px;
+        .add-task-btn {
             background-color: #4d0b0b;
             color: white;
-            text-decoration: none;
+            padding: 10px 15px;
+            border: none;
             border-radius: 5px;
+            cursor: pointer;
         }
-        a.add-task-btn:hover {
-            background-color: #4d0b0b;
+        .add-task-btn:hover {
+            background-color: #930404;
         }
-        form {
-            display: inline-block;
+        .add-task-form {
             margin-top: 10px;
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .add-task-form input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
         }
         .delete-btn {
             color: red;
@@ -111,37 +118,32 @@
         .delete-btn:hover {
             text-decoration: underline;
         }
-        .navbar {
-            margin: 20px;
-            text-align: left;
-            padding-top: 10px;
+        .status-summary {
+            background-color: #e0ffe0;
+            border: 1px solid #b2ffb2;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 20px;
         }
-
-        .navbar a {
-            text-decoration: none;
-            color: #f0f0f0;
-            font-weight: bold;
-        }
-
     </style>
 </head>
 <body>
-
-
     <div class="container">
         <!-- Sidebar -->
+        
         <div class="sidebar">
-            <div class="navbar">
-                <a href="{% url 'user_home' %}" class="back-home">Back to Home</a>
-            </div>
+        <div class="navbar">
+        <button class="logout-btn" onclick="window.location.href='{% url 'user_home' %}';">BACK</button>
+    </div>
             <h2>Wedding Planner</h2>
             <ul>
-                <li><a href="#">Dashboard</a></li>
-                <li><a href="#">To-Do List</a></li>
-                <li><a href="#">Vendors</a></li>
-                <li><a href="#">Bookings</a></li>
-                <li><a href="#">Calendar</a></li>
-                <li ><a href="#Custom To-Do List">Custom To-Do List</a></li>
+                <li><a href="#section-6-12">6-12 Months</a></li>
+                <li><a href="#section-4-6">4-6 Months</a></li>
+                <li><a href="#section-2-4">2-4 Months</a></li>
+                <li><a href="#section-1-2-weeks">1-2 Weeks</a></li>
+                <li><a href="#section-final-days">Final Days</a></li>
+                <li><a href="#section-wedding-day">Wedding Day</a></li>
             </ul>
         </div>
 
@@ -149,154 +151,293 @@
         <div class="main-content">
             <h1>Wedding Preparation To-Do List</h1>
 
-            <!-- Static pre-made tasks -->
-            <div class="todo-list">
-                <h2>Pre-Made To-Do List</h2>
-                <h3>6-12 Months Before the Wedding</h3>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Set a Budget
-                    <p>Determine overall budget and allocate funds for different aspects.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Create a Guest List
-                    <p>Draft a preliminary guest list for invitations.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Choose a Date and Venue
-                    <p>Select a wedding date and book the venue for the ceremony and reception.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Hire a Wedding Planner (if desired)
-                    <p>Consider hiring a planner to assist with logistics.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Select Wedding Theme/Style
-                    <p>Decide on a theme, colors, and overall style.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Start Researching Vendors
-                    <p>Look for caterers, photographers, florists, and entertainment options.</p>
-                </div>
+            <!-- 6-12 Months Section -->
+            <div id="section-6-12" class="task-section">
+                <h2>6-12 Months Before the Wedding</h2>
+                <div class="todo-list">
+                    <h4>Predefined Tasks</h4>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Set a Budget
+                        <p>Determine overall budget and allocate funds for different aspects.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Create Guest List
+                        <p>Compile a list of potential guests to invite.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Research Venues
+                        <p>Start looking at venues and narrowing down options.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Book a Venue
+                        <p>Finalize and secure the wedding venue with a deposit.</p>
+                    </div>
 
-                <h3>4-6 Months Before the Wedding</h3>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Book Vendors
-                    <p>Finalize contracts with key vendors (caterer, photographer, etc.).</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Choose Attire
-                    <p>Shop for wedding dress/tuxedo and schedule fittings.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Plan the Ceremony
-                    <p>Decide on officiant and ceremony details (readings, music).</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Send Save-the-Dates
-                    <p>Mail out save-the-date cards to guests.</p>
-                </div>
-
-                <h3>2-4 Months Before the Wedding</h3>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Order Invitations
-                    <p>Design and order wedding invitations and other stationery.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Plan the Menu
-                    <p>Work with caterer to finalize the menu.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Arrange Transportation
-                    <p>Book transportation for the wedding day (limos, shuttles).</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Plan Honeymoon
-                    <p>Research and book honeymoon destination and travel arrangements.</p>
-                </div>
-
-                <h3>1-2 Months Before the Wedding</h3>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Send Invitations
-                    <p>Mail out wedding invitations to guests.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Finalize Details with Vendors
-                    <p>Confirm details and timelines with all vendors.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Purchase Wedding Rings
-                    <p>Shop for and purchase wedding bands.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Create a Wedding Day Timeline
-                    <p>Draft a schedule for the wedding day, including vendor arrival times.</p>
-                </div>
-
-                <h3>1-2 Weeks Before the Wedding</h3>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Confirm RSVP
-                    <p>Follow up with guests who haven’t responded.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Prepare Payments and Tips
-                    <p>Prepare payment envelopes for vendors to be distributed on the wedding day.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Pack for Honeymoon
-                    <p>Organize and pack items for the honeymoon trip.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Practice Vows
-                    <p>Review and practice vows if writing your own.</p>
-                </div>
-
-                <h3>Final Days Before the Wedding</h3>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Final Dress Fitting
-                    <p>Have the final fitting for wedding attire.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Delegate Tasks
-                    <p>Assign tasks to trusted friends or family for the wedding day.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Relax and Pamper Yourself
-                    <p>Schedule time for relaxation or pampering (spa, manicure).</p>
-                </div>
-
-                <h3>Wedding Day</h3>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Eat Breakfast
-                    <p>Remember to eat a good breakfast to keep your energy up.</p>
-                </div>
-                <div class="todo-item">
-                    <input type="checkbox" class="checkbox"> Enjoy Your Day!
-                    <p>Take a moment to breathe and enjoy every moment of your special day.</p>
+                    <!-- Add New Task Form -->
+                    <h4>Add New Task</h4>
+                    <form method="POST" action="{% url 'add_task' %}" class="add-task-form">
+                        {% csrf_token %}
+                        <input type="text" name="task_description" placeholder="Add new task" required>
+                        <input type="hidden" name="task_month" value="6-12">
+                        <button type="submit" class="add-task-btn">Add</button>
+                    </form>
+                    <h4>Newly Added Tasks</h4>
+                    <ul>
+                        {% for task in tasks %}
+                            {% if task.task_month == "6-12" and not task.is_predefined %}
+                                <li class="todo-item">
+                                    <form method="POST" action="{% url 'update_task' task.id %}" class="form-inline">
+                                        {% csrf_token %}
+                                        <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
+                                        <span>{{ task.description }}</span>
+                                    </form>
+                                    <a href="{% url 'delete_task' task.id %}" class="delete-btn">Delete</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
-<section id="Custom To-Do List">
-            <!-- Dynamic To-Do List -->
-            <div class="todo-list">
-                <h2>Your Custom To-Do List</h2>
-                <a href="{% url 'add_task' %}" class="add-task-btn">Add New Task</a>
-                <ul>
-                    {% for task in tasks %}
-                        <li class="todo-item">
-                            <form method="POST" action="{% url 'update_task' task.id %}" class="form-inline">
-                                {% csrf_token %}
-                                <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
-                                {{ task.description }}
-                            </form>
-                            <a href="{% url 'delete_task' task.id %}" class="delete-btn">Delete</a>
-                        </li>
-                    {% empty %}
-                        <li>No tasks available.</li>
-                    {% endfor %}
-                </ul>
+           
+            <!-- 4-6 Months Section -->
+            <div id="section-4-6" class="task-section">
+                <h2>4-6 Months Before the Wedding</h2>
+                <div class="todo-list">
+                    <h4>Predefined Tasks</h4>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Order Invitations
+                        <p>Design and order wedding invitations and other stationery.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Book Vendors
+                        <p>Hire vendors for photography, catering, and entertainment.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Plan Ceremony Details
+                        <p>Decide on the ceremony format, officiant, and readings.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Schedule Dress Fittings
+                        <p>Plan and schedule fittings for the wedding dress.</p>
+                    </div>
+
+                    <!-- Add New Task Form -->
+                    <h4>Add New Task</h4>
+                    <form method="POST" action="{% url 'add_task' %}" class="add-task-form">
+                        {% csrf_token %}
+                        <input type="text" name="task_description" placeholder="Add new task" required>
+                        <input type="hidden" name="task_month" value="4-6">
+                        <button type="submit" class="add-task-btn">Add</button>
+                    </form>
+                    <h4>Newly Added Tasks</h4>
+                    <ul>
+                        {% for task in tasks %}
+                            {% if task.task_month == "4-6" and not task.is_predefined %}
+                                <li class="todo-item">
+                                    <form method="POST" action="{% url 'update_task' task.id %}" class="form-inline">
+                                        {% csrf_token %}
+                                        <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
+                                        <span>{{ task.description }}</span>
+                                    </form>
+                                    <a href="{% url 'delete_task' task.id %}" class="delete-btn">Delete</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
-        </section>
+
+            <!-- 2-4 Months Section -->
+            <div id="section-2-4" class="task-section">
+                <h2>2-4 Months Before the Wedding</h2>
+                <div class="todo-list">
+                    <h4>Predefined Tasks</h4>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Finalize Guest List
+                        <p>Confirm the final guest list and send out invitations.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Schedule Hair and Makeup Trials
+                        <p>Book trials for hair and makeup with your stylist.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Plan Rehearsal Dinner
+                        <p>Coordinate the details for the rehearsal dinner.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Confirm Details with Vendors
+                        <p>Check in with all vendors to confirm arrangements.</p>
+                    </div>
+
+                    <!-- Add New Task Form -->
+                    <h4>Add New Task</h4>
+                    <form method="POST" action="{% url 'add_task' %}" class="add-task-form">
+                        {% csrf_token %}
+                        <input type="text" name="task_description" placeholder="Add new task" required>
+                        <input type="hidden" name="task_month" value="2-4">
+                        <button type="submit" class="add-task-btn">Add</button>
+                    </form>
+                    <h4>Newly Added Tasks</h4>
+                    <ul>
+                        {% for task in tasks %}
+                            {% if task.task_month == "2-4" and not task.is_predefined %}
+                                <li class="todo-item">
+                                    <form method="POST" action="{% url 'update_task' task.id %}" class="form-inline">
+                                        {% csrf_token %}
+                                        <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
+                                        <span>{{ task.description }}</span>
+                                    </form>
+                                    <a href="{% url 'delete_task' task.id %}" class="delete-btn">Delete</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 1-2 Weeks Section -->
+            <div id="section-1-2-weeks" class="task-section">
+                <h2>1-2 Weeks Before the Wedding</h2>
+                <div class="todo-list">
+                    <h4>Predefined Tasks</h4>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Confirm Arrangements
+                        <p>Ensure all vendors have confirmed their services.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Prepare Wedding Day Emergency Kit
+                        <p>Pack essentials like sewing kit, first aid supplies, etc.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Finalize Seating Arrangements
+                        <p>Prepare seating chart and name cards for guests.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Schedule Final Dress Fitting
+                        <p>Make sure your dress fits perfectly one last time.</p>
+                    </div>
+
+                    <!-- Add New Task Form -->
+                    <h4>Add New Task</h4>
+                    <form method="POST" action="{% url 'add_task' %}" class="add-task-form">
+                        {% csrf_token %}
+                        <input type="text" name="task_description" placeholder="Add new task" required>
+                        <input type="hidden" name="task_month" value="1-2">
+                        <button type="submit" class="add-task-btn">Add</button>
+                    </form>
+                    <h4>Newly Added Tasks</h4>
+                    <ul>
+                        {% for task in tasks %}
+                            {% if task.task_month == "1-2" and not task.is_predefined %}
+                                <li class="todo-item">
+                                    <form method="POST" action="{% url 'update_task' task.id %}" class="form-inline">
+                                        {% csrf_token %}
+                                        <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
+                                        <span>{{ task.description }}</span>
+                                    </form>
+                                    <a href="{% url 'delete_task' task.id %}" class="delete-btn">Delete</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Final Days Section -->
+            <div id="section-final-days" class="task-section">
+                <h2>Final Days Before the Wedding</h2>
+                <div class="todo-list">
+                    <h4>Predefined Tasks</h4>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Relax and De-stress
+                        <p>Take time for yourself and unwind before the big day.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Confirm Final Headcount
+                        <p>Make sure to have an accurate count for catering.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Pack for Honeymoon
+                        <p>Ensure you have everything ready for your trip.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Have Rehearsal Dinner
+                        <p>Enjoy a dinner with family and bridal party to finalize details.</p>
+                    </div>
+
+                    <!-- Add New Task Form -->
+                    <h4>Add New Task</h4>
+                    <form method="POST" action="{% url 'add_task' %}" class="add-task-form">
+                        {% csrf_token %}
+                        <input type="text" name="task_description" placeholder="Add new task" required>
+                        <input type="hidden" name="task_month" value="Final Days">
+                        <button type="submit" class="add-task-btn">Add</button>
+                    </form>
+                    <h4>Newly Added Tasks</h4>
+                    <ul>
+                        {% for task in tasks %}
+                            {% if task.task_month == "Final Days" and not task.is_predefined %}
+                                <li class="todo-item">
+                                    <form method="POST" action="{% url 'update_task' task.id %}" class="form-inline">
+                                        {% csrf_token %}
+                                        <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
+                                        <span>{{ task.description }}</span>
+                                    </form>
+                                    <a href="{% url 'delete_task' task.id %}" class="delete-btn">Delete</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Wedding Day Section -->
+            <div id="section-wedding-day" class="task-section">
+                <h2>Wedding Day</h2>
+                <div class="todo-list">
+                    <h4>Predefined Tasks</h4>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Enjoy the Day
+                        <p>Relax and enjoy your wedding day with loved ones.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Delegate Responsibilities
+                        <p>Assign tasks to trusted friends and family to ease stress.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Take Moments for Yourselves
+                        <p>Take a moment alone with your partner to soak it all in.</p>
+                    </div>
+                    <div class="todo-item">
+                        <input type="checkbox" class="checkbox"> Have Fun
+                        <p>Don't forget to have fun and dance the night away!</p>
+                    </div>
+
+                    <!-- Add New Task Form -->
+                    <h4>Add New Task</h4>
+                    <form method="POST" action="{% url 'add_task' %}" class="add-task-form">
+                        {% csrf_token %}
+                        <input type="text" name="task_description" placeholder="Add new task" required>
+                        <input type="hidden" name="task_month" value="Wedding Day">
+                        <button type="submit" class="add-task-btn">Add</button>
+                    </form>
+                    <h4>Newly Added Tasks</h4>
+                    <ul>
+                        {% for task in tasks %}
+                            {% if task.task_month == "Wedding Day" and not task.is_predefined %}
+                                <li class="todo-item">
+                                    <form method="POST" action="{% url 'update_task' task.id %}" class="form-inline">
+                                        {% csrf_token %}
+                                        <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
+                                        <span>{{ task.description }}</span>
+                                    </form>
+                                    <a href="{% url 'delete_task' task.id %}" class="delete-btn">Delete</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
-</body>
-</html>
