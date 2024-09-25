@@ -1,8 +1,8 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.hashers import make_password, check_password
-from .models import UserSignup, UserProfile, VendorProfile,WeddingTask,RSVPInvitation
+from .models import UserSignup, UserProfile, VendorProfile,WeddingTask,RSVPInvitation, VendorImage
 from django_countries import countries
 from django.utils import timezone
 from django.utils.crypto import get_random_string
@@ -12,19 +12,70 @@ from datetime import timedelta
 from datetime import datetime
 from datetime import date
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
 import re
 from django.contrib.auth import logout
 from django.views.decorators.cache import cache_control
+from django.utils import timezone
+
+from django.core.files.storage import FileSystemStorage
+from django.core.exceptions import ValidationError
+from django.db.models import Avg
+from .models import Service, ServiceImage, Rating
+
+
 
 def index(request):
     return render(request, 'dreamknot1/index.html')
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-def user_home(request):
-    user_name = request.session.get('user_name', 'user')
-    return render(request, 'dreamknot1/user_home.html', {'name': user_name})
 
+def user_home(request):
+    user_name = request.session.get('user_name', 'user')  # Assuming you're storing the email in the session
+
+    try:
+        # Fetch the user instance using the session data
+        user_instance = UserSignup.objects.get(name=user_name)  # Adjust if needed based on your session key
+    except UserSignup.DoesNotExist:
+        user_instance = None
+
+    time_left = None
+    wedding_date = None
+    message = None
+
+    # Check if the user instance exists and has a related UserProfile
+    if user_instance:
+        try:
+            wedding_date = user_instance.userprofile.wedding_date
+        except UserProfile.DoesNotExist:
+            wedding_date = None
+
+        # Calculate the time left if wedding_date is present
+        if wedding_date:
+            now = timezone.now()  # This is a timezone-aware datetime object
+            
+            # Convert wedding_date to a timezone-aware datetime
+            wedding_datetime = timezone.make_aware(timezone.datetime.combine(wedding_date, timezone.datetime.min.time()))
+
+            # Compare wedding_datetime and now
+            if wedding_datetime >= now:
+                total_seconds = (wedding_datetime - now).total_seconds()
+                days = int(total_seconds // (24 * 3600))
+                hours = int((total_seconds % (24 * 3600)) // 3600)
+                minutes = int((total_seconds % 3600) // 60)
+                seconds = int(total_seconds % 60)
+
+                time_left = f"{days} days, {hours} hours, {minutes} minutes, {seconds} seconds left"
+            else:
+                time_left = "Your wedding date has passed!"
+        else:
+            message = "Please set your wedding date in your profile."
+
+    return render(request, 'dreamknot1/user_home.html', {
+        'name': user_name,
+        'time_left': time_left,
+        'wedding_date': wedding_date,
+        'message': message
+    })
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def vendor_home(request):
     user_name = request.session.get('user_name', 'vendor')
@@ -165,8 +216,18 @@ def login_view(request):
             return redirect('login')
 
     return render(request, 'dreamknot1/login.html')
+#vendor image delete
+def delete_vendor_image(request, image_id):
+    if not request.session.get('user_id'):
+        return redirect('login')
 
+    image = get_object_or_404(VendorImage, id=image_id)
+    if request.method == 'POST':
+        image.delete()
+        messages.success(request, "Image deleted successfully!")
+        return redirect('vendor_profile')  # Redirect to the vendor profile page
 
+    return render(request, 'dreamknot1/delete_image.html', {'image': image})
 
 
 
@@ -396,42 +457,13 @@ def update_vendor_profile(request):
         country = request.POST.get('country')
         state = request.POST.get('state')
         place = request.POST.get('place')
-
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
+        image = request.FILES.get('image')  # Get the uploaded image
 
         errors = {}
 
-        # Validate email
-        if not re.match(r'^[a-zA-Z0-9_.+-]+@gmail\.com$', email):
-            messages.error(request, "Please enter a valid Gmail address.")
-            errors['email'] = "Invalid Gmail address."
-
-        # Validate other fields
-        if not name:
-            errors['name'] = 'Name is required.'
-        if not phone or not re.match(r'^\+?1?\d{10}$', phone):
-            errors['phone'] = 'Enter a valid phone number with 10 digits.'
-        if not company_name:
-            errors['company_name'] = 'Company name is required.'
-        if not business_category:
-            errors['business_category'] = 'Business category is required.'
-        if not bio:
-            errors['bio'] = 'Bio is required.'
-
-        if new_password or confirm_password:
-            if new_password != confirm_password:
-                errors['password'] = 'Passwords do not match.'
-            if len(new_password) < 8:
-                errors['password_length'] = "Password must be at least 8 characters long."
-            if not re.search(r'[A-Z]', new_password):
-                errors['password_uppercase'] = "Password must contain at least one uppercase letter."
-            if not re.search(r'[a-z]', new_password):
-                errors['password_lowercase'] = "Password must contain at least one lowercase letter."
-            if not re.search(r'[0-9]', new_password):
-                errors['password_digit'] = "Password must contain at least one digit."
-            if not re.search(r'[!@#$%^&*(),.?":{}|<>]', new_password):
-                errors['password_special'] = "Password must contain at least one special character."
+        # Validate fields as before...
 
         if errors:
             return render(request, 'dreamknot1/update_vendor_profile.html', {
@@ -446,10 +478,10 @@ def update_vendor_profile(request):
                 'country': country,
                 'state': state,
                 'place': place,
-                'countries': countries,  # Pass list of countries
+                'countries': countries,
             })
 
-        # Update vendor details
+        # Update user details
         user_signup.name = name
         user_signup.email = email
         user_signup.phone = phone
@@ -469,6 +501,14 @@ def update_vendor_profile(request):
         vendor_profile.status = True
         vendor_profile.save()
 
+        # If an image is uploaded, create a new VendorImage record
+        if image:
+            VendorImage.objects.create(
+                vendor_profile=vendor_profile,
+                image=image,
+                status=True  # You can set status based on your requirements
+            )
+
         messages.success(request, "Vendor profile updated successfully!")
         return redirect('vendor_home')
 
@@ -480,10 +520,10 @@ def update_vendor_profile(request):
         'business_category': vendor_profile.business_category,
         'company_name': vendor_profile.company_name,
         'bio': vendor_profile.bio,
-        'country': user_signup.country,  # Pre-populate country
-        'state': user_signup.state,      # Pre-populate state
-        'place': user_signup.place,      # Pre-populate place
-        'countries': countries,          # Pass list of countries
+        'country': user_signup.country,
+        'state': user_signup.state,
+        'place': user_signup.place,
+        'countries': countries,
     })
 
 def todo_list(request):
@@ -629,170 +669,234 @@ def rsvp_confirm(request, invitation_id, response):
     return render(request, 'dreamknot1/rsvp_confirmation.html', {'message': message})
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Service, ServiceImage, VendorProfile, UserSignup
+from django.shortcuts import render, redirect
+from django.utils import timezone
 from django.http import HttpResponse
+from .models import VendorProfile, Service, ServiceImage, Booking, Rating, Favorite
 
-
-# Service Provider (Vendor) Dashboard Views
-from .models import Service
-
-# Service Provider (Vendor) Dashboard Views
+# Vendor Dashboard - Add and Manage Services
 def vendor_dashboard(request):
-    # Check if the user is logged in
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
+    vendor_name = request.session.get('user_name', 'vendor')
+    try:
+        vendor_instance = VendorProfile.objects.get(user__name=vendor_name)
+    except VendorProfile.DoesNotExist:
+        return HttpResponse("Vendor not found.")
 
-    # Get the logged-in user
-    user_signup = get_object_or_404(UserSignup, id=user_id)
+    services = Service.objects.filter(vendor=vendor_instance)
 
-    # Ensure the user has a 'vendor' role; if not, show an error message or redirect
-    if user_signup.role != 'vendor':
-        return render(request, '404.html')  # Alternatively, redirect to a suitable page
+    # Initialize empty error dictionary and variables to retain form data
+    errors = {}
+    service_name = ""
+    description = ""
+    price = ""
+    category = ""
+    availability = False
 
-    # Get or create the VendorProfile for the logged-in user
-    vendor_profile, _ = VendorProfile.objects.get_or_create(user=user_signup)
+    if request.method == "POST":
+        service_name = request.POST.get('name', '')
+        description = request.POST.get('description', '')
+        price = request.POST.get('price', '')
+        category = request.POST.get('category', '')
+        availability = 'availability' in request.POST  # Checkbox handling
 
-    # Fetch all services related to the vendor
-    services = Service.objects.filter(vendor=vendor_profile)
+        # Validate inputs
+        if not re.match(r'^[A-Za-z\s]+$', service_name):
+            errors['name'] = "Service name can only contain alphabets and spaces."
+        if not price:
+            errors['price'] = "Price is required."
+        else:
+            try:
+                price_value = float(price)
+                if price_value <= 0:
+                    errors['price'] = "Price must be a positive number."
+            except ValueError:
+                errors['price'] = "Invalid price format."
 
-    # Render the vendor dashboard template
+        # If there are no errors, save the service
+        if not errors:
+            service = Service(
+                vendor=vendor_instance,
+                name=service_name,
+                description=description,
+                price=price_value,
+                category=category,
+                availability=availability,
+                created_at=timezone.now(),
+            )
+            service.save()
+
+            if 'image' in request.FILES:
+                image = request.FILES['image']
+                service_image = ServiceImage(service=service, image=image)
+                service_image.save()
+
+            return redirect('vendor_dashboard')
+
     return render(request, 'dreamknot1/vendor_dashboard.html', {
-        'vendor_profile': vendor_profile,
-        'services': services  # Pass the services to the template
+        'services': services,
+        'vendor_name': vendor_name,
+        'errors': errors,
+        'form_data': {
+            'name': service_name,
+            'description': description,
+            'price': price,
+            'category': category,
+            'availability': availability,
+        },
     })
-
-def add_service(request):
-    """Vendor can add a new service."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
-
-    if request.method == "POST":
-        # Ensure the request user is a UserSignup instance
-        user_signup = get_object_or_404(UserSignup, id=user_id)
-
-        # Get or create the vendor profile
-        vendor_profile, created = VendorProfile.objects.get_or_create(user=user_signup)
-
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        price = request.POST.get('price')
-        category = request.POST.get('category')
-
-        # Create the service
-        service = Service.objects.create(
-            vendor=vendor_profile,
-            name=name,
-            description=description,
-            price=price,
-            category=category,
-            availability=True,
-            created_at=timezone.now(),
-        )
-
-        # Handle image uploads
-        if request.FILES.getlist('images'):
-            for image in request.FILES.getlist('images'):
-                ServiceImage.objects.create(service=service, image=image)
-
-        return redirect('vendor_dashboard')
-
-    return render(request, 'dreamknot1/add_service.html')
-
 def edit_service(request, service_id):
-    """Vendor can edit their existing service."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
-
-    user_signup = get_object_or_404(UserSignup, id=user_id)
-    vendor_profile = get_object_or_404(VendorProfile, user=user_signup)
-
-    # Ensure the service belongs to the current vendor
-    service = get_object_or_404(Service, id=service_id, vendor=vendor_profile)
+    # Fetch the service instance
+    service = get_object_or_404(Service, id=service_id)
+    vendor_name = request.session.get('user_name', 'vendor')
     
+    # Ensure the user is the owner of the service
+    if service.vendor.user.name != vendor_name:
+        return HttpResponse("You do not have permission to edit this service.")
+
     if request.method == "POST":
-        service.name = request.POST.get('name')
-        service.description = request.POST.get('description')
-        service.price = request.POST.get('price')
-        service.category = request.POST.get('category')
-        service.availability = request.POST.get('availability') == 'on'
+        # Validate and update service fields
+        service.name = request.POST['name']
+        service.description = request.POST['description']
+        service.price = request.POST['price']
+        service.category = request.POST['category']
+        
+        # Check availability based on the presence of the checkbox
+        service.availability = 'availability' in request.POST
+
+        # Validate fields
+        if not service.name or not service.description or not service.price or not service.category:
+            return render(request, 'dreamknot1/edit_service.html', {
+                'service': service,
+                'error_message': "All fields are required."
+            })
+        
+        # Save the updated service
+        service.updated_at = timezone.now()
         service.save()
+
+        # Handle image upload (if a new image is uploaded)
+        if 'image' in request.FILES:
+            # Delete existing image if necessary
+            ServiceImage.objects.filter(service=service).delete()  # You can choose to keep this or just overwrite
+            image = request.FILES['image']
+            service_image = ServiceImage(service=service, image=image)
+            service_image.save()
+
         return redirect('vendor_dashboard')
 
-    context = {'service': service}
-    return render(request, 'dreamknot1/edit_service.html', context)
-
+    return render(request, 'dreamknot1/edit_service.html', {'service': service})
+# Delete Service
 def delete_service(request, service_id):
-    """Vendor can delete a service."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
+    try:
+        service = Service.objects.get(id=service_id)
+        service.delete()
+        return redirect('vendor_dashboard')
+    except Service.DoesNotExist:
+        return HttpResponse("Service not found.")
+    
 
-    user_signup = get_object_or_404(UserSignup, id=user_id)
-    vendor_profile = get_object_or_404(VendorProfile, user=user_signup)
+    # User Dashboard - View Vendor Services, Book, Rate, Favorite
+def user_dashboard(request):
+    user_name = request.session.get('user_name', 'user')
+    services = Service.objects.filter(status=1, availability=True)  # Only active services
 
-    # Ensure the service belongs to the current vendor
-    service = get_object_or_404(Service, id=service_id, vendor=vendor_profile)
+    # Filter services by category
+    if 'category' in request.GET:
+        category = request.GET['category']
+        services = services.filter(category=category)
 
-    service.delete()
-    return redirect('vendor_dashboard')
+    # Search services
+    if 'search' in request.GET:
+        search_query = request.GET['search']
+        services = services.filter(name__icontains=search_query)
 
-# User Views for Viewing and Booking Services
-def services_list(request):
-    """Display all available services to users."""
-    services = Service.objects.filter(availability=True)
-    context = {'services': services}
-    return render(request, 'dreamknot1/services_list.html', context)
+    # Get vendors and related services
+    vendor_services = {}
+    for service in services:
+        vendor = service.vendor
+        vendor_services.setdefault(vendor, []).append(service)
+
+    return render(request, 'dreamknot1/user_dashboard.html', {
+        'vendor_services': vendor_services,
+        'user_name': user_name,
+    })
+def vendor_services(request, vendor_id):
+    vendor = get_object_or_404(VendorProfile, id=vendor_id)
+    services = Service.objects.filter(vendor=vendor, status=1, availability=True)
+    return render(request, 'dreamknot1/vendor_services.html', {'vendor': vendor, 'services': services})
 
 def service_detail(request, service_id):
-    """Display details of a selected service."""
     service = get_object_or_404(Service, id=service_id)
-    service_images = ServiceImage.objects.filter(service=service)
-    
-    context = {
-        'service': service,
-        'service_images': service_images
-    }
-    return render(request, 'dreamknot1/service_detail.html', context)
-
-def add_to_favorites(request, service_id):
-    """Add a service to user's favorites."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
-
-    service = get_object_or_404(Service, id=service_id)
-    if 'favorites' not in request.session:
-        request.session['favorites'] = []
-    
-    if service_id not in request.session['favorites']:
-        request.session['favorites'].append(service_id)
-        request.session.modified = True
-    
-    return redirect('favorites_list')
-
-def favorites_list(request):
-    """Display user's favorite services."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
-
-    favorite_service_ids = request.session.get('favorites', [])
-    favorite_services = Service.objects.filter(id__in=favorite_service_ids)
-
-    context = {'favorite_services': favorite_services}
-    return render(request, 'dreamknot1/favorites_list.html', context)
-
+    return render(request, 'dreamknot1/service_detail.html', {'service': service})
+# Book a Service
 def book_service(request, service_id):
-    """Simulate booking a service (expandable based on your logic)."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
+    user_name = request.session.get('user_name', 'user')
+    
+    try:
+        service = Service.objects.get(id=service_id)
+        user = UserSignup.objects.get(name=user_name)
+        user_profile = UserProfile.objects.get(user=user)
+    except Service.DoesNotExist:
+        return HttpResponse("Service not found.")
+    except UserSignup.DoesNotExist:
+        return HttpResponse("User not found.")
+    except UserProfile.DoesNotExist:
+        user_profile = None  # In case the user profile is not yet created
 
-    service = get_object_or_404(Service, id=service_id)
-    # Logic to handle service booking can be added here
-    return HttpResponse(f"Service '{service.name}' booked successfully!")
+    if request.method == "POST":
+        event_date = request.POST.get('event_date')
+        address = request.POST.get('address', user.place)  # Use the user's existing address as default
+        phone_number = request.POST.get('phone', user.phone)
+        email = request.POST.get('email', user.email)
+
+        # Update the wedding date if provided by the user
+        wedding_date = request.POST.get('wedding_date')
+        if wedding_date and user_profile:
+            user_profile.wedding_date = wedding_date
+            user_profile.save()
+
+        # Book the service
+        booking = Booking(user=user, service=service, event_date=event_date)
+        booking.save()
+
+        return redirect('user_dashboard')
+
+    return render(request, 'dreamknot1/book_service.html', {
+        'service': service,
+        'user': user,
+        'user_profile': user_profile
+    })
+
+# Add to Favorite
+def add_to_favorite(request, service_id):
+    user_name = request.session.get('user_name', 'user')
+    try:
+        service = Service.objects.get(id=service_id)
+        user = UserSignup.objects.get(name=user_name)
+    except Service.DoesNotExist:
+        return HttpResponse("Service not found.")
+    except UserSignup.DoesNotExist:
+        return HttpResponse("User not found.")
+
+    # Add to favorites
+    favorite, created = Favorite.objects.get_or_create(user=user, service=service)
+    return redirect('user_dashboard')
+
+# Rate a Service
+def rate_service(request, service_id):
+    user_name = request.session.get('user_name', 'user')
+    try:
+        service = Service.objects.get(id=service_id)
+        user = UserSignup.objects.get(name=user_name)
+    except Service.DoesNotExist:
+        return HttpResponse("Service not found.")
+    except UserSignup.DoesNotExist:
+        return HttpResponse("User not found.")
+
+    if request.method == "POST":
+        rating_value = int(request.POST['rating'])
+        rating, created = Rating.objects.update_or_create(user=user, service=service, defaults={'rating': rating_value})
+        return redirect('user_dashboard')
+
+    return render(request, 'dreamknot1/rate_service.html', {'service': service})
+

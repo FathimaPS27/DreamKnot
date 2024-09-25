@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ vendor.company_name }} Services</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>{{ vendor.company_name }}'s Services</h2>
+        <div class="row">
+            {% for service in services %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{{ service.images.first.image.url }}" alt="{{ service.name }}" class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ service.name }}</h5>
+                        <p class="card-text">{{ service.description }}</p>
+                        <p class="card-text">Price: ${{ service.price }}</p>
+                        <a href="{% url 'service_detail' service.id %}" class="btn btn-primary">More Details</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p>No services available for this vendor.</p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

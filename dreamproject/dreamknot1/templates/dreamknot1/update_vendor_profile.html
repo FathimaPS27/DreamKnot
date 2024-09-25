@@ -108,9 +108,13 @@
     </ul>
 {% endif %}
 
-        <form method="POST" action="{% url 'update_vendor_profile' %}">
+        <form method="POST" action="{% url 'update_vendor_profile' %}" enctype="multipart/form-data">
             {% csrf_token %}
+            {% if vendor_profile.images.all %}
+    <img src="{{ vendor_profile.images.first.image.url }}" alt="Vendor Profile Image" style="display: block; width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #ccc; margin: 0 auto 10px auto;">
+{% endif %}
 
+        
             <div class="error">{{ errors.name }}</div>
             <label for="name">Name</label>
             <input type="text" id="name" name="name" value="{{ name }}" required>
@@ -153,6 +157,9 @@
             <label for="confirm_password">Confirm Password</label>
             <input type="password" id="confirm_password" name="confirm_password">
 
+            <label for="image">Profile Image</label>
+            <input type="file" id="image" name="image">
+          
             <input type="submit" value="Update Profile">
         </form>
     </div>

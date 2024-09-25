@@ -5,30 +5,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Service</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container mt-4">
-        <h1>Edit Service</h1>
-        <form method="post" enctype="multipart/form-data">
+    <div class="container mt-5">
+        <h2>Edit Service: {{ service.name }}</h2>
+        
+        {% if error_message %}
+            <div class="alert alert-danger">{{ error_message }}</div>
+        {% endif %}
+        
+        <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-group">
-                <label for="name">Service Name:</label>
-                <input type="text" class="form-control" id="name" name="name" value="{{ service.name }}" required>
+                <label for="name">Service Name</label>
+                <input type="text" class="form-control" name="name" value="{{ service.name }}" required>
             </div>
             <div class="form-group">
-                <label for="description">Description:</label>
-                <textarea class="form-control" id="description" name="description" rows="3" required>{{ service.description }}</textarea>
+                <label for="description">Description</label>
+                <textarea class="form-control" name="description" required>{{ service.description }}</textarea>
             </div>
             <div class="form-group">
-                <label for="price">Price:</label>
-                <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ service.price }}" required>
+                <label for="price">Price</label>
+                <input type="number" class="form-control" name="price" value="{{ service.price }}" required>
             </div>
             <div class="form-group">
-                <label for="category">Category:</label>
-                <input type="text" class="form-control" id="category" name="category" value="{{ service.category }}" required>
+                <label for="category">Category</label>
+                <select class="form-control" name="category" required>
+                    <option value="" disabled>Select a category</option>
+                    <option value="Photography" {% if service.category == "Photography" %}selected{% endif %}>Photography</option>
+                    <option value="Catering" {% if service.category == "Catering" %}selected{% endif %}>Catering</option>
+                    <option value="Venue" {% if service.category == "Venue" %}selected{% endif %}>Venue</option>
+                    <option value="Decoration" {% if service.category == "Decoration" %}selected{% endif %}>Decoration</option>
+                    <option value="Music" {% if service.category == "Music" %}selected{% endif %}>Music</option>
+                    <option value="Makeup" {% if service.category == "Makeup" %}selected{% endif %}>Makeup</option>
+                    <option value="Transportation" {% if service.category == "Transportation" %}selected{% endif %}>Transportation</option>
+                </select>
             </div>
-            <button type="submit" class="btn btn-primary">Update Service</button>
+            <div class="form-group">
+                <label for="availability">Availability</label>
+                <input type="checkbox" name="availability" id="availability" {% if service.availability %}checked{% endif %}> Available
+            </div>
+            <div class="form-group">
+                <label for="image">Service Image</label>
+                <input type="file" class="form-control-file" name="image" id="image" accept="image/*">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{% url 'vendor_dashboard' %}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
 </body>

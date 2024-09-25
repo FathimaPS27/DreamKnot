@@ -1,0 +1,284 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css">
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: #343a40;
+            color: white;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar .brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffc107;
+        }
+        .navbar ul {
+            display: flex;
+            list-style: none;
+        }
+        .navbar ul li {
+            margin-left: 20px;
+        }
+        .navbar ul li a {
+            color: white;
+            font-weight: 500;
+        }
+        .navbar ul li a:hover {
+            color: #ffc107;
+        }
+
+        /* Hero Section */
+        .hero {
+            background-image: url("{% static 'images/hero-image.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            height: 80vh;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            position: relative;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .hero-content {
+            z-index: 1;
+            max-width: 700px;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+        }
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 30px;
+        }
+        .btn-cta {
+            background-color: #ffc107;
+            color: #343a40;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-cta:hover {
+            background-color: #e0a800;
+        }
+
+        /* Main Section */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px 50px;
+        }
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* Search and Filter */
+        .search-filter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 50px;
+        }
+        .search-filter input, .search-filter select, .search-filter button {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        .search-filter input, .search-filter select {
+            flex: 1;
+            margin-right: 10px;
+        }
+        .search-filter button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .search-filter button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Service Cards */
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.2);
+        }
+        .card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .card .card-body {
+            padding: 20px;
+        }
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .card-text {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        .footer a {
+            color: #ffc107;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .search-filter {
+                flex-direction: column;
+            }
+            .search-filter input, .search-filter select, .search-filter button {
+                margin-bottom: 10px;
+            }
+            .search-filter input, .search-filter select {
+                margin-right: 0;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .hero p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="brand">ServiceHub</div>
+        <ul>
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">My Bookings</a></li>
+            <li><a href="#">Favorites</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" style="background-image: url('{% static 'images/hero-image.jpg' %}');">
+        <div class="hero-content">
+            <h1>Welcome, {{ user_name }}</h1>
+            <p>Find the best services tailored just for you.</p>
+            <a href="#services" class="btn-cta">Explore Services</a>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="card-container">
+        {% for vendor, services in vendor_services.items %}
+        <div class="card">
+            <!-- Vendor Image with dynamic check for images -->
+            {% if vendor.images.all %}
+                <img src="{{ vendor.images.first.image.url }}" alt="{{ vendor.company_name }}" style="display: block; width: 100%; height: 200px; object-fit: cover;">
+            {% else %}
+                <img src="{% static 'images/vendor-placeholder.jpg' %}" alt="Vendor Placeholder" style="display: block; width: 100%; height: 200px; object-fit: cover;">
+            {% endif %}
+            
+            <div class="card-body">
+                <h5 class="card-title">{{ vendor.company_name }}</h5>
+                <p class="card-text">{{ vendor.bio|default:"No bio available." }}</p>
+                <p class="card-text"><strong>Location:</strong> {{ vendor.user.place|default:"Not specified" }}</p>
+                <a href="{% url 'vendor_services' vendor.id %}" class="btn-primary">View Services</a>
+            </div>
+        </div>
+        {% empty %}
+        <p>No services available.</p>
+        {% endfor %}
+    </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 ServiceHub. All rights reserved.</p>
+        <p>Designed with ♥ by <a href="https://yourwebsite.com">Your Company</a></p>
+    </footer>
+
+</body>
+</html>

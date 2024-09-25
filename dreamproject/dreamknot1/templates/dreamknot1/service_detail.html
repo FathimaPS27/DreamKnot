@@ -1,21 +1,23 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service Details</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>{{ service.name }} Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container mt-4">
-        <h1>{{ service.name }}</h1>
-        <img src="{{ service.image.url }}" alt="{{ service.name }}" class="img-fluid mb-3">
-        <p>{{ service.description }}</p>
-        <p><strong>Category:</strong> {{ service.category }}</p>
+    <div class="container mt-5">
+        <h2>{{ service.name }}</h2>
+        <img src="{{ service.images.first.image.url }}" alt="{{ service.name }}" class="img-fluid mb-3">
+        <p><strong>Description:</strong> {{ service.description }}</p>
         <p><strong>Price:</strong> ${{ service.price }}</p>
-        <a href="{% url 'book_service' service.id %}" class="btn btn-success">Book Service</a>
-        <a href="{% url 'add_to_favorites' service.id %}" class="btn btn-secondary">Add to Favorites</a>
-        <a href="{% url 'service_list' %}" class="btn btn-primary">Back to Services</a>
+        <p><strong>Category:</strong> {{ service.category }}</p>
+        <p><strong>Vendor:</strong> {{ service.vendor.company_name }}</p>
+        <p><strong>Availability:</strong> {% if service.availability %} Available {% else %} Not Available {% endif %}</p>
+        
+        <a href="{% url 'vendor_services' service.vendor.id %}" class="btn btn-secondary">Back to Vendor Services</a>
     </div>
 </body>
 </html>

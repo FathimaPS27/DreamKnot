@@ -135,7 +135,7 @@
 							<ul class="nav navbar-nav navbar-right" data-in="fadeInDown" data-out="fadeOutUp">
 								<li class="scroll active"><a href="#home">home</a></li>
 								<li class="scroll"><a href="#works">how it works</a></li>
-								<li class="serv"><a href="{% url 'services_list' %}">SERVICE Page</a></li>
+								<li class="serv"><a href="{% url 'user_dashboard' %}">SERVICE Page</a></li>
 								<li class="todo"><a href="{% url 'send_rsvp_invitation' %}">RSVP INVITATION</a></li>
 								<li class="todo"><a href="{% url 'todo_list' %}">todo_list</a></li>
 								<li class="scroll"><a href="#contact">contact</a></li>
@@ -163,21 +163,39 @@
 
 		</section><!-- /.top-area-->
 		<!-- top-area End -->
-		{% if messages %}
+		
+		<!--welcome-hero start -->
+		<section id="home" class="welcome-hero">
+			<div class="container">
+				{% if messages %}
 		<ul class="messages">
 			{% for message in messages %}
 				<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
 			{% endfor %}
 		</ul>
 	{% endif %}
-		<!--welcome-hero start -->
-		<section id="home" class="welcome-hero">
-			<div class="container">
+
 				<div class="welcome-hero-txt">
+					<h3 style="font-size: 35px; font-family: Comic Sans MS , cursive; color: rgba(45, 56, 6, 1); padding-bottom:30px;"><i>Welcome, {{ name }}!</i></h3>
 					<h2>best place to find and explore <br> that all you need </h2>
 					<p>
 						manage your upcoming events, keep track of your wedding checklist, and ensure every detail is perfectly taken care of. Let us help you create unforgettable memories and a wedding day you’ll cherish forever. 
 					</p>
+					{% if time_left %}
+    <!--<h2 style="color: #5c0e07; font-family: Lucida Handwriting, cursive; font-size: 10px;">Time until your wedding:</h2>-->
+    <p style="font-size: 40px; font-weight: bold; font-family: Didot ,serif; color: #ffffff; background:rgba(30, 28, 29, 0.65)">{{ time_left }}</p>
+{% endif %}
+
+{% if message %}
+    <div style="background-color: #d9edf7; border: 1px solid #bcdff1; border-radius: 5px; padding: 10px; margin-top: 20px;">
+        <p style="color: #31708f; font-family: Arial, sans-serif;">{{ message }}</p>
+    </div>
+{% endif %}
+
+
+		<div class="profile">
+            <p><strong>Wedding Date:</strong> {% if wedding_date %}{{ wedding_date }}{% else %}Not set{% endif %}</p>
+        </div>
 				</div>
 				<!--<div class="welcome-hero-serch-box">
 					<div class="welcome-hero-form">

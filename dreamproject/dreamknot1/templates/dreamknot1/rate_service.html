@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Service</title>
+</head>
+<body>
+    <h2>Rate {{ service.name }}</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="rating">Rating (1-5):</label>
+        <select name="rating" id="rating" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select><br>
+        <button type="submit">Submit Rating</button>
+    </form>
+    <a href="{% url 'user_dashboard' %}">Back to Dashboard</a>
+</body>
+</html>
