@@ -152,7 +152,13 @@
 
 		</section><!-- /.top-area-->
 		<!-- top-area End -->
-
+		{% if messages %}
+		<ul class="messages">
+			{% for message in messages %}
+				<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
 		<!--welcome-hero start -->
 		<section id="home" class="welcome-hero">
 			<div class="container">
@@ -252,13 +258,13 @@
 		<!--list-topics end-->-->
 
 		<!--works start -->
-		<section id="works" class="works">
+	<!--<section id="works" class="works">
 			<div class="container">
 				<div class="section-header">
 					<h2>how it works</h2>
 					<p>Learn More about how our website works</p>
 				</div><!--/.section-header-->
-				<div class="works-content">
+				<!--<div class="works-content">
 					<div class="row">
 						<div class="col-md-4 col-sm-6">
 							<div class="single-how-works">
@@ -272,7 +278,7 @@
 								<!--<button class="welcome-hero-btn how-work-btn" onclick="window.location.href='#'">
 									read more
 								</button>-->
-							</div>
+						<!--	</div>
 						</div>
 						<div class="col-md-4 col-sm-6">
 							<div class="single-how-works">
@@ -306,13 +312,13 @@
 		<!--works end -->
 
 		<!--explore start -->
-		<section id="explore" class="explore">
+		<!--<section id="explore" class="explore">
 			<div class="container">
 				<div class="section-header">
 					<h2>explore</h2>
 					<p>Explore New place, food, culture around the world and many more</p>
 				</div><!--/.section-header-->
-				<div class="explore-content">
+				<!--<div class="explore-content">
 					<div class="row">
 						<div class=" col-md-4 col-sm-6">
 							<div class="single-explore-item">
@@ -718,12 +724,12 @@
 		<!--explore end -->
 
 		<!--reviews start -->
-		<section id="reviews" class="reviews">
+		<!--<section id="reviews" class="reviews">
 			<div class="section-header">
 				<h2>clients reviews</h2>
 				<p>What our client say about us</p>
 			</div><!--/.section-header-->
-			<div class="reviews-content">
+			<!--<div class="reviews-content">
 				<div class="testimonial-carousel">
 				    <div class="single-testimonial-box">
 						<div class="testimonial-description">
@@ -731,7 +737,7 @@
 								<div class="testimonial-img">
 									<img src="{% static 'assets/images/clients/c1.png'%}" alt="clients">
 								</div><!--/.testimonial-img-->
-								<div class="testimonial-person">
+							<!--	<div class="testimonial-person">
 									<h2>Tom Leakar</h2>
 									<h4>london, UK</h4>
 									<div class="testimonial-person-star">
@@ -742,21 +748,21 @@
 										<i class="fa fa-star"></i>
 									</div>
 								</div><!--/.testimonial-person-->
-							</div><!--/.testimonial-info-->
-							<div class="testimonial-comment">
+							<!--</div><!--/.testimonial-info-->
+							<!--<div class="testimonial-comment">
 								<p>
 									Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis eaque.
 								</p>
 							</div><!--/.testimonial-comment-->
 						</div><!--/.testimonial-description-->
 					</div><!--/.single-testimonial-box-->
-				    <div class="single-testimonial-box">
+				    <!--<div class="single-testimonial-box">
 						<div class="testimonial-description">
 							<div class="testimonial-info">
 								<div class="testimonial-img">
 									<img src="{% static 'assets/images/clients/c2.png'%}" alt="clients">
 								</div><!--/.testimonial-img-->
-								<div class="testimonial-person">
+								<!--<div class="testimonial-person">
 									<h2>monirul islam</h2>
 									<h4>london, UK</h4>
 									<div class="testimonial-person-star">
@@ -767,21 +773,21 @@
 										<i class="fa fa-star"></i>
 									</div>
 								</div><!--/.testimonial-person-->
-							</div><!--/.testimonial-info-->
-							<div class="testimonial-comment">
+							<!--</div><!--/.testimonial-info-->
+							<!--<div class="testimonial-comment">
 								<p>
 									Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis eaque.
 								</p>
 							</div><!--/.testimonial-comment-->
-						</div><!--/.testimonial-description-->
-					</div><!--/.single-testimonial-box-->
-				    <div class="single-testimonial-box">
+						<!--</div><!--/.testimonial-description-->
+					<!--</div><!--/.single-testimonial-box-->
+				    <!--<div class="single-testimonial-box">
 						<div class="testimonial-description">
 							<div class="testimonial-info">
 								<div class="testimonial-img">
 									<img src="{% static 'assets/images/clients/c3.png'%}" alt="clients">
 								</div><!--/.testimonial-img-->
-								<div class="testimonial-person">
+								<!--<div class="testimonial-person">
 									<h2>Shohrab Hossain</h2>
 									<h4>london, UK</h4>
 									<div class="testimonial-person-star">
@@ -792,21 +798,21 @@
 										<i class="fa fa-star"></i>
 									</div>
 								</div><!--/.testimonial-person-->
-							</div><!--/.testimonial-info-->
-							<div class="testimonial-comment">
+							<!--</div><!--/.testimonial-info-->
+							<!--<div class="testimonial-comment">
 								<p>
 									Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis eaque.
 								</p>
 							</div><!--/.testimonial-comment-->
-						</div><!--/.testimonial-description-->
-					</div><!--/.single-testimonial-box-->
-				    <div class="single-testimonial-box">
+						<!--</div><!--/.testimonial-description-->
+					<!--</div><!--/.single-testimonial-box-->
+				    <!--<div class="single-testimonial-box">
 						<div class="testimonial-description">
 							<div class="testimonial-info">
 								<div class="testimonial-img">
 									<img src="{% static 'assets/images/clients/c4.png'%}" alt="clients">
 								</div><!--/.testimonial-img-->
-								<div class="testimonial-person">
+							<!--	<div class="testimonial-person">
 									<h2>Tom Leakar</h2>
 									<h4>london, UK</h4>
 									<div class="testimonial-person-star">
@@ -818,20 +824,20 @@
 									</div>
 								</div><!--/.testimonial-person-->
 							</div><!--/.testimonial-info-->
-							<div class="testimonial-comment">
+						<!--	<div class="testimonial-comment">
 								<p>
 									Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis eaque.
 								</p>
 							</div><!--/.testimonial-comment-->
 						</div><!--/.testimonial-description-->
 					</div><!--/.single-testimonial-box-->
-				    <div class="single-testimonial-box">
+				    <!--<div class="single-testimonial-box">
 						<div class="testimonial-description">
 							<div class="testimonial-info">
 								<div class="testimonial-img">
 									<img src="{% static 'assets/images/clients/c1.png'%}" alt="clients">
 								</div><!--/.testimonial-img-->
-								<div class="testimonial-person">
+								<!--<div class="testimonial-person">
 									<h2>Tom Leakar</h2>
 									<h4>london, UK</h4>
 									<div class="testimonial-person-star">
@@ -843,20 +849,20 @@
 									</div>
 								</div><!--/.testimonial-person-->
 							</div><!--/.testimonial-info-->
-							<div class="testimonial-comment">
+							<!--<div class="testimonial-comment">
 								<p>
 									Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis eaque.
 								</p>
 							</div><!--/.testimonial-comment-->
 						</div><!--/.testimonial-description-->
 					</div><!--/.single-testimonial-box-->
-				    <div class="single-testimonial-box">
+				    <!--<div class="single-testimonial-box">
 						<div class="testimonial-description">
 							<div class="testimonial-info">
 								<div class="testimonial-img">
 									<img src="{% static 'assets/images/clients/c2.png'%}" alt="clients">
 								</div><!--/.testimonial-img-->
-								<div class="testimonial-person">
+							<!--	<div class="testimonial-person">
 									<h2>monirul islam</h2>
 									<h4>london, UK</h4>
 									<div class="testimonial-person-star">
@@ -868,20 +874,20 @@
 									</div>
 								</div><!--/.testimonial-person-->
 							</div><!--/.testimonial-info-->
-							<div class="testimonial-comment">
+							<!--<div class="testimonial-comment">
 								<p>
 									Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis eaque.
 								</p>
 							</div><!--/.testimonial-comment-->
 						</div><!--/.testimonial-description-->
 					</div><!--/.single-testimonial-box-->
-				    <div class="single-testimonial-box">
+				   <!-- <div class="single-testimonial-box">
 						<div class="testimonial-description">
 							<div class="testimonial-info">
 								<div class="testimonial-img">
 									<img src="{% static 'assets/images/clients/c3.png'%}" alt="clients">
 								</div><!--/.testimonial-img-->
-								<div class="testimonial-person">
+								<!--<div class="testimonial-person">
 									<h2>Shohrab Hossain</h2>
 									<h4>london, UK</h4>
 									<div class="testimonial-person-star">
@@ -892,21 +898,21 @@
 										<i class="fa fa-star"></i>
 									</div>
 								</div><!--/.testimonial-person-->
-							</div><!--/.testimonial-info-->
-							<div class="testimonial-comment">
+							<!--</div><!--/.testimonial-info-->
+							<!--<div class="testimonial-comment">
 								<p>
 									Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis eaque.
 								</p>
 							</div><!--/.testimonial-comment-->
 						</div><!--/.testimonial-description-->
 					</div><!--/.single-testimonial-box-->
-				    <div class="single-testimonial-box">
+				    <!--<div class="single-testimonial-box">
 						<div class="testimonial-description">
 							<div class="testimonial-info">
 								<div class="testimonial-img">
 									<img src="{% static 'assets/images/clients/c4.png'%}" alt="clients">
 								</div><!--/.testimonial-img-->
-								<div class="testimonial-person">
+							<!--	<div class="testimonial-person">
 									<h2>Tom Leakar</h2>
 									<h4>london, UK</h4>
 									<div class="testimonial-person-star">
@@ -918,7 +924,7 @@
 									</div>
 								</div><!--/.testimonial-person-->
 							</div><!--/.testimonial-info-->
-							<div class="testimonial-comment">
+							<!--<div class="testimonial-comment">
 								<p>
 									Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis eaque.
 								</p>
@@ -932,7 +938,7 @@
 		<!--reviews end -->
 
 		<!-- statistics strat -->
-		<section id="statistics"  class="statistics">
+		<!--<section id="statistics"  class="statistics">
 			<div class="container">
 				<div class="statistics-counter"> 
 					<div class="col-md-3 col-sm-6">
@@ -940,31 +946,31 @@
 							<div class="statistics-content">
 								<div class="counter">90 </div> <span>K+</span>
 							</div><!--/.statistics-content-->
-							<h3>listings</h3>
+				<!--			<h3>listings</h3>
 						</div><!--/.single-ststistics-box-->
 					</div><!--/.col-->
-					<div class="col-md-3 col-sm-6">
+				<!--	<div class="col-md-3 col-sm-6">
 						<div class="single-ststistics-box">
 							<div class="statistics-content">
 								<div class="counter">40</div> <span>k+</span>
 							</div><!--/.statistics-content-->
-							<h3>listing categories</h3>
+					<!--		<h3>listing categories</h3>
 						</div><!--/.single-ststistics-box-->
-					</div><!--/.col-->
-					<div class="col-md-3 col-sm-6">
+					<!--</div><!--/.col-->
+					<!--<div class="col-md-3 col-sm-6">
 						<div class="single-ststistics-box">
 							<div class="statistics-content">
 								<div class="counter">65</div> <span>k+</span>
 							</div><!--/.statistics-content-->
-							<h3>visitors</h3>
+					<!--		<h3>visitors</h3>
 						</div><!--/.single-ststistics-box-->
 					</div><!--/.col-->
-					<div class="col-md-3 col-sm-6">
+					<!--<div class="col-md-3 col-sm-6">
 						<div class="single-ststistics-box">
 							<div class="statistics-content">
 								<div class="counter">50</div> <span>k+</span>
 							</div><!--/.statistics-content-->
-							<h3>happy clients</h3>
+						<!--	<h3>happy clients</h3>
 						</div><!--/.single-ststistics-box-->
 					</div><!--/.col-->
 				</div><!--/.statistics-counter-->	
@@ -974,13 +980,13 @@
 		<!-- statistics end -->
 
 		<!--blog start -->
-		<section id="blog" class="blog" >
+		<!--<section id="blog" class="blog" >
 			<div class="container">
 				<div class="section-header">
 					<h2>news and articles</h2>
 					<p>Always upto date with our latest News and Articles </p>
 				</div><!--/.section-header-->
-				<div class="blog-content">
+				<!--<div class="blog-content">
 					<div class="row">
 						<div class="col-md-4 col-sm-6">
 							<div class="single-blog-item">
@@ -1028,11 +1034,11 @@
 				</div>
 			</div><!--/.container-->
 			
-		</section><!--/.blog-->
+		<!--</section><!--/.blog-->
 		<!--blog end -->
 
 		<!--subscription strat -->
-		<section id="contact"  class="subscription">
+		<!--<section id="contact"  class="subscription">
 			<div class="container">
 				<div class="subscribe-title text-center">
 					<h2>
@@ -1060,7 +1066,7 @@
 		<!--subscription end -->
 
 		<!--footer start-->
-		<footer id="footer"  class="footer">
+	<!--	<footer id="footer"  class="footer">
 			<div class="container">
 				<div class="footer-menu">
 		           	<div class="row">
@@ -1069,7 +1075,7 @@
 				                <a class="navbar-brand" href="index.html">list<span>race</span></a>
 				            </div><!--/.navbar-header-->
 			           	</div>
-			           	<div class="col-sm-9">
+			        <!--   	<div class="col-sm-9">
 			           		<ul class="footer-menu-item">
 			                    <li class="scroll"><a href="#works">how it works</a></li>
 			                    <li class="scroll"><a href="#explore">explore</a></li>
@@ -1081,14 +1087,14 @@
 			           	</div>
 		           </div>
 				</div>
-				<div class="hm-footer-copyright">
+				<!--<div class="hm-footer-copyright">
 					<div class="row">
 						<div class="col-sm-5">
 							<p>
 								&copy;copyright. designed and developed by <a href="https://www.themesine.com/">themesine</a>
 							</p><!--/p-->
 						</div>
-						<div class="col-sm-7">
+					<!--	<div class="col-sm-7">
 							<div class="footer-social">
 								<span><i class="fa fa-phone"> +1  (222) 777 8888</i></span>
 								<a href="#"><i class="fa fa-facebook"></i></a>	
@@ -1108,6 +1114,7 @@
 				</div>
 				
 			</div><!--/.scroll-Top-->
+		
 			
         </footer><!--/.footer-->
 		<!--footer end-->

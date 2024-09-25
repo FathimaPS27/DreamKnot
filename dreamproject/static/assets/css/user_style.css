@@ -350,6 +350,14 @@ nav.navbar.bootsnav .navbar-toggle i{color: #600508;}
     height:  auto;
     margin-left:  12px;
 }
+.error {
+    color: red;
+    margin-bottom: 10px;
+}
+
+.success {
+    color: green;
+    margin-bottom: 10px;
 
 /*-------------------------------------
         5. List-topuics

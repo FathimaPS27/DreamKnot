@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send RSVP Invitation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4; /* Light gray background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background-color: #ffffff; /* White background for the form */
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 300px; /* Set a fixed width for the form */
+            text-align: left; /* Left-align the text */
+        }
+
+        h1 {
+            color: #4CAF50; /* Green color for the heading */
+            text-align: center; /* Center the heading */
+        }
+
+        label {
+            margin-top: 10px; /* Spacing above labels */
+            display: block; /* Make labels block elements for better spacing */
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="time"] {
+            width: 100%; /* Full width for inputs */
+            padding: 8px;
+            margin-top: 5px; /* Spacing above inputs */
+            border: 1px solid #ccc; /* Border for inputs */
+            border-radius: 5px; /* Rounded corners for inputs */
+        }
+
+        button {
+            background-color: #4CAF50; /* Green button */
+            color: white; /* White text */
+            padding: 10px 15px;
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners for button */
+            cursor: pointer; /* Pointer cursor on hover */
+            display: block; /* Make the button block level */
+            margin: 20px auto 0; /* Center the button */
+            width: 100%; /* Full width for the button */
+        }
+
+        button:hover {
+            background-color: #45a049; /* Darker green on hover */
+        }
+    </style>
+</head>
+<body>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+<div class="navbar">
+    <a href="{% url 'user_home' %}" class="back-home">Dream Knot</a>
+</div>
+    <div class="container">
+        <h1>Send RSVP Invitation</h1>
+        <form method="post">
+            {% csrf_token %}
+            <label for="guest_name">Guest Name:</label>
+            <input type="text" name="guest_name" required>
+
+            <label for="guest_email">Guest Email:</label>
+            <input type="email" name="guest_email" required>
+
+            <label for="wedding_date">Wedding Date:</label>
+            <input type="date" name="wedding_date" required>
+
+            <label for="venue">Venue:</label>
+            <input type="text" name="venue" required>
+
+            <label for="location">Location:</label>
+            <input type="text" name="location" required>
+
+            <label for="time">Time:</label>
+            <input type="time" name="time" required>
+
+            <button type="submit">Send Invitation</button>
+        </form>
+    </div>
+</body>
+</html>

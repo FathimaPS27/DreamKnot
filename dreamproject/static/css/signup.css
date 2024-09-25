@@ -382,4 +382,13 @@ span a:hover {
         left: 50%;
         transform: translateX(-50%);
     }
+    .error {
+        color: red;
+        margin-bottom: 10px;
+    }
+
+    .success {
+        color: green;
+        margin-bottom: 10px;
+    }
 }

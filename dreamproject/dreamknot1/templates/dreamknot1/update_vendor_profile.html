@@ -72,8 +72,14 @@
 
         .navbar a {
             text-decoration: none;
-            color: #6e1c0f;
-            font-weight: bold;
+            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 30px;
+            font-weight: 600;
+            font-family: 'Lucida Handwriting', cursive;
+            transition: background 0.3s ease;
+            padding-top: 20px;
         }
 
        
@@ -86,12 +92,21 @@
     </style>
 </head>
 <body>
+
     <div class="navbar">
-        <a href="{% url 'vendor_home' %}" class="back-home">Back to Home</a>
+        <a href="{% url 'vendor_home' %}" class="back-home">Dream Knot</a>
     </div>
 
     <div class="container">
         <h2>Update Vendor Profile</h2>
+
+        {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 
         <form method="POST" action="{% url 'update_vendor_profile' %}">
             {% csrf_token %}

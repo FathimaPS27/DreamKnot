@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.hashers import make_password, check_password
-from .models import UserSignup, UserProfile, VendorProfile,WeddingTask
+from .models import UserSignup, UserProfile, VendorProfile,WeddingTask,RSVPInvitation
 from django_countries import countries
 from django.utils import timezone
 from django.utils.crypto import get_random_string
@@ -259,7 +259,15 @@ def logout_view(request):
     return redirect('index')
 
 
-# to update user profile
+import re
+from django.shortcuts import redirect, render
+from django.contrib import messages
+from django.utils import timezone
+from django.contrib.auth.hashers import make_password
+from datetime import date
+from .models import UserSignup, UserProfile
+
+# Update user profile
 def update_user_profile(request):
     if not request.session.get('user_id'):
         return redirect('login')
@@ -281,6 +289,11 @@ def update_user_profile(request):
         confirm_password = request.POST.get('confirm_password')
 
         errors = {}
+
+        # Validate email
+        if not re.match(r'^[a-zA-Z0-9_.+-]+@gmail\.com$', email):
+            messages.error(request, "Please enter a valid Gmail address.")
+            errors['email'] = "Invalid Gmail address."
 
         # Validate wedding_date
         if wedding_date:
@@ -350,7 +363,7 @@ def update_user_profile(request):
         'name': user.name,
         'email': user.email,
         'phone': user.phone,
-        'wedding_date': user_profile.wedding_date ,
+        'wedding_date': user_profile.wedding_date,
         'event_held': user_profile.event_held,  # Pre-populate event_held status
         'country': user.country,  # Pre-populate country
         'state': user.state,      # Pre-populate state
@@ -359,6 +372,13 @@ def update_user_profile(request):
     })
 
 
+import re
+from django.shortcuts import redirect, render
+from django.contrib import messages
+from django.contrib.auth.hashers import make_password
+from .models import UserSignup, VendorProfile
+
+# Update vendor profile
 def update_vendor_profile(request):
     if not request.session.get('user_id'):
         return redirect('login')
@@ -382,6 +402,12 @@ def update_vendor_profile(request):
 
         errors = {}
 
+        # Validate email
+        if not re.match(r'^[a-zA-Z0-9_.+-]+@gmail\.com$', email):
+            messages.error(request, "Please enter a valid Gmail address.")
+            errors['email'] = "Invalid Gmail address."
+
+        # Validate other fields
         if not name:
             errors['name'] = 'Name is required.'
         if not phone or not re.match(r'^\+?1?\d{10}$', phone):
@@ -536,3 +562,237 @@ def delete_task(request, task_id):
     task.delete()
     messages.success(request, "Task deleted successfully.")
     return redirect('todo_list')
+
+
+
+
+def send_rsvp_invitation(request):
+    couple_id = request.user.id  # Assuming the logged-in user is the couple
+
+    if request.method == "POST":
+        guest_name = request.POST.get("guest_name")
+        guest_email = request.POST.get("guest_email")
+        wedding_date = request.POST.get("wedding_date")  # You might get this from UserProfile
+        venue = request.POST.get("venue")  # You might get this from UserProfile
+        location = request.POST.get("location")  # You might get this from UserProfile
+        time = request.POST.get("time")  # You might get this from UserProfile
+
+        # Create the RSVP invitation entry
+        invitation = RSVPInvitation.objects.create(
+            couple=request.user,
+            guest_name=guest_name,
+            guest_email=guest_email,
+            wedding_date=wedding_date,
+            venue=venue,
+            location=location,
+            time=time
+        )
+
+        # Generate confirmation links
+        accept_url = request.build_absolute_uri(reverse('rsvp_confirm', args=[invitation.id, 'yes']))
+        decline_url = request.build_absolute_uri(reverse('rsvp_confirm', args=[invitation.id, 'no']))
+
+        # Send email with the confirmation links
+        send_mail(
+            f"Wedding Invitation from {request.user.name}",
+            f"You are invited to the wedding of {request.user.name} on {wedding_date} at {venue}, {location}. "
+            f"The event will start at {time}.\n\n"
+            f"Please confirm your attendance:\n"
+            f"Accept: {accept_url}\n"
+            f"Decline: {decline_url}\n",
+            'noreply@dreamknot.com',  # Your configured email
+            [guest_email],
+            fail_silently=False,
+        )
+
+        return redirect('rsvp_success')
+
+    return render(request, 'dreamknot1/send_rsvp_invitation.html')
+
+def rsvp_confirm(request, invitation_id, response):
+    invitation = get_object_or_404(RSVPInvitation, id=invitation_id)
+
+    if response == 'yes':
+        invitation.is_accepted = True
+    elif response == 'no':
+        invitation.is_accepted = False
+    else:
+        return HttpResponse("Invalid response")
+
+    invitation.save()  # Save the guest's response to the database
+
+    if invitation.is_accepted:
+        message = f"Thank you for confirming! We look forward to seeing you at the wedding."
+    else:
+        message = f"We're sorry you won't be able to attend. Thank you for letting us know."
+
+    return render(request, 'dreamknot1/rsvp_confirmation.html', {'message': message})
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import Service, ServiceImage, VendorProfile, UserSignup
+from django.http import HttpResponse
+
+
+# Service Provider (Vendor) Dashboard Views
+from .models import Service
+
+# Service Provider (Vendor) Dashboard Views
+def vendor_dashboard(request):
+    # Check if the user is logged in
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+
+    # Get the logged-in user
+    user_signup = get_object_or_404(UserSignup, id=user_id)
+
+    # Ensure the user has a 'vendor' role; if not, show an error message or redirect
+    if user_signup.role != 'vendor':
+        return render(request, '404.html')  # Alternatively, redirect to a suitable page
+
+    # Get or create the VendorProfile for the logged-in user
+    vendor_profile, _ = VendorProfile.objects.get_or_create(user=user_signup)
+
+    # Fetch all services related to the vendor
+    services = Service.objects.filter(vendor=vendor_profile)
+
+    # Render the vendor dashboard template
+    return render(request, 'dreamknot1/vendor_dashboard.html', {
+        'vendor_profile': vendor_profile,
+        'services': services  # Pass the services to the template
+    })
+
+def add_service(request):
+    """Vendor can add a new service."""
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+
+    if request.method == "POST":
+        # Ensure the request user is a UserSignup instance
+        user_signup = get_object_or_404(UserSignup, id=user_id)
+
+        # Get or create the vendor profile
+        vendor_profile, created = VendorProfile.objects.get_or_create(user=user_signup)
+
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        price = request.POST.get('price')
+        category = request.POST.get('category')
+
+        # Create the service
+        service = Service.objects.create(
+            vendor=vendor_profile,
+            name=name,
+            description=description,
+            price=price,
+            category=category,
+            availability=True,
+            created_at=timezone.now(),
+        )
+
+        # Handle image uploads
+        if request.FILES.getlist('images'):
+            for image in request.FILES.getlist('images'):
+                ServiceImage.objects.create(service=service, image=image)
+
+        return redirect('vendor_dashboard')
+
+    return render(request, 'dreamknot1/add_service.html')
+
+def edit_service(request, service_id):
+    """Vendor can edit their existing service."""
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+
+    user_signup = get_object_or_404(UserSignup, id=user_id)
+    vendor_profile = get_object_or_404(VendorProfile, user=user_signup)
+
+    # Ensure the service belongs to the current vendor
+    service = get_object_or_404(Service, id=service_id, vendor=vendor_profile)
+    
+    if request.method == "POST":
+        service.name = request.POST.get('name')
+        service.description = request.POST.get('description')
+        service.price = request.POST.get('price')
+        service.category = request.POST.get('category')
+        service.availability = request.POST.get('availability') == 'on'
+        service.save()
+        return redirect('vendor_dashboard')
+
+    context = {'service': service}
+    return render(request, 'dreamknot1/edit_service.html', context)
+
+def delete_service(request, service_id):
+    """Vendor can delete a service."""
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+
+    user_signup = get_object_or_404(UserSignup, id=user_id)
+    vendor_profile = get_object_or_404(VendorProfile, user=user_signup)
+
+    # Ensure the service belongs to the current vendor
+    service = get_object_or_404(Service, id=service_id, vendor=vendor_profile)
+
+    service.delete()
+    return redirect('vendor_dashboard')
+
+# User Views for Viewing and Booking Services
+def services_list(request):
+    """Display all available services to users."""
+    services = Service.objects.filter(availability=True)
+    context = {'services': services}
+    return render(request, 'dreamknot1/services_list.html', context)
+
+def service_detail(request, service_id):
+    """Display details of a selected service."""
+    service = get_object_or_404(Service, id=service_id)
+    service_images = ServiceImage.objects.filter(service=service)
+    
+    context = {
+        'service': service,
+        'service_images': service_images
+    }
+    return render(request, 'dreamknot1/service_detail.html', context)
+
+def add_to_favorites(request, service_id):
+    """Add a service to user's favorites."""
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+
+    service = get_object_or_404(Service, id=service_id)
+    if 'favorites' not in request.session:
+        request.session['favorites'] = []
+    
+    if service_id not in request.session['favorites']:
+        request.session['favorites'].append(service_id)
+        request.session.modified = True
+    
+    return redirect('favorites_list')
+
+def favorites_list(request):
+    """Display user's favorite services."""
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+
+    favorite_service_ids = request.session.get('favorites', [])
+    favorite_services = Service.objects.filter(id__in=favorite_service_ids)
+
+    context = {'favorite_services': favorite_services}
+    return render(request, 'dreamknot1/favorites_list.html', context)
+
+def book_service(request, service_id):
+    """Simulate booking a service (expandable based on your logic)."""
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+
+    service = get_object_or_404(Service, id=service_id)
+    # Logic to handle service booking can be added here
+    return HttpResponse(f"Service '{service.name}' booked successfully!")

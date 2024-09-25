@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Favorite Services</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Your Favorite Services</h1>
+        <div class="row">
+            {% for service in favorites %}
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <img src="{{ service.image.url }}" class="card-img-top" alt="{{ service.name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ service.name }}</h5>
+                        <p class="card-text">{{ service.description }}</p>
+                        <p><strong>Price:</strong> ${{ service.price }}</p>
+                        <a href="{% url 'service_detail' service.id %}" class="btn btn-primary">View Details</a>
+                        <a href="{% url 'book_service' service.id %}" class="btn btn-success">Book Service</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p>No favorite services yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

@@ -126,16 +126,37 @@
             text-align: center;
             margin-bottom: 20px;
         }
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+
+        .success {
+            color: green;
+            margin-bottom: 10px;
+        }
+        .navbar a {
+            text-decoration: none;
+            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 30px;
+            font-weight: 600;
+            font-family: 'Lucida Handwriting', cursive;
+            transition: background 0.3s ease;
+            padding-top: 20px;
+        }
     </style>
 </head>
 <body>
+    
     <div class="container">
         <!-- Sidebar -->
         
         <div class="sidebar">
-        <div class="navbar">
-        <button class="logout-btn" onclick="window.location.href='{% url 'user_home' %}';">BACK</button>
-    </div>
+            <div class="navbar">
+                <a href="{% url 'user_home' %}" class="back-home">Dream Knot</a>
+            </div>   
             <h2>Wedding Planner</h2>
             <ul>
                 <li><a href="#section-6-12">6-12 Months</a></li>
@@ -150,6 +171,17 @@
         <!-- Main Content -->
         <div class="main-content">
             <h1>Wedding Preparation To-Do List</h1>
+            {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+<div class="status-summary">
+    <p>Completed Tasks: {{ completed_count }}</p>
+    <p>Pending Tasks: {{ pending_count }}</p>
+</div>
 
             <!-- 6-12 Months Section -->
             <div id="section-6-12" class="task-section">
