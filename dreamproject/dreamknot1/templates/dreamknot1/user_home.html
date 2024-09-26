@@ -181,6 +181,11 @@
 					<p>
 						manage your upcoming events, keep track of your wedding checklist, and ensure every detail is perfectly taken care of. Let us help you create unforgettable memories and a wedding day you’ll cherish forever. 
 					</p>
+					<a href="{% url 'login' %}" class="btn btn-primary" style="background-color:rgb(51, 14, 14); border-color: rgb(61, 22, 22); padding: 5px 25px 5px 25px; margin-top: 29px;">Explore Services</a>
+
+							
+					
+				
 					{% if time_left %}
     <!--<h2 style="color: #5c0e07; font-family: Lucida Handwriting, cursive; font-size: 10px;">Time until your wedding:</h2>-->
     <p style="font-size: 40px; font-weight: bold; font-family: Didot ,serif; color: #ffffff; background:rgba(30, 28, 29, 0.65)">{{ time_left }}</p>
@@ -196,6 +201,10 @@
 		<div class="profile">
             <p><strong>Wedding Date:</strong> {% if wedding_date %}{{ wedding_date }}{% else %}Not set{% endif %}</p>
         </div>
+
+		
+
+		
 				</div>
 				<!--<div class="welcome-hero-serch-box">
 					<div class="welcome-hero-form">
@@ -1178,13 +1187,13 @@
 		     
         <!--Custom JS-->
         <script src="{% static 'assets/js/custom.js'%}"></script>
+
         <script type="text/javascript">
 			window.history.forward();
 			function noBack() {
 				window.history.forward();
 			}
 		</script>
-		
     </body>
 	
 </html>

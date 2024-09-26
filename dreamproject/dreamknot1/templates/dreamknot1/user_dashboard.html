@@ -38,9 +38,15 @@
             z-index: 100;
         }
         .navbar .brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #ffc107;
+            text-decoration: none;
+            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 30px;
+            font-weight: 600;
+            font-family: 'Lucida Handwriting', cursive;
+            transition: background 0.3s ease;
+            padding-top: 20px;
         }
         .navbar ul {
             display: flex;
@@ -233,12 +239,12 @@
 <body>
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="brand">ServiceHub</div>
+        <div class="brand">Dream Knot</div>
         <ul>
-            <li><a href="#">Dashboard</a></li>
+            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
             <li><a href="#">My Bookings</a></li>
-            <li><a href="#">Favorites</a></li>
-            <li><a href="#">Profile</a></li>
+            <li><a href="3">Favorites</a></li>
+            <li><a href="{% url 'update_user_profile' %}">Profile</li>
             <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
         </ul>
     </nav>
@@ -279,6 +285,7 @@
         <p>&copy; 2024 ServiceHub. All rights reserved.</p>
         <p>Designed with ♥ by <a href="https://yourwebsite.com">Your Company</a></p>
     </footer>
-
+ 
+    </script>
 </body>
 </html>

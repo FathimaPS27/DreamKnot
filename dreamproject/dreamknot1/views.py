@@ -677,11 +677,22 @@ from .models import VendorProfile, Service, ServiceImage, Booking, Rating, Favor
 # Vendor Dashboard - Add and Manage Services
 def vendor_dashboard(request):
     vendor_name = request.session.get('user_name', 'vendor')
+
     try:
         vendor_instance = VendorProfile.objects.get(user__name=vendor_name)
-    except VendorProfile.DoesNotExist:
-        return HttpResponse("Vendor not found.")
+        
+        # Check if required profile details are missing
+        if not vendor_instance.company_name or not vendor_instance.bio or not vendor_instance.business_category:
+            # Add a flash message and redirect to the profile update page
+            messages.warning(request, "Please complete your profile before accessing the dashboard.")
+            return redirect('update_vendor_profile')  # Redirect to the profile update page
 
+    except VendorProfile.DoesNotExist:
+        # Add a flash message and redirect to the profile update page if profile does not exist
+        messages.warning(request, "Vendor not found. Please add your details in the profile first.")
+        return redirect('update_vendor_profile')
+
+    # Fetch services related to the vendor
     services = Service.objects.filter(vendor=vendor_instance)
 
     # Initialize empty error dictionary and variables to retain form data
