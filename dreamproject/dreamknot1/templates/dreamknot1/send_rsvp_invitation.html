@@ -11,10 +11,53 @@
             margin: 0;
             padding: 0;
             display: flex;
+            flex-direction: column; /* Align items in a column */
             justify-content: center;
             align-items: center;
             height: 100vh;
             color: #333;
+        }
+
+        .navbar {
+            background-color: white; /* White background for navbar */
+            padding: 10px 20px; /* Padding for the navbar */
+            width: 100%; /* Full width for the navbar */
+            position: fixed; /* Fix the navbar at the top */
+            top: 0; /* Align to the top */
+            left: 0; /* Align to the left */
+            z-index: 1000; /* Ensure it stays on top */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for navbar */
+            display: flex; /* Use flexbox */
+            justify-content: space-between; /* Space between items */
+            align-items: center; /* Center items vertically */
+        }
+
+        .navbar .logo {
+            text-decoration: none;
+            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 30px;
+            font-weight: 600;
+            font-family: 'Lucida Handwriting', cursive;
+            transition: background 0.3s ease;
+            padding: 20px 0; /* Spacing around the logo */
+        }
+
+        .navbar .links {
+            display: flex; /* Use flexbox for links */
+        }
+
+        .navbar a {
+            color: maroon; /* Maroon text color for links */
+            text-decoration: none; /* Remove underline from links */
+            padding: 10px 15px; /* Padding for links */
+            display: inline-block; /* Align links inline */
+            transition: color 0.3s; /* Transition for color change */
+        }
+
+        .navbar a:hover {
+            color: #ffc107; /* Change color on hover */
         }
 
         .container {
@@ -24,10 +67,12 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             width: 300px; /* Set a fixed width for the form */
             text-align: left; /* Left-align the text */
+            margin-top: 200px; /* Space below navbar */
+            
         }
 
         h1 {
-            color: #4CAF50; /* Green color for the heading */
+            color: maroon; /* Green color for the heading */
             text-align: center; /* Center the heading */
         }
 
@@ -48,7 +93,7 @@
         }
 
         button {
-            background-color: #4CAF50; /* Green button */
+            background-color: maroon; /* Green button */
             color: white; /* White text */
             padding: 10px 15px;
             border: none; /* No border */
@@ -60,21 +105,27 @@
         }
 
         button:hover {
-            background-color: #45a049; /* Darker green on hover */
+            background-color: #3d0606; /* Darker green on hover */
         }
     </style>
 </head>
 <body>
+    <div class="navbar">
+        <div class="logo">Dream Knot</div>
+        <div class="links">
+            <a href="{% url 'user_home' %}">Home</a>
+            <a href="{% url 'logout' %}">Logout&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+    </div>
+
     {% if messages %}
     <ul class="messages">
         {% for message in messages %}
             <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
         {% endfor %}
     </ul>
-{% endif %}
-<div class="navbar">
-    <a href="{% url 'user_home' %}" class="back-home">Dream Knot</a>
-</div>
+    {% endif %}
+
     <div class="container">
         <h1>Send RSVP Invitation</h1>
         <form method="post">

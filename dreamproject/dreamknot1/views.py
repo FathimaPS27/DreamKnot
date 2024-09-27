@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.hashers import make_password, check_password
-from .models import UserSignup, UserProfile, VendorProfile,WeddingTask,RSVPInvitation, VendorImage
+from .models import UserSignup, UserProfile, VendorProfile,WeddingTask,RSVPInvitation, VendorImage,Favorite, Booking
 from django_countries import countries
 from django.utils import timezone
 from django.utils.crypto import get_random_string
@@ -809,7 +809,15 @@ def delete_service(request, service_id):
     # User Dashboard - View Vendor Services, Book, Rate, Favorite
 def user_dashboard(request):
     user_name = request.session.get('user_name', 'user')
-    services = Service.objects.filter(status=1, availability=True)  # Only active services
+    
+    # Fetch the user from session
+    try:
+        user = UserSignup.objects.get(name=user_name)
+    except UserSignup.DoesNotExist:
+        return HttpResponse("User not found.")
+
+    # Fetch active services
+    services = Service.objects.filter(status=1, availability=True)
 
     # Filter services by category
     if 'category' in request.GET:
@@ -827,10 +835,19 @@ def user_dashboard(request):
         vendor = service.vendor
         vendor_services.setdefault(vendor, []).append(service)
 
+    # Fetch favorite services for the logged-in user
+    favorites = Favorite.objects.filter(user=user).select_related('service')
+    
+    # Fetch bookings for the logged-in user
+    bookings = Booking.objects.filter(user=user).select_related('service')
+
     return render(request, 'dreamknot1/user_dashboard.html', {
         'vendor_services': vendor_services,
         'user_name': user_name,
+        'favorites': favorites,
+        'bookings': bookings,
     })
+
 def vendor_services(request, vendor_id):
     vendor = get_object_or_404(VendorProfile, id=vendor_id)
     services = Service.objects.filter(vendor=vendor, status=1, availability=True)
@@ -892,6 +909,22 @@ def add_to_favorite(request, service_id):
     # Add to favorites
     favorite, created = Favorite.objects.get_or_create(user=user, service=service)
     return redirect('user_dashboard')
+
+def favorite_list(request):
+    # Get the current logged-in user from the session (based on 'user_name')
+    user_name = request.session.get('user_name')
+    
+    if not user_name:
+        return HttpResponse("User is not logged in.")
+
+    # Fetch the user object based on the username
+    user = get_object_or_404(UserSignup, name=user_name)
+
+    # Fetch all favorite services for this user
+    favorites = Favorite.objects.filter(user=user).select_related('service')
+
+    # Pass the favorites to the template for display
+    return render(request, 'dreamknot1/favorite_list.html', {'favorites': favorites})
 
 # Rate a Service
 def rate_service(request, service_id):

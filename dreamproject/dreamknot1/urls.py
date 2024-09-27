@@ -33,6 +33,7 @@ urlpatterns = [
     path('user/book/<int:service_id>/', views.book_service, name='book_service'),
     path('user/favorite/<int:service_id>/', views.add_to_favorite, name='add_to_favorite'),
     path('user/rate/<int:service_id>/', views.rate_service, name='rate_service'),
+    path('user/favorites/', views.favorite_list, name='favorite_list')
 
 ]
 if settings.DEBUG:

@@ -133,10 +133,6 @@
 			            <div class="collapse navbar-collapse menu-ui-design" id="navbar-menu">
 			                <ul class="nav navbar-nav navbar-right" data-in="fadeInDown" data-out="fadeOutUp">
 			                    <li class=" scroll active"><a href="#home">home</a></li>
-			                    <li class="scroll"><a href="#works">how it works</a></li>
-			                    <li class="scroll"><a href="#explore">explore</a></li>
-			                    <li class="scroll"><a href="#reviews">review</a></li>
-			                    <li class="scroll"><a href="#blog">blog</a></li>
 			                    <li class="scroll"><a href="#contact">contact</a></li>
 								<li class="login"><a href="login">Login</a></li>
 								<li class="signup"><a href="signup">Signup</a></li>
@@ -152,15 +148,16 @@
 
 		</section><!-- /.top-area-->
 		<!-- top-area End -->
-		{% if messages %}
+		
+		<!--welcome-hero start -->
+		<section id="home" class="welcome-hero">
+			{% if messages %}
 		<ul class="messages">
 			{% for message in messages %}
 				<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
 			{% endfor %}
 		</ul>
 	{% endif %}
-		<!--welcome-hero start -->
-		<section id="home" class="welcome-hero">
 			<div class="container">
 				<div class="welcome-hero-txt">
 					<h2>Plan, Smile, Celebrate with <br> Dream Knot! </h2>

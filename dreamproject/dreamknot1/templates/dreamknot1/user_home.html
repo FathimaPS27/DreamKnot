@@ -134,7 +134,7 @@
 			            <div class="collapse navbar-collapse menu-ui-design" id="navbar-menu">
 							<ul class="nav navbar-nav navbar-right" data-in="fadeInDown" data-out="fadeOutUp">
 								<li class="scroll active"><a href="#home">home</a></li>
-								<li class="scroll"><a href="#works">how it works</a></li>
+								
 								<li class="serv"><a href="{% url 'user_dashboard' %}">SERVICE Page</a></li>
 								<li class="todo"><a href="{% url 'send_rsvp_invitation' %}">RSVP INVITATION</a></li>
 								<li class="todo"><a href="{% url 'todo_list' %}">todo_list</a></li>
@@ -176,12 +176,12 @@
 	{% endif %}
 
 				<div class="welcome-hero-txt">
-					<h3 style="font-size: 35px; font-family: Comic Sans MS , cursive; color: rgba(45, 56, 6, 1); padding-bottom:30px;"><i>Welcome, {{ name }}!</i></h3>
+					<h3 style="font-size: 35px; font-family: Comic Sans MS , cursive; color: white; padding-bottom:30px;"><i>Welcome, {{ name }}!</i></h3>
 					<h2>best place to find and explore <br> that all you need </h2>
 					<p>
 						manage your upcoming events, keep track of your wedding checklist, and ensure every detail is perfectly taken care of. Let us help you create unforgettable memories and a wedding day you’ll cherish forever. 
 					</p>
-					<a href="{% url 'login' %}" class="btn btn-primary" style="background-color:rgb(51, 14, 14); border-color: rgb(61, 22, 22); padding: 5px 25px 5px 25px; margin-top: 29px;">Explore Services</a>
+					<a href="{% url 'user_dashboard' %}" class="btn btn-primary" style="background-color:orange; border-color: rgb(61, 22, 22); padding: 5px 25px 5px 25px; margin-top: 29px;">Explore Services</a>
 
 							
 					

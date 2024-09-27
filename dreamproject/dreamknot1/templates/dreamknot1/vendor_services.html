@@ -6,8 +6,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ vendor.company_name }} Services</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #343a40;
+        }
+        .card {
+            height: 100%; /* Makes all cards the same height */
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: scale(1.05);
+        }
+        .card-img-top {
+            height: 250px; /* Increased height for images */
+            object-fit: cover; /* Ensures the image covers the area */
+        }
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Distributes space between elements */
+        }
+        .btn-primary {
+            background-color: maroon;
+            border: none;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #3d0606;
+        }
+        .no-services {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 20px;
+            color: #6c757d;
+        }
+        /* Navbar Styles */
+        .navbar {
+            background-color: white;
+            color: white;
+        }
+        .navbar .logo {
+            
+            text-decoration: none;
+            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 30px;
+            font-weight: 600;
+            font-family: 'Lucida Handwriting', cursive;
+            transition: background 0.3s ease;
+            padding-top: 20px;
+
+        }
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+        }
+        .navbar ul li {
+            margin: 0 15px;
+        }
+        .navbar ul li a {
+            color: maroon;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        .navbar ul li a:hover {
+            color:#3d0606;
+        }
+    </style>
 </head>
 <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">Dream Knot</div>
+            <!--<div class="logo">{{ vendor.company_name }}</div>-->
+            <ul>
+                <li><a href="{% url 'user_home' %}">Home</a></li>
+                <li><a href="{% url 'user_dashboard' %}">Services</a></li>
+                <li><a href="{% url 'update_user_profile' %}">Contact</a></li>
+                <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
     <div class="container mt-5">
         <h2>{{ vendor.company_name }}'s Services</h2>
         <div class="row">
@@ -18,15 +108,19 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ service.name }}</h5>
                         <p class="card-text">{{ service.description }}</p>
-                        <p class="card-text">Price: ${{ service.price }}</p>
+                        <p class="card-text"><strong>Price:</strong> ${{ service.price }}</p>
                         <a href="{% url 'service_detail' service.id %}" class="btn btn-primary">More Details</a>
                     </div>
                 </div>
             </div>
             {% empty %}
-            <p>No services available for this vendor.</p>
+            <p class="no-services">No services available for this vendor.</p>
             {% endfor %}
         </div>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

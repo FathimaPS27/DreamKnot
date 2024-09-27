@@ -1,43 +1,31 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
-    <!-- Font Awesome for Icons -->
+    <!-- External CSS and Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css">
     <style>
         /* Global Styles */
-        * {
+        body {
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-        }
-        a {
-            text-decoration: none;
-            color: inherit;
+            background-color: #f4f4f9;
         }
 
         /* Navbar */
         .navbar {
+            background-color: white;
+            color: white;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            background-color: #343a40;
-            color: white;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 100;
         }
-        .navbar .brand {
+        .navbar .logo {
             text-decoration: none;
             background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
             -webkit-background-clip: text;
@@ -47,109 +35,72 @@
             font-family: 'Lucida Handwriting', cursive;
             transition: background 0.3s ease;
             padding-top: 20px;
+
         }
         .navbar ul {
-            display: flex;
             list-style: none;
+            display: flex;
+            margin: 0;
         }
         .navbar ul li {
-            margin-left: 20px;
+            margin: 0 15px;
         }
         .navbar ul li a {
-            color: white;
-            font-weight: 500;
+            color: maroon;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s;
         }
         .navbar ul li a:hover {
             color: #ffc107;
         }
 
-        /* Hero Section */
-        .hero {
-            background-image: url("{% static 'images/hero-image.jpg' %}");
-            background-size: cover;
-            background-position: center;
-            height: 80vh;
+        /* Header */
+        header {
+            padding: 20px;
+            background-color: #343a40;
             color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 20px;
-            position: relative;
-        }
-        .hero::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .hero-content {
-            z-index: 1;
-            max-width: 700px;
-        }
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-        }
-        .hero p {
-            font-size: 1.25rem;
-            margin-bottom: 30px;
-        }
-        .btn-cta {
-            background-color: #ffc107;
-            color: #343a40;
-            padding: 12px 30px;
-            font-size: 1rem;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-cta:hover {
-            background-color: #e0a800;
-        }
-
-        /* Main Section */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 100px 20px 50px;
-        }
-        h2 {
-            font-size: 2.5rem;
-            margin-bottom: 30px;
             text-align: center;
         }
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
 
-        /* Search and Filter */
-        .search-filter {
+        /* Search and Filter Section */
+        .filter-section {
+            padding: 20px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            background-color: white;
-            padding: 20px;
+            background-color: #fff;
+            margin: 20px 0;
+            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 50px;
         }
-        .search-filter input, .search-filter select, .search-filter button {
+        .filter-section form {
+            display: flex;
+            align-items: center;
+        }
+        .filter-section label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .filter-section select, .filter-section input {
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
             border-radius: 5px;
+            margin-right: 10px;
             font-size: 1rem;
         }
-        .search-filter input, .search-filter select {
-            flex: 1;
-            margin-right: 10px;
-        }
-        .search-filter button {
-            background-color: #007bff;
+        .filter-section button {
+            padding: 10px 15px;
+            background-color: #3d0606;
             color: white;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
         }
-        .search-filter button:hover {
+        .filter-section button:hover {
             background-color: #0056b3;
         }
 
@@ -158,134 +109,168 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
+            padding-top: 50px;
         }
         .card {
-            background-color: white;
+            background-color: #fff;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             overflow: hidden;
             transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #ddd; /* Added border for more definition */
         }
         .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.2);
+            transform: translateY(-5px); /* Slight lift effect on hover */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
         }
         .card img {
             width: 100%;
             height: 200px;
             object-fit: cover;
+            border-bottom: 2px solid #ffc107; /* Bottom border for visual separation */
         }
         .card .card-body {
             padding: 20px;
+            text-align: center; /* Center-align text for better aesthetics */
         }
         .card-title {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             margin-bottom: 10px;
+            color: #333; /* Darker color for better contrast */
         }
         .card-text {
             font-size: 1rem;
             color: #6c757d;
             margin-bottom: 20px;
         }
+        .card-footer {
+            display: flex;
+            justify-content: center; /* Center the button */
+        }
         .btn-primary {
             display: inline-block;
-            background-color: #007bff;
+            background-color: #3d0606;
             color: white;
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             text-align: center;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.3s; /* Added transition for button */
         }
         .btn-primary:hover {
-            background-color: #0056b3;
+            background-color: #e0a800;
+            transform: translateY(-2px); /* Slight lift effect on button hover */
         }
 
         /* Footer */
         .footer {
-            background-color: #343a40;
+            background-color: #333;
             color: white;
+            padding: 15px;
             text-align: center;
-            padding: 20px;
-            margin-top: 50px;
+            margin-top:50px;
         }
         .footer a {
             color: #ffc107;
+            text-decoration: none;
         }
         .footer a:hover {
             text-decoration: underline;
         }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .search-filter {
-                flex-direction: column;
-            }
-            .search-filter input, .search-filter select, .search-filter button {
-                margin-bottom: 10px;
-            }
-            .search-filter input, .search-filter select {
-                margin-right: 0;
-            }
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            .hero p {
-                font-size: 1rem;
-            }
-        }
     </style>
 </head>
 <body>
+
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="brand">Dream Knot</div>
+        <div class="logo">Dream Knot</div>
         <ul>
             <li><a href="{% url 'user_home' %}">Dashboard</a></li>
             <li><a href="#">My Bookings</a></li>
-            <li><a href="3">Favorites</a></li>
-            <li><a href="{% url 'update_user_profile' %}">Profile</li>
+            <li><a href="{% url 'favorite_list' %}">My Favorite Services</a>            </li>
+            <li><a href="{% url 'update_user_profile' %}">Profile</a></li>
+
             <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
         </ul>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero" style="background-image: url('{% static 'images/hero-image.jpg' %}');">
-        <div class="hero-content">
-            <h1>Welcome, {{ user_name }}</h1>
-            <p>Find the best services tailored just for you.</p>
-            <a href="#services" class="btn-cta">Explore Services</a>
-        </div>
-    </section>
+    <!-- Header -->
+    <header>
+        <h1>Find the best services tailored just for you.</h1>
+    </header>
 
-    <!-- Main Content -->
-    <div class="card-container">
-        {% for vendor, services in vendor_services.items %}
-        <div class="card">
-            <!-- Vendor Image with dynamic check for images -->
-            {% if vendor.images.all %}
-                <img src="{{ vendor.images.first.image.url }}" alt="{{ vendor.company_name }}" style="display: block; width: 100%; height: 200px; object-fit: cover;">
-            {% else %}
-                <img src="{% static 'images/vendor-placeholder.jpg' %}" alt="Vendor Placeholder" style="display: block; width: 100%; height: 200px; object-fit: cover;">
-            {% endif %}
-            
-            <div class="card-body">
-                <h5 class="card-title">{{ vendor.company_name }}</h5>
-                <p class="card-text">{{ vendor.bio|default:"No bio available." }}</p>
-                <p class="card-text"><strong>Location:</strong> {{ vendor.user.place|default:"Not specified" }}</p>
-                <a href="{% url 'vendor_services' vendor.id %}" class="btn-primary">View Services</a>
-            </div>
-        </div>
-        {% empty %}
-        <p>No services available.</p>
-        {% endfor %}
+    <!-- Filter and Search Section -->
+    <div class="filter-section">
+        <form method="GET">
+            <label for="category">Filter by Category:</label>
+            <select name="category" id="category">
+                <option value="">All Categories</option>
+                <option value="Photography">Photography</option>
+                <option value="Catering">Catering</option>
+                <option value="Venue">Venue</option>
+                <option value="Decoration">Decoration</option>
+                <option value="Music">Music</option>
+                <option value="Makeup">Makeup</option>
+                <option value="Florists">Florists</option>
+                <option value="Transportation">Transportation</option>
+                <option value="Wedding Planners">Wedding Planners</option>
+                <option value="Bakeries">Bakeries</option>
+                <option value="Videography">Videography</option>
+                <option value="Invitations">Invitations</option>
+                <option value="Rentals">Rentals</option>
+                <option value="Bride and Groom Wear">Bride and Groom Wear</option>
+                <option value="Mehndi">Mehndi</option>
+                <option value="Jewelry and Accessories">Jewelry and Accessories</option>
+                <option value="Food">Food</option>
+            </select>
+            <button type="submit">Filter</button>
+        </form>
+
+        <form method="GET">
+            <label for="search">Search Services:</label>
+            <input type="text" name="search" id="search" placeholder="Search...">
+            <button type="submit">Search</button>
+        </form>
     </div>
+
+    <!-- Service Listings with Cards -->
+    <div class="service-section">
+        <center>
+            <h2 style="color: maroon;">Available Services</h2>
+        </center>
+        <div class="card-container">
+            {% if vendor_services %}
+                {% for vendor, services in vendor_services.items %}
+                    <div class="card">
+                        <!-- Vendor Image with dynamic check for images -->
+                        {% if vendor.images.all %}
+                            <img src="{{ vendor.images.first.image.url }}" alt="{{ vendor.company_name }}">
+                        {% else %}
+                            <img src="{% static 'images/vendor-placeholder.jpg' %}" alt="Vendor Placeholder">
+                        {% endif %}
+        
+                        <div class="card-body">
+                            <h3 class="card-title">{{ vendor.company_name }}</h3>
+                            <p class="card-text">{{ vendor.bio|default:"No bio available." }}</p>
+
+                            <p class="card-text"><i class="fas fa-map-marker-alt"></i> {{ vendor.user.place|default:"Not specified" }}</p>
+                            <div class="card-footer">
+                                <a href="{% url 'vendor_services' vendor.id %}" class="btn-primary">View Services</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No services available at the moment.</p>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="footer">
-        <p>&copy; 2024 ServiceHub. All rights reserved.</p>
-        <p>Designed with ♥ by <a href="https://yourwebsite.com">Your Company</a></p>
+        <p>&copy; 2024 Dream Knot. All rights reserved.</p>
+        <p>Designed by <a href="#">Dream Knot</a></p>
     </footer>
- 
-    </script>
+
 </body>
 </html>
