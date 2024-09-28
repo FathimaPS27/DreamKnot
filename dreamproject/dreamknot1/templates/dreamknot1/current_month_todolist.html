@@ -1,0 +1,317 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Current Month's Task List</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* Internal CSS for styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar .logo {
+            text-decoration: none;
+            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 30px;
+            font-weight: 600;
+            font-family: 'Lucida Handwriting', cursive;
+            transition: background 0.3s ease;
+            padding-top: 20px;
+        }
+
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+        }
+
+        .navbar ul li {
+            margin: 0 15px;
+        }
+
+        .navbar ul li a {
+            color: maroon;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+
+        .navbar ul li a:hover {
+            color: #ffc107;
+        }
+
+        h1, h2 {
+            color: #343a40;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: .375rem;
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .task-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            position: relative;
+            display: flex;
+            justify-content: space-between; /* Space between task info and button */
+            align-items: center; /* Align items vertically */
+        }
+
+        .completed {
+            background-color: #d4edda; /* Light green background for completed tasks */
+            border-color: #c3e6cb; /* Light green border */
+        }
+
+        .delayed-task {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn.completed {
+            background-color: #28a745; /* Green for completed tasks */
+            color: white; /* Ensure text remains readable */
+        }
+        
+            /* Task Overview Section */
+            .task-overview {
+                background-color: #F5EBEB; /* Background color */
+                border-radius: 10px; /* Rounded corners */
+                padding: 10px; /* Padding around the content */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
+                margin-bottom: 10px; /* Space below the section */
+                margin-top: 10px;
+            }
+        
+            .task-overview h4 {
+                margin: 0 0 10px 0; /* Spacing below the heading */
+                color: #343a40; /* Darker text color */
+                font-weight: bold;
+            }
+        
+            .task-overview h5 {
+                margin: 0 0 5px 0; /* Adjust margin for clarity */
+                color: #343a40; /* Darker text color */
+                font-size: 1rem;
+            }
+        
+            .task-overview .total-count {
+                font-weight: bold; /* Bold text for counts */
+                font-size: 1.5rem; /* Larger font size for count display */
+                color: #28a745; /* Green color for completed counts */
+            }
+        
+            .task-overview .total-count.pending {
+                color: #dc3545; /* Red color for pending counts */
+            }
+        
+            .task-overview .row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+        
+            /* Responsive adjustments */
+            @media (max-width: 768px) {
+                .task-overview .row {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+        
+                .task-overview .col-md-6 {
+                    width: 100%;
+                    text-align: left;
+                }
+            }
+      
+        
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Dream Knot</div>
+        <ul>
+            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
+            <li><a href="#">My Bookings</a></li>
+            <li><a href="{% url 'favorite_list' %}">My Favorite Services</a></li>
+            <li><a href="{% url 'todo_list' %}">All Tasks</a></li>
+            <li><a href="{% url 'current_month_todolist' %}">Current Month</a></li>
+            <li><a href="{% url 'update_user_profile' %}">Profile</a></li>
+            <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
+        </ul>
+    </nav>
+ <!-- Overall Task Summary -->
+<div class="task-overview mb-4">
+    <h4>Overall Tasks Summary</h4>
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Total Overall Completed Tasks: <span class="total-count">{{ overall_completed_count }}</span></h5>
+        </div>
+        <div class="col-md-6 text-right">
+            <h5>Total Overall Pending Tasks: <span class="total-count">{{ overall_pending_count }}</span></h5>
+        </div>
+        
+    </div>
+    
+</div>
+
+<!-- Task Overview Section -->
+<div class="task-overview mb-4">
+    <h4>Current Month's Task Overview</h4>
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Total Pending Tasks for Current Month: <span class="total-count">{{ pending_count }}</span></h5>
+        </div>
+        <div class="col-md-6 text-right">
+            <h5>Total Completed Tasks for Current Month: <span class="total-count">{{ completed_count }}</span></h5>
+        </div>
+    </div>
+</div>
+    <div class="container">
+        <h1>Task List for {{ wedding_month }}</h1>
+
+        {% if delayed_tasks.exists %}
+        <div class="alert alert-warning">
+            You have delayed tasks that need your attention!
+        </div>
+        {% endif %}
+
+        <p><strong>Today's Date:</strong> {{ today }}</p>
+
+        <h2>Pending Tasks</h2>
+        {% if pending_tasks %}
+            <ul>
+                {% for task in pending_tasks %}
+                    <li class="task-item" id="task-{{ task.id }}">
+                        <div>
+                            <strong>{{ task.title }}</strong>
+                            <p>{{ task.description }}</p>
+                        </div>
+                        <!-- Update Task Status -->
+                        <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm" style="background-color: maroon; color: white;" onclick="markAsCompleted(event, {{ task.id }})">Mark as Completed</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No pending tasks for this month.</p>
+        {% endif %}
+
+        <h2>Completed Tasks</h2>
+        {% if completed_tasks %}
+            <ul>
+                {% for task in completed_tasks %}
+                    <li class="task-item completed">
+                        <div>
+                            <strong>{{ task.title }}</strong>
+                            <p>{{ task.description }}</p>
+                            
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No tasks have been completed yet.</p>
+        {% endif %}
+
+        <h2>Delayed Tasks</h2>
+        {% if delayed_tasks %}
+            <ul>
+                {% for task in delayed_tasks %}
+                    <li class="task-item delayed-task">
+                        <div>
+                            <strong>{{ task.title }}</strong>
+                            <p>{{ task.description }}</p>
+                        </div>
+                        <form method="POST" action="{% url 'update_task' task.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning"style="background-color: maroon; color: white;">Mark as Complete</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No delayed tasks.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        function markAsCompleted(event, taskId) {
+            // Prevent form submission for immediate UI update
+            event.preventDefault();
+
+            // Change button color
+            const button = event.target;
+            button.classList.add('completed'); // Add completed class for color change
+
+            // Update the task status in the backend (optional - here for illustration)
+            const form = button.closest('form');
+            form.submit(); // Proceed with form submission to update task status
+        }
+    </script>
+</body>
+</html>

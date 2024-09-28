@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Task</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        /* Navbar */
+        .navbar {
+            background-color: white;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar .logo {
+            text-decoration: none;
+            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 30px;
+            font-weight: 600;
+            font-family: 'Lucida Handwriting', cursive;
+            transition: background 0.3s ease;
+            padding-top: 20px;
+
+        }
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+        }
+        .navbar ul li {
+            margin: 0 15px;
+        }
+        .navbar ul li a {
+            color: maroon;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        .navbar ul li a:hover {
+            color: #ffc107;
+        }
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #28a745;
+        }
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo">Dream Knot</div>
+    <ul>
+        <li><a href="{% url 'user_home' %}">Dashboard</a></li>
+        <li><a href="#">My Bookings</a></li>
+        <li><a href="{% url 'favorite_list' %}">My Favorite Services</a>            </li>
+        <li><a href="{% url 'current_month_todolist' %}"> Current Tasks</a></li>
+        <li><a href="{% url 'todo_list' %}"> All Tasks</a></li>
+        <li><a href="{% url 'update_user_profile' %}">Profile</a></li>
+
+        <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
+    </ul>
+</nav>
+<!-- Container for Add Task Form -->
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Add New Task</h1>
+
+    <!-- Alerts -->
+    {% if messages %}
+        <div class="alert alert-info">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    <!-- Add Task Form -->
+    <form method="post" action="{% url 'add_task' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="task_description" class="form-label">Task Description</label>
+            <input type="text" name="task_description" id="task_description" class="form-control" placeholder="Describe your task" required>
+        </div>
+        <div class="mb-3">
+            <label for="task_month" class="form-label">Task Month</label>
+            <select name="task_month" id="task_month" class="form-select" required>
+                <option value="" disabled selected>Select when this task needs to be done</option>
+                <option value="6-12">6-12 Months Before</option>
+                <option value="4-6">4-6 Months Before</option>
+                <option value="2-4">2-4 Months Before</option>
+                <option value="1-2">1-2 Months Before</option>
+                <option value="1-2 Weeks">1-2 Weeks Before</option>
+                <option value="Final Days">Final Days</option>
+                <option value="Wedding Day">Wedding Day</option>
+            </select>
+        </div>
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-success">Add Task</button>
+            <a href="{% url 'todo_list' %}" class="btn btn-secondary">Back to Task List</a>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

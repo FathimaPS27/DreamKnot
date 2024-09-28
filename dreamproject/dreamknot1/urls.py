@@ -17,10 +17,11 @@ urlpatterns = [
 
     path('forgotpass/', views.forgotpass, name='forgotpass'),
     path('reset_password/<str:token>/', views.reset_password, name='reset_password'),
-    path('todo/', views.todo_list, name='todo_list'),
-    path('add_task/', views.add_task, name='add_task'),
-    path('update_task/<int:task_id>/', views.update_task, name='update_task'),
-    path('delete_task/<int:task_id>/', views.delete_task, name='delete_task'),
+    path('todo/current/', views.current_month_todolist, name='current_month_todolist'),  # Current month tasks page
+    path('todo/', views.todo_list, name='todo_list'),  # Full to-do list page
+    path('todo/add/', views.add_task, name='add_task'),
+    path('todo/update/<int:task_id>/', views.update_task, name='update_task'),
+    path('todo/delete/<int:task_id>/', views.delete_task, name='delete_task'),
     path('send-invitation/', views.send_rsvp_invitation, name='send_rsvp_invitation'),
     path('rsvp/<int:invitation_id>/<str:response>/', views.rsvp_confirm, name='rsvp_confirm'),
 

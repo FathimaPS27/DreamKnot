@@ -1,6 +1,9 @@
 from django.db import models
 from django_countries.fields import CountryField
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.mail import send_mail
 
 class UserSignup(models.Model):
     name = models.CharField(max_length=100)
@@ -56,13 +59,14 @@ TASK_MONTH_CHOICES = [
 ]
 
 class WeddingTask(models.Model):
-    user = models.ForeignKey(UserSignup, on_delete=models.CASCADE)
+    user = models.ForeignKey('UserSignup', on_delete=models.CASCADE, null=True, blank=True)  # Link to UserSignup
     description = models.CharField(max_length=255)
     task_month = models.CharField(max_length=20, choices=TASK_MONTH_CHOICES, default='6-12')
     is_completed = models.BooleanField(default=False)
-    is_predefined = models.BooleanField(default=False)  # To differentiate predefined vs custom tasks
+    is_predefined = models.BooleanField(default=False)  # True if predefined task
     created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)  # Auto-updates on every save
+    updated_at = models.DateTimeField(auto_now=True)
+    status = models.BooleanField(default=True)
 
     def __str__(self):
         return self.description
@@ -154,3 +158,41 @@ class VendorImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.vendor_profile.company_name or self.vendor_profile.user.name}"
+    
+
+
+# Signal to assign predefined tasks to new users
+@receiver(post_save, sender=UserSignup)
+def assign_predefined_tasks(sender, instance, created, **kwargs):
+    if created and instance.role == 'user':  # Only for new users
+        predefined_tasks = WeddingTask.objects.filter(is_predefined=True, user=None)
+        for task in predefined_tasks:
+            # Create a copy of each predefined task for the new user
+            WeddingTask.objects.create(
+                user=instance,
+                description=task.description,
+                task_month=task.task_month,
+                is_predefined=False,  # Mark as user-specific now
+            )
+
+
+# Signal to notify users about task updates
+@receiver(post_save, sender=WeddingTask)
+def notify_user_task_status(sender, instance, created, **kwargs):
+    if instance.user:
+        if created:
+            message = f"A new task '{instance.description}' has been added to your wedding plan."
+        else:
+            if instance.is_completed:
+                message = f"Congratulations! You've completed the task '{instance.description}'."
+            else:
+                message = f"You have an upcoming task: '{instance.description}'. Don't forget to complete it."
+
+        # Sending an email notification
+        send_mail(
+            'Task Notification',
+            message,
+            'from@example.com',
+            [instance.user.email],
+            fail_silently=False,
+        )

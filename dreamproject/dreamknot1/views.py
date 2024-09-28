@@ -526,44 +526,165 @@ def update_vendor_profile(request):
         'countries': countries,
     })
 
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.utils import timezone
+from datetime import timedelta
+from .models import WeddingTask, UserSignup, UserProfile
+from django.db.models import Q
+from datetime import timedelta, date
+
+
+def current_month_todolist(request):
+    # Check if the user is logged in
+    user_id = request.session.get('user_id')
+    if not user_id:
+        messages.error(request, "You must be logged in to view your tasks.")
+        return redirect('login')
+
+    # Get the user instance
+    user_instance = get_object_or_404(UserSignup, id=user_id)
+    user_profile = get_object_or_404(UserProfile, user=user_instance)
+
+    # Check if the wedding date is set
+    if not user_profile.wedding_date:
+        messages.warning(request, "Please set your wedding date to view tasks.")
+        return redirect('profile_update')
+
+    # Get the current date and wedding date
+    today = timezone.now().date()
+    wedding_date = user_profile.wedding_date
+
+    # Calculate remaining days until the wedding
+    remaining_days = (wedding_date - today).days
+
+    # Determine which task range to filter based on remaining days
+    if remaining_days > 180:  # More than 6 months left
+        current_month = '6-12'
+    elif 120 < remaining_days <= 180:  # 4-6 months left
+        current_month = '4-6'
+    elif 60 < remaining_days <= 120:  # 2-4 months left
+        current_month = '2-4'
+    elif 30 < remaining_days <= 60:  # 1-2 months left
+        current_month = '1-2'
+    elif 14 < remaining_days <= 30:  # 1-2 weeks left
+        current_month = '1-2 Weeks'
+    else:  # Final days
+        current_month = 'Final Days'
+
+    # Fetch user-specific tasks
+    user_tasks = WeddingTask.objects.filter(user=user_instance, task_month=current_month)
+
+    # Fetch predefined tasks (tasks that are not tied to a specific user)
+    predefined_tasks = WeddingTask.objects.filter(user=None, task_month=current_month)
+
+    # Combine both user-specific and predefined tasks
+    all_tasks = user_tasks | predefined_tasks
+
+    # Separate pending and completed tasks
+    pending_tasks = all_tasks.filter(is_completed=False)
+    completed_tasks = all_tasks.filter(is_completed=True)
+
+    # Calculate completed and pending task counts for display
+    completed_count = completed_tasks.count()
+    pending_count = pending_tasks.count()
+
+    # Overall counts for all tasks (not just the current month)
+    overall_completed_count = WeddingTask.objects.filter(user=user_instance, is_completed=True).count() + WeddingTask.objects.filter(user=None, is_completed=True).count()
+    overall_pending_count = WeddingTask.objects.filter(user=user_instance, is_completed=False).count() + WeddingTask.objects.filter(user=None, is_completed=False).count()
+
+    # Rendering the template with the current month's tasks
+    return render(request, 'dreamknot1/current_month_todolist.html', {
+        'pending_tasks': pending_tasks,  # Tasks that are still pending
+        'completed_tasks': completed_tasks,  # Tasks that are completed
+        'wedding_month': current_month,  # The current task month
+        'today': today,  # Today's date
+        'completed_count': completed_count,  # Count of completed tasks for the month
+        'pending_count': pending_count,  # Count of pending tasks for the month
+        'overall_completed_count': overall_completed_count,  # Total completed tasks overall
+        'overall_pending_count': overall_pending_count,  # Total pending tasks overall
+    })
+
+
+
 def todo_list(request):
     # Check if the user is logged in
     user_id = request.session.get('user_id')
     if not user_id:
         messages.error(request, "You must be logged in to view your tasks.")
-        return redirect('login')  # Redirect to login page if not logged in
+        return redirect('login')
 
     # Get the user instance
     user_instance = get_object_or_404(UserSignup, id=user_id)
 
-    # Query the tasks associated with the current user
-    user_tasks = WeddingTask.objects.filter(user=user_instance).order_by('-created_at')
+    # Get the user profile instance
+    user_profile = get_object_or_404(UserProfile, user=user_instance)
 
-    # Calculate completed and pending task counts
-    completed_count = user_tasks.filter(is_completed=True).count()
-    pending_count = user_tasks.filter(is_completed=False).count()
+    # Check if the wedding date is set
+    if not user_profile.wedding_date:
+        messages.warning(request, "Please set your wedding date to view tasks.")
+        return redirect('profile_update')
 
-    # Render tasks with counts
+    # Calculate the number of days until the wedding date
+    remaining_days = (user_profile.wedding_date - timezone.now().date()).days
+
+    # Fetch all tasks for the user and predefined tasks
+    user_tasks = WeddingTask.objects.filter(user=user_instance)
+    predefined_tasks = WeddingTask.objects.filter(user=None)
+
+    # Combine user tasks and predefined tasks
+    tasks = user_tasks | predefined_tasks
+
+    # Filter tasks based on months left (but still show past tasks)
+    current_tasks = tasks.filter(
+        Q(task_month='6-12', is_completed=False) & Q(user=user_instance) if remaining_days > 180 else
+        Q(task_month='4-6', is_completed=False) & Q(user=user_instance) if 120 < remaining_days <= 180 else
+        Q(task_month='2-4', is_completed=False) & Q(user=user_instance) if 60 < remaining_days <= 120 else
+        Q(task_month='1-2', is_completed=False) & Q(user=user_instance) if 30 < remaining_days <= 60 else
+        Q(task_month='1-2 Weeks', is_completed=False) & Q(user=user_instance) if 14 < remaining_days <= 30 else
+        Q(task_month='Final Days', is_completed=False) & Q(user=user_instance)
+    )
+ 
+    # Allow access to past tasks
+    past_tasks = tasks.filter(is_completed=True)
+
+    # Calculate completed and pending task counts (for user-specific tasks only)
+    completed_count = tasks.filter(is_completed=True).count()
+    pending_count = tasks.filter(is_completed=False).count()
+
     return render(request, 'dreamknot1/todo_list.html', {
-        'tasks': user_tasks,
+        'tasks': tasks,  # All tasks (including past)
+        'current_tasks': current_tasks,  # Current tasks based on months left
+        'past_tasks': past_tasks,  # Past tasks that were completed
         'completed_count': completed_count,
         'pending_count': pending_count,
     })
-
 def add_task(request):
-    # Check if the user is logged in
     user_id = request.session.get('user_id')
     if not user_id:
         messages.error(request, "You must be logged in to add a task.")
         return redirect('login')
 
+    user_instance = get_object_or_404(UserSignup, id=user_id)
+
+    # Get the user profile instance
+    user_profile = get_object_or_404(UserProfile, user=user_instance)
+
+    if not user_profile.wedding_date:
+        messages.error(request, "Please set your wedding date first.")
+        return redirect('set_wedding_date')
+
     if request.method == 'POST':
         task_description = request.POST.get('task_description')
         task_month = request.POST.get('task_month')
-        
-        if task_description:  # Ensure the task description is not empty
-            user_instance = get_object_or_404(UserSignup, id=user_id)
-            WeddingTask.objects.create(user=user_instance, description=task_description, task_month=task_month)
+
+        if task_description:
+            WeddingTask.objects.create(
+                user=user_instance,
+                description=task_description,
+                task_month=task_month
+            )
             messages.success(request, "Task added successfully.")
             return redirect('todo_list')
         else:
@@ -572,13 +693,11 @@ def add_task(request):
     return render(request, 'dreamknot1/add_task.html')
 
 def update_task(request, task_id):
-    # Check if the user is logged in
     user_id = request.session.get('user_id')
     if not user_id:
         messages.error(request, "You must be logged in to update a task.")
         return redirect('login')
 
-    # Get the task and ensure it belongs to the logged-in user
     task = get_object_or_404(WeddingTask, id=task_id, user__id=user_id)
 
     if request.method == 'POST':
@@ -589,21 +708,28 @@ def update_task(request, task_id):
 
     return render(request, 'dreamknot1/update_task.html', {'task': task})
 
+
 def delete_task(request, task_id):
-    # Check if the user is logged in
     user_id = request.session.get('user_id')
     if not user_id:
         messages.error(request, "You must be logged in to delete a task.")
         return redirect('login')
 
-    # Get the task and ensure it belongs to the logged-in user
-    task = get_object_or_404(WeddingTask, id=task_id, user__id=user_id)
-    
+    task = get_object_or_404(WeddingTask, id=task_id)
+
+    # Prevent deletion of predefined tasks
+    if task.user is None:  # Predefined tasks have user=None
+        messages.error(request, "Predefined tasks cannot be deleted.")
+        return redirect('todo_list')
+
+    # Only allow deletion of user-added tasks
+    if task.user_id != user_id:
+        messages.error(request, "You can only delete your own tasks.")
+        return redirect('todo_list')
+
     task.delete()
     messages.success(request, "Task deleted successfully.")
     return redirect('todo_list')
-
-
 
 
 def send_rsvp_invitation(request):
