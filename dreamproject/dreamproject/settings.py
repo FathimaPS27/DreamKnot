@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'dreamproject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',  # Set the database backend to MySQL
-        'NAME': 'dreamknot',          # Name of your database
+        'NAME': 'new_dreamknot',          # Name of your database
         'USER': 'root',          # Your MySQL username
         'PASSWORD': '',  # Your MySQL password
         'HOST': 'localhost',          # Set to 'localhost' or the IP address of your MySQL server

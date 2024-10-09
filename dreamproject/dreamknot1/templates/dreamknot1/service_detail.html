@@ -77,10 +77,12 @@
                 <li><a href="{% url 'user_home' %}">Home</a></li>
                 <li><a href="{% url 'user_dashboard' %}">Services</a></li>
                 <li><a href="{% url 'update_user_profile' %}">Contact</a></li>
+
                 <li><a href="{% url 'logout' %}">Logout</a></li>
             </ul>
         </div>
     </nav>
+    
     {% if messages %}
     <div class="alert alert-danger">
         {% for message in messages %}

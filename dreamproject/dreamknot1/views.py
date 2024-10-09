@@ -183,39 +183,50 @@ def signup(request):
     return render(request, 'dreamknot1/signup.html', context)
 
 # for login
+from django.contrib.auth.hashers import check_password
+from django.shortcuts import redirect, render
+from django.contrib import messages
+from .models import UserSignup
 
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-        
+
         try:
-            # Find user by email
             user = UserSignup.objects.get(email=email)
-            
-            # Check if the password is correct
+            print("User found:", user.name)
+            print("User Status:", user.status)  # Debugging
+
+            if not user.status:
+                messages.error(request, "Your account is deactivated. Please contact the admin.")
+                print("Deactivated user attempted to log in.") 
+                return redirect('login')
+
             if check_password(password, user.password):
-                # Log the user in by setting session data
                 request.session['user_id'] = user.id
                 request.session['user_role'] = user.role
                 request.session['user_name'] = user.name
                 
                 messages.success(request, "Login successful!")
                 if user.role == 'admin':
-                    return redirect('/admin')
+                    return redirect('admin_dashboard')
                 elif user.role == 'vendor':
                     return redirect('vendor_home')
                 else:
                     return redirect('user_home')
             else:
                 messages.error(request, "Invalid email or password.")
+                print("Incorrect password for user:", user.name)  # Debugging
                 return redirect('login')
 
         except UserSignup.DoesNotExist:
             messages.error(request, "Invalid email or password.")
+            print("User not found for email:", email)  # Debugging
             return redirect('login')
 
     return render(request, 'dreamknot1/login.html')
+
 #vendor image delete
 def delete_vendor_image(request, image_id):
     if not request.session.get('user_id'):
@@ -506,7 +517,7 @@ def update_vendor_profile(request):
             VendorImage.objects.create(
                 vendor_profile=vendor_profile,
                 image=image,
-                status=True  # You can set status based on your requirements
+                venimg_status=True  # You can set status based on your requirements
             )
 
         messages.success(request, "Vendor profile updated successfully!")
@@ -732,73 +743,135 @@ def delete_task(request, task_id):
     return redirect('todo_list')
 
 
+import csv
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import RSVPInvitation
+from django.core.mail import send_mail
+from django.urls import reverse
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from django.utils.encoding import smart_str
+from io import TextIOWrapper
+from django.core.exceptions import ValidationError
+
 def send_rsvp_invitation(request):
-    couple_id = request.user.id  # Assuming the logged-in user is the couple
+    if not request.session.get('user_id'):
+        return redirect('login')
+
+    couple = UserSignup.objects.get(id=request.session['user_id'])
 
     if request.method == "POST":
-        guest_name = request.POST.get("guest_name")
-        guest_email = request.POST.get("guest_email")
-        wedding_date = request.POST.get("wedding_date")  # You might get this from UserProfile
-        venue = request.POST.get("venue")  # You might get this from UserProfile
-        location = request.POST.get("location")  # You might get this from UserProfile
-        time = request.POST.get("time")  # You might get this from UserProfile
+        guest_names = request.POST.getlist("guest_name[]")  # Expecting multiple names
+        guest_emails = request.POST.getlist("guest_email[]")  # Expecting multiple emails
+        event_name = request.POST.get("event_name")
+        event_date = request.POST.get("event_date")
+        event_time = request.POST.get("event_time")
+        event_description = request.POST.get("event_description")
+        venue = request.POST.get("venue")
+        venue_address = request.POST.get("venue_address")
+        phone_number = request.POST.get("phone_number")
+        location_link = request.POST.get("location_link")
+        csv_file = request.FILES.get('guest_upload')  # Uploaded CSV file
 
-        # Create the RSVP invitation entry
-        invitation = RSVPInvitation.objects.create(
-            couple=request.user,
-            guest_name=guest_name,
-            guest_email=guest_email,
-            wedding_date=wedding_date,
-            venue=venue,
-            location=location,
-            time=time
-        )
+        if csv_file:
+            try:
+                # Handle CSV file upload for bulk guest entries
+                csv_file = TextIOWrapper(csv_file.file, encoding='utf-8')
+                reader = csv.reader(csv_file)
 
-        # Generate confirmation links
-        accept_url = request.build_absolute_uri(reverse('rsvp_confirm', args=[invitation.id, 'yes']))
-        decline_url = request.build_absolute_uri(reverse('rsvp_confirm', args=[invitation.id, 'no']))
+                for row in reader:
+                    if len(row) != 2:
+                        raise ValidationError("Invalid CSV format. Each row must have exactly two columns: Name and Email.")
 
-        # Send email with the confirmation links
-        send_mail(
-            f"Wedding Invitation from {request.user.name}",
-            f"You are invited to the wedding of {request.user.name} on {wedding_date} at {venue}, {location}. "
-            f"The event will start at {time}.\n\n"
-            f"Please confirm your attendance:\n"
-            f"Accept: {accept_url}\n"
-            f"Decline: {decline_url}\n",
-            'noreply@dreamknot.com',  # Your configured email
-            [guest_email],
-            fail_silently=False,
-        )
+                    guest_name, guest_email = row
+                    # Create and send the invitation for each guest in CSV
+                    send_invitation(couple, event_name, event_date, event_time, event_description,
+                                    venue, venue_address, phone_number, location_link, guest_name, guest_email)
 
+            except ValidationError as e:
+                messages.error(request, str(e))
+                return redirect('send_rsvp_invitation')
+
+            except Exception as e:
+                messages.error(request, 'Error processing CSV file. Please ensure the format is correct.')
+                return redirect('send_rsvp_invitation')
+
+        # Handle manual guest entry from the form
+        for guest_name, guest_email in zip(guest_names, guest_emails):
+            send_invitation(couple, event_name, event_date, event_time, event_description,
+                            venue, venue_address, phone_number, location_link, guest_name, guest_email)
+
+        messages.success(request, 'Invitations sent successfully to all guests!')
         return redirect('rsvp_success')
 
     return render(request, 'dreamknot1/send_rsvp_invitation.html')
 
-def rsvp_confirm(request, invitation_id, response):
-    invitation = get_object_or_404(RSVPInvitation, id=invitation_id)
 
-    if response == 'yes':
-        invitation.is_accepted = True
-    elif response == 'no':
-        invitation.is_accepted = False
-    else:
-        return HttpResponse("Invalid response")
+def send_invitation(couple, event_name, event_date, event_time, event_description, venue, venue_address, phone_number, location_link, guest_name, guest_email):
+    """
+    Helper function to create the invitation entry and send an email.
+    """
+    # Create the RSVP invitation entry
+    invitation = RSVPInvitation.objects.create(
+        couple=couple,
+        couple_name=couple.name,
+        event_name=event_name,
+        guest_name=guest_name,
+        guest_email=guest_email,
+        event_date=event_date,
+        event_time=event_time,
+        event_description=event_description,
+        venue=venue,
+        venue_address=venue_address,
+        phone_number=phone_number,
+        location_link=location_link,
+    )
 
-    invitation.save()  # Save the guest's response to the database
+    # Prepare the HTML email content
+    html_message = render_to_string('dreamknot1/email_invitation.html', {
+        'couple_name': couple.name,
+        'event_name': event_name,
+        'event_date': event_date,
+        'event_time': event_time,
+        'event_description': event_description,
+        'venue': venue,
+        'venue_address': venue_address,
+        'phone_number': phone_number,
+        'location_link': location_link,
+        'guest_name': guest_name,  # Customize the email for each guest
+    })
 
-    if invitation.is_accepted:
-        message = f"Thank you for confirming! We look forward to seeing you at the wedding."
-    else:
-        message = f"We're sorry you won't be able to attend. Thank you for letting us know."
+    # Send the HTML email to each guest
+    send_mail(
+        f"Invitation to {event_name} from {couple.name}",
+        '',
+        'noreply@dreamknot.com',
+        [guest_email],
+        html_message=html_message,
+        fail_silently=False,
+    )
 
-    return render(request, 'dreamknot1/rsvp_confirmation.html', {'message': message})
 
+def invitation_list(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+
+    couple = UserSignup.objects.get(id=request.session['user_id'])
+    invitations = RSVPInvitation.objects.filter(couple=couple)
+
+    return render(request, 'dreamknot1/invitation_list.html', {'invitations': invitations})
+
+
+def rsvp_success(request):
+    return render(request, 'dreamknot1/rsvp_success.html')
 
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.http import HttpResponse
 from .models import VendorProfile, Service, ServiceImage, Booking, Rating, Favorite
+
+
 
 # Vendor Dashboard - Add and Manage Services
 def vendor_dashboard(request):
@@ -1069,4 +1142,106 @@ def rate_service(request, service_id):
         return redirect('user_dashboard')
 
     return render(request, 'dreamknot1/rate_service.html', {'service': service})
+
+
+
+
+
+
+from django.shortcuts import render, redirect
+from django.shortcuts import render, get_object_or_404, redirect
+from django.core.paginator import Paginator
+# from django.contrib.auth.decorators import login_required
+from .models import Service, UserSignup
+
+# Admin Dashboard View (restricted to superusers)
+def admin_dashboard(request):
+        return render(request, 'dreamknot1/admin_dashboard.html')
+
+
+from django.shortcuts import render
+from .models import UserSignup
+
+def view_users(request):
+    role_filter = request.GET.get('role', 'user')  # Default to 'user' if no filter is applied
+
+    if role_filter == 'vendor':
+        users = UserSignup.objects.filter(role='vendor')
+    else:
+        users = UserSignup.objects.filter(role='user')
+
+    context = {
+        'users': users,
+        'role_filter': role_filter,
+    }
+    return render(request, 'dreamknot1/view_users.html', context)
+
+from django.shortcuts import redirect, get_object_or_404
+from .models import UserSignup
+from django.contrib import messages
+
+def toggle_user_status(request, user_id):
+    # Fetch the user by ID
+    user = get_object_or_404(UserSignup, id=user_id)
+    
+    # Toggle the user's status
+    user.status = not user.status
+    user.save()
+    
+    # Add a success message
+    if user.status:
+        messages.success(request, f"{user.name} has been activated.")
+    else:
+        messages.success(request, f"{user.name} has been deactivated.")
+    
+    # Redirect to the same page or the users list
+    return redirect('view_users')
+
+
+
+
+# View Venues (restricted to admin users)
+
+def view_venues(request):
+    if request.user.role == 'admin':
+        venues = Service.objects.all()
+        paginator = Paginator(venues, 10)  # Show 10 venues per page
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context = {
+            'venues': page_obj,  # Passing paginated venues
+            'is_paginated': True if paginator.num_pages > 1 else False,
+            'page_obj': page_obj
+        }
+        return render(request, 'view_venues.html', context)
+    else:
+        return redirect('login')
+
+# Edit Venue (restricted to admin users)
+
+def edit_venue(request, id):
+    if request.user.role == 'admin':
+        venue = get_object_or_404(Service, id=id)
+        if request.method == 'POST':
+            venue.name = request.POST['name']
+            venue.location = request.POST['location']
+            venue.capacity = request.POST['capacity']
+            venue.price = request.POST['price']
+            venue.availability = request.POST.get('availability', False)
+            venue.save()
+            return redirect('view_venues')
+        return render(request, 'edit_venue.html', {'venue': venue})
+    else:
+        return redirect('login')
+
+# Delete Venue (restricted to admin users)
+
+def delete_venue(request, id):
+    if request.user.role == 'admin':
+        venue = get_object_or_404(Service, id=id)
+        venue.delete()
+        return redirect('view_venues')
+    else:
+        return redirect('login')
 

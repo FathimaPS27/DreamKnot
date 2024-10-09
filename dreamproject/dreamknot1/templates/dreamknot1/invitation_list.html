@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP Invitations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        h2 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h2>RSVP Invitations</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Guest Name</th>
+                <th>Event Name</th>
+                <th>Event Date</th>
+                <th>Venue</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invitation in invitations %}
+            <tr>
+                <td>{{ invitation.guest_name }}</td>
+                <td>{{ invitation.event_name }}</td>
+                <td>{{ invitation.event_date }}</td>
+                <td>{{ invitation.venue }}</td>
+                <td>Sent</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

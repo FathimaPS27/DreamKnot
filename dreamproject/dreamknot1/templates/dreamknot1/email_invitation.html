@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP Invitation</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            background-color: #f2f2f2;
+            color: #333;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 40px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            background-color: #fff; /* Fallback solid color */
+            background-image: url('https://www.drevio.com/wp-content/uploads/2020/01/Gold-Wedding-Invitation-Set-Printable.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+        h1 {
+            color: #400721; /* Pink color for headings */
+            font-size: 2.5em;
+            margin: 0;
+            text-align: center;
+        }
+        h2 {
+            font-size: 1.5em;
+            color: #555;
+            text-align: center;
+            margin-top: 5px;
+        }
+        p {
+            line-height: 1.5;
+            font-size: 1.1em;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #777;
+            text-align: center;
+        }
+        .details {
+            margin-top: 20px;
+            border-top: 2px solid #400721;
+            padding-top: 20px;
+        }
+        .link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #400721;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .link:hover {
+            background-color: #400721; /* Darker shade on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ event_name }}</h1>
+        <h2>You're Invited!</h2>
+        <p>Dear {{ guest_name }},</p>
+        <p>We are thrilled to invite you to the {{ event_name }} of <strong>{{ couple_name }}</strong>!</p>
+        
+        <div class="details">
+            <p><strong>Date:</strong> {{ event_date }}<br>
+               <strong>Time:</strong> {{ event_time }}<br>
+               <strong>Venue:</strong> {{ venue }}<br>
+               <strong>Address:</strong> {{ venue_address }}<br>
+               <strong>Description:</strong> {{ event_description }}</p>
+        </div>
+
+        <p>If you have any questions, feel free to reach out at <strong>{{ phone_number }}</strong>.</p>
+        <p>Find the location <a class="link" href="{{ location_link }}">here</a>.</p>
+        <p>We hope to see you there!</p>
+
+        <div class="footer">
+            <p>Best regards,<br>{{ couple_name }}</p>
+        </div>
+    </div>
+</body>
+</html>

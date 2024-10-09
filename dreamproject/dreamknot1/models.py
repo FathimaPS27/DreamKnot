@@ -5,13 +5,16 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 
+from django_countries.fields import CountryField
+from django.db import models
+
 class UserSignup(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=100)
     country = CountryField() 
-    state = models.CharField(max_length=100)  
-    place = models.CharField(max_length=100)  
+    state = models.CharField(max_length=100)
+    place = models.CharField(max_length=100)
     phone = models.CharField(max_length=15)
     role = models.CharField(max_length=10, choices=[('vendor', 'Vendor'), ('user', 'User')])  
     reset_token = models.CharField(max_length=100, blank=True, null=True)
@@ -19,9 +22,17 @@ class UserSignup(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.BooleanField(default=True)
+    
+    # Field to indicate if the user is a superuser
+    is_super = models.BooleanField(default=False)  # True if user is a superuser, False otherwise
 
     def __str__(self):
         return self.name
+
+    # Custom method to check if the user is a superuser
+    def is_superuser(self):
+        return self.is_super
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(UserSignup, on_delete=models.CASCADE)
@@ -29,7 +40,7 @@ class UserProfile(models.Model):
     event_held = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    status = models.BooleanField(default=True)
+    up_status = models.BooleanField(default=True)
 
     def __str__(self):
         return self.user.name
@@ -41,7 +52,7 @@ class VendorProfile(models.Model):
     bio = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    status = models.BooleanField(default=True)
+    vp_status = models.BooleanField(default=True)
 
     def __str__(self):
         return self.company_name if self.company_name else self.user.name
@@ -66,23 +77,29 @@ class WeddingTask(models.Model):
     is_predefined = models.BooleanField(default=False)  # True if predefined task
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    status = models.BooleanField(default=True)
+    wt_status = models.BooleanField(default=True)
 
     def __str__(self):
         return self.description
     
 
-
 class RSVPInvitation(models.Model):
     couple = models.ForeignKey(UserSignup, on_delete=models.CASCADE)
+    couple_name = models.CharField(max_length=255)  # Couple's name
+    event_name = models.CharField(max_length=255)   # Event name
     guest_name = models.CharField(max_length=255)
     guest_email = models.EmailField()
-    wedding_date = models.DateField()
+    event_date = models.DateField()               # Event date
+    event_time = models.TimeField()                 # Event time
+    event_description = models.TextField(blank=True, null=True)  # Optional event description
     venue = models.CharField(max_length=255)
-    location = models.CharField(max_length=255)
-    time = models.TimeField()
-    is_accepted = models.BooleanField(null=True, blank=True)  # Will be True for attending, False for not attending, None if no response yet
+    venue_address = models.CharField(max_length=255)  # Venue address
+    phone_number = models.CharField(max_length=15)  # Contact number
+    location_link = models.URLField(blank=True, null=True)  # Location link
+    number_attending = models.PositiveIntegerField(null=True, blank=True)  # Allows guests to input number of attendees
+    is_accepted = models.BooleanField(null=True, blank=True)  # Response status
     created_at = models.DateTimeField(auto_now_add=True)
+    rsvp_status = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.guest_name} - RSVP for {self.couple.name}"
@@ -98,6 +115,7 @@ class Service(models.Model):
     status = models.IntegerField(default=1, choices=[(0, 'Inactive'), (1, 'Active')])
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    
 
     def __str__(self):
         return self.name
@@ -106,7 +124,7 @@ class Service(models.Model):
 class ServiceImage(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='service_images/')
-    status = models.IntegerField(default=1, choices=[(0, 'Inactive'), (1, 'Active')])
+    ing_status = models.IntegerField(default=1, choices=[(0, 'Inactive'), (1, 'Active')])
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -117,7 +135,7 @@ class Rating(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='ratings')
     user = models.ForeignKey(UserSignup, on_delete=models.CASCADE)
     rating = models.IntegerField()
-    status = models.IntegerField(default=1, choices=[(0, 'Inactive'), (1, 'Active')])
+    rat_status = models.IntegerField(default=1, choices=[(0, 'Inactive'), (1, 'Active')])
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -134,7 +152,7 @@ class Booking(models.Model):
     event_date = models.DateField()
     event_address = models.CharField(max_length=255, blank=True, null=True)  # Optional event address
 
-    status = models.IntegerField(default=0, choices=[(0, 'Pending'), (1, 'Confirmed'), (2, 'Completed'), (3, 'Canceled')])
+    book_status = models.IntegerField(default=0, choices=[(0, 'Pending'), (1, 'Confirmed'), (2, 'Completed'), (3, 'Canceled')])
 
     def __str__(self):
         return f"{self.user.username} booked {self.service.name} on {self.event_date}"
@@ -143,7 +161,7 @@ class Booking(models.Model):
 class Favorite(models.Model):
     user = models.ForeignKey(UserSignup, on_delete=models.CASCADE)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
-
+    fav_status = models.BooleanField(default=True)
     class Meta:
         unique_together = ('user', 'service')
 
@@ -154,7 +172,7 @@ class VendorImage(models.Model):
     vendor_profile = models.ForeignKey(VendorProfile, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='vendor_images/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    status = models.BooleanField(default=True)  # Status field (0 for inactive, 1 for active)
+    venimg_status = models.BooleanField(default=True)  # Status field (0 for inactive, 1 for active)
 
     def __str__(self):
         return f"Image for {self.vendor_profile.company_name or self.vendor_profile.user.name}"

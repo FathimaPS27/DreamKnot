@@ -15,6 +15,24 @@ urlpatterns = [
     path('vendor/profile/', views.update_vendor_profile, name='update_vendor_profile'),
     path('vendor/image/delete/<int:image_id>/',views.delete_vendor_image, name='delete_vendor_image'),
 
+    #admin
+    path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('view-users/', views.view_users, name='view_users'),
+    path('toggle_status/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'),
+
+    
+
+    path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
+
+
+
+    # path('view_venues/', views.view_venues, name='view_venues'),
+    # path('edit_venue/<int:id>/', views.edit_venue, name='edit_venue'),
+    # path('delete_venue/<int:id>/', views.delete_venue, name='delete_venue'),
+    # path('view_bookings/', views.view_bookings, name='view_bookings'),
+    # path('view_vendors/', views.view_vendors, name='view_vendors'),   
+    # path('admin_logout/', views.admin_logout, name='admin_logout'),
+
     path('forgotpass/', views.forgotpass, name='forgotpass'),
     path('reset_password/<str:token>/', views.reset_password, name='reset_password'),
     path('todo/current/', views.current_month_todolist, name='current_month_todolist'),  # Current month tasks page
@@ -22,8 +40,10 @@ urlpatterns = [
     path('todo/add/', views.add_task, name='add_task'),
     path('todo/update/<int:task_id>/', views.update_task, name='update_task'),
     path('todo/delete/<int:task_id>/', views.delete_task, name='delete_task'),
+    
     path('send-invitation/', views.send_rsvp_invitation, name='send_rsvp_invitation'),
-    path('rsvp/<int:invitation_id>/<str:response>/', views.rsvp_confirm, name='rsvp_confirm'),
+    path('invitations/', views.invitation_list, name='invitation_list'),
+    path('rsvp-success/', views.rsvp_success, name='rsvp_success'),
 
     path('vendor/', views.vendor_dashboard, name='vendor_dashboard'),
     path('vendor/delete_service/<int:service_id>/', views.delete_service, name='delete_service'),
