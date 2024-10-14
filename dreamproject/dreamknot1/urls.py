@@ -1,13 +1,15 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
-from .views import login_view, signup,logout_view
+from .views import login_view, signup,verify_email, logout_view
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('accounts/', include('allauth.urls')),  # Add this for allauth
     path('login/', login_view, name='login'),
     path('signup/', signup, name='signup'),
+    path('verify-email/<str:verification_code>/', verify_email, name='verify_email'),
     path('logout/', logout_view, name='logout'),
     path('user_home/', views.user_home, name='user_home'),
     path('vendor_home/', views.vendor_home, name='vendor_home'),
@@ -22,7 +24,7 @@ urlpatterns = [
 
     
 
-    path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
+
 
 
 
@@ -51,10 +53,21 @@ urlpatterns = [
     path('user/', views.user_dashboard, name='user_dashboard'),
     path('vendor_services/<int:vendor_id>/', views.vendor_services, name='vendor_services'),
     path('service_detail/<int:service_id>/', views.service_detail, name='service_detail'), 
+    path('vendor/approve-booking/<int:booking_id>/', views.vendor_approve_booking, name='vendor_approve_booking'),
+    path('vendor/calendar/<int:service_id>/', views.booking_calendar_view, name='booking_calendar'),
+
+
+
+    path('service/<int:service_id>/calendar/', views.booking_calendar_view, name='booking_calendar'),
+    path('get-booking-slots/<int:service_id>/', views.get_booking_slots, name='get_booking_slots'),
+    path('submit-booking/<int:service_id>/', views.submit_booking, name='submit_booking'),
+   
+   
     path('user/book/<int:service_id>/', views.book_service, name='book_service'),
     path('user/favorite/<int:service_id>/', views.add_to_favorite, name='add_to_favorite'),
     path('user/rate/<int:service_id>/', views.rate_service, name='rate_service'),
-    path('user/favorites/', views.favorite_list, name='favorite_list')
+    path('user/favorites/', views.favorite_list, name='favorite_list'),
+    path('user/bookings/', views.user_booking_details, name='user_booking_details'),
 
 ]
 if settings.DEBUG:

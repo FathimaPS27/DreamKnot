@@ -27,11 +27,21 @@
             height: 250px; /* Increased height for images */
             object-fit: cover; /* Ensures the image covers the area */
         }
+        /* Styling for the service description paragraphs */
+.card-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #6c757d; /* Light gray text for the description */
+    margin-bottom: 10px;
+    text-align: justify; /* Align text for a clean look */
+}
+
         .card-body {
             display: flex;
             flex-direction: column;
             justify-content: space-between; /* Distributes space between elements */
         }
+        
         .btn-primary {
             background-color: maroon;
             border: none;
@@ -107,8 +117,8 @@
                     <img src="{{ service.images.first.image.url }}" alt="{{ service.name }}" class="card-img-top">
                     <div class="card-body">
                         <h5 class="card-title">{{ service.name }}</h5>
-                        <p class="card-text">{{ service.description }}</p>
-                        <p class="card-text"><strong>Price:</strong> ${{ service.price }}</p>
+                        <p class="card-text">{{ service.description|linebreaksbr }}</p>
+                        <p class="card-text"><strong>Price:</strong> ₹{{ service.price }}</p>
                         <a href="{% url 'service_detail' service.id %}" class="btn btn-primary">More Details</a>
                     </div>
                 </div>

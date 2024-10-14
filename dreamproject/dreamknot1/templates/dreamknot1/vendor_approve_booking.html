@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approve Booking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .booking-details {
+            margin-bottom: 20px;
+        }
+        .details {
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: #e9ecef;
+            margin-bottom: 15px;
+        }
+        .button-container {
+            text-align: center;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .error-message {
+            color: red;
+            text-align: center;
+        }
+        .success-message {
+            color: green;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Approve Booking</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{{ message.tags }}-message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="booking-details">
+            <div class="details">
+                <strong>Booking ID:</strong> {{ booking.id }}<br>
+                <strong>User:</strong> {{ booking.user.username }}<br>
+                <strong>Service:</strong> {{ booking.service.name }}<br>
+                <strong>Event Date:</strong> {{ booking.event_date|date:"F j, Y" }}<br>
+                <strong>Status:</strong> {% if booking.book_status == 0 %} Pending {% elif booking.book_status == 1 %} Confirmed {% endif %}
+            </div>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="button-container">
+                <button type="submit">Approve Booking</button>
+            </div>
+        </form>
+
+        <div class="button-container">
+            <a href="{% url 'vendor_dashboard' %}" style="text-decoration: none; color: #007bff;">Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

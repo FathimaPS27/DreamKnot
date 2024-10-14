@@ -61,11 +61,18 @@
                                     <img src="{% static 'images/facebook.png' %}" alt="Facebook" style="height: 18px; margin-right: 10px;">
                                     Sign in with Facebook
                                 </button> -->
-                                <button type="button" class="social-btn google-btn">
-                                    <img src="{% static 'images/google.png' %}" alt="Google" style="height: 18px; margin-right: 10px;"> <!-- Replace with your icon path -->
+                               <!-- Google login -->
+                            <a href="{% url 'google_login' %}" class="social-btn google-btn">
+                                <button type="button">
+                                    <img src="{% static 'images/google.png' %}" alt="Google" style="height: 18px; margin-right: 10px;">
                                     Sign in with Google
                                 </button>
+                            </a>
+                            
+                            
                             </div>
+                           
+                            
                             
                             <!-- Divider Text -->
                             <div class="signin">

@@ -81,6 +81,14 @@ def vendor_home(request):
     user_name = request.session.get('user_name', 'vendor')
     return render(request, 'dreamknot1/vendor_home.html', {'name': user_name})
 
+import uuid
+from django.contrib import messages
+from django.contrib.auth.hashers import make_password
+from django.core.mail import send_mail
+from django.shortcuts import render, redirect
+from .models import UserSignup
+from django.conf import settings
+import re
 
 def signup(request):
     if request.method == 'POST':
@@ -112,23 +120,18 @@ def signup(request):
         if password != re_password:
             messages.error(request, "Passwords do not match.")
             errors['password'] = "Passwords do not match."
-
         if len(password) < 8:
             messages.error(request, "Password must be at least 8 characters long.")
             errors['password_length'] = "Password too short."
-
         if not re.search(r'[A-Z]', password):
             messages.error(request, "Password must contain at least one uppercase letter.")
             errors['password_uppercase'] = "Password needs an uppercase letter."
-
         if not re.search(r'[a-z]', password):
             messages.error(request, "Password must contain at least one lowercase letter.")
             errors['password_lowercase'] = "Password needs a lowercase letter."
-
         if not re.search(r'[0-9]', password):
             messages.error(request, "Password must contain at least one digit.")
             errors['password_digit'] = "Password needs a digit."
-
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
             messages.error(request, "Password must contain at least one special character.")
             errors['password_special'] = "Password needs a special character."
@@ -143,13 +146,13 @@ def signup(request):
             messages.error(request, "Email already registered.")
             errors['email_exists'] = "Email already registered."
 
-        # If there are errors, redirect back to the signup page with messages and the entered data
+        # If there are errors, re-render the form with messages
         if errors:
             return render(request, 'dreamknot1/signup.html', {
                 'name': name,
                 'email': email,
                 'password': password,
-                're_password': re_password,  # Re-populating re-entered password
+                're_password': re_password,
                 'country': country,
                 'state': state,
                 'place': place,
@@ -161,19 +164,34 @@ def signup(request):
         # Hash the password before saving
         hashed_password = make_password(password)
 
-        # Save user if validation is passed
+        # Generate a unique verification code using uuid
+        verification_code = str(uuid.uuid4())
+
+        # Save the user with the verification code
         user_signup = UserSignup(
             name=name,
             email=email,
-            password=hashed_password,  # Save the hashed password
+            password=hashed_password,
             country=country,
             state=state,
             place=place,
             phone=phone,
             role=role,
+            verification_code=verification_code,  # Store generated verification code
         )
         user_signup.save()
-        messages.success(request, "Signup successful!")
+
+        # Send email with the verification link
+        verification_link = request.build_absolute_uri(f"/verify-email/{verification_code}/")
+        send_mail(
+            'Email Verification - Dream Knot',
+            f'Please verify your email by clicking on this link: {verification_link}',
+            settings.EMAIL_HOST_USER,
+            [email],
+            fail_silently=False,
+        )
+
+        messages.success(request, "Signup successful! Please check your email to verify your account.")
         return redirect('login')
 
     # For GET requests, render the signup page
@@ -181,6 +199,25 @@ def signup(request):
         'countries': countries,  # Assuming you have a list of countries
     }
     return render(request, 'dreamknot1/signup.html', context)
+
+from django.shortcuts import redirect
+from django.contrib import messages
+from .models import UserSignup
+
+def verify_email(request, verification_code):
+    try:
+        user = UserSignup.objects.get(verification_code=verification_code)
+        if not user.is_verified:
+            user.is_verified = True
+            user.verification_code = None  # Clear the verification code after it's used
+            user.save()
+            messages.success(request, "Your email has been verified successfully!")
+        else:
+            messages.info(request, "Your email is already verified.")
+    except UserSignup.DoesNotExist:
+        messages.error(request, "Invalid verification link.")
+
+    return redirect('login')
 
 # for login
 from django.contrib.auth.hashers import check_password
@@ -953,6 +990,7 @@ def vendor_dashboard(request):
             'category': category,
             'availability': availability,
         },
+        
     })
 def edit_service(request, service_id):
     # Fetch the service instance
@@ -1055,43 +1093,299 @@ def vendor_services(request, vendor_id):
 def service_detail(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     return render(request, 'dreamknot1/service_detail.html', {'service': service})
-# Book a Service
-def book_service(request, service_id):
-    user_name = request.session.get('user_name', 'user')
-    
-    try:
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import Booking
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from django.contrib import messages
+from .models import Booking
+
+def vendor_approve_booking(request, booking_id):
+    """View for vendors to approve or reject a booking."""
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    if request.method == "POST":
+        action = request.POST.get('action', 'approve')  # Get action (approve/reject)
+        
+        if action == 'approve':
+            booking.book_status = 1  # Confirm booking
+            booking.vendor_confirmed_at = timezone.now()  # Set confirmation time
+            messages.success(request, "Booking approved successfully!")
+        elif action == 'reject':
+            booking.book_status = 3  # Cancel booking
+            booking.cancellation_reason = request.POST.get('cancellation_reason', '')
+            messages.error(request, "Booking rejected successfully.")
+
+        booking.save()
+        return redirect('vendor_dashboard')  # Redirect to the dashboard after processing
+
+    return render(request, 'dreamknot1/vendor_approve_booking.html', {
+        'booking': booking,
+    })
+
+from django.http import JsonResponse
+from django.utils import timezone
+from datetime import timedelta
+
+def get_booking_slots(request, service_id):
+    """API view to fetch booked and available slots for FullCalendar."""
+    bookings = Booking.objects.filter(service_id=service_id)
+    events = []
+
+    # Status color mapping
+    status_color_mapping = {
+        0: ('Pending', 'orange'),  # Pending approval
+        1: ('Confirmed', 'green'),  # Approved
+        2: ('Completed', 'blue'),   # Completed
+        3: ('Canceled', 'red'),     # Canceled
+    }
+
+    # Add booked slots to the events list
+    for booking in bookings:
+        event_status, color = status_color_mapping.get(booking.book_status, ('Unknown', 'gray'))
+        events.append({
+            'title': f'{event_status} - {booking.user.username}',  # Display username
+            'start': booking.event_date.isoformat(),  # ISO format for date compatibility
+            'color': color,
+            'status': event_status
+        })
+
+    # Logic for available slots (e.g., next 30 days)
+    today = timezone.now().date()
+    future_dates = [today + timedelta(days=i) for i in range(30)]  # Next 30 days
+    booked_dates = bookings.values_list('event_date', flat=True)  # Already booked dates
+
+    for date in future_dates:
+        if date not in booked_dates:
+            events.append({
+                'title': 'Available',  # Mark as available
+                'start': date.isoformat(),
+                'color': 'lightgray',  # Use light gray for available slots
+                'status': 'Available'
+            })
+
+    return JsonResponse(events, safe=False)
+
+# views.py
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from .models import Booking, Service, UserSignup
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+# View to render the calendar and form page
+def booking_calendar_view(request, service_id):
+    service = Service.objects.get(id=service_id)
+    return render(request, 'dreamknot1/booking_calendar.html', {'service': service})
+
+# API view to fetch booked and available slots for FullCalendar
+from django.http import JsonResponse
+from django.utils.timezone import now, timedelta
+
+def get_booking_slots(request, service_id):
+    # Fetch bookings for the given service
+    bookings = Booking.objects.filter(service_id=service_id)
+    events = []
+
+    # Define status-to-color mapping
+    status_color_mapping = {
+        0: ('Pending', 'orange'),  # Vendor has not confirmed
+        1: ('Confirmed', 'green'),  # Vendor confirmed the booking
+        2: ('Completed', 'blue'),  # Booking is marked as completed
+        3: ('Canceled', 'red'),  # Booking was canceled
+    }
+
+    # Add booked slots to the events list
+    for booking in bookings:
+        event_status, color = status_color_mapping.get(booking.book_status, ('Unknown', 'gray'))
+        events.append({
+            'title': f'{event_status}',
+            'start': booking.event_date.isoformat(),  # ISO format for date compatibility
+            'color': color,
+            'status': event_status
+        })
+
+    # Optionally: Add available slots logic (e.g., next 30 days)
+    # Assuming "available" means dates with no bookings in the next 30 days
+    today = now().date()
+    future_dates = [today + timedelta(days=i) for i in range(30)]  # Next 30 days
+    booked_dates = bookings.values_list('event_date', flat=True)  # List of already booked dates
+
+    for date in future_dates:
+        if date not in booked_dates:
+            events.append({
+                'title': 'Available',  # Mark as available
+                'start': date.isoformat(),
+                'color': 'lightgray',  # Use light gray for available slots
+                'status': 'Available'
+            })
+
+    return JsonResponse(events, safe=False)
+
+
+# View to handle booking submission
+@csrf_exempt
+def submit_booking(request, service_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        event_date = data.get('event_date')
+
+        # Create booking entry
+        user = request.user
         service = Service.objects.get(id=service_id)
+        Booking.objects.create(
+            user=user,
+            service=service,
+            event_date=event_date,
+            book_status=0  # Pending by default
+        )
+        return JsonResponse({'status': 'success', 'message': 'Booking submitted! Await vendor confirmation.'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
+
+
+
+
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import Booking
+from django.utils import timezone
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import Booking, UserSignup
+from django.utils import timezone
+
+def user_booking_details(request):
+    # Get the current logged-in user based on 'user_name' from session
+    user_name = request.session.get('user_name')
+    
+    # If no user is found in session, redirect to login
+    if not user_name:
+        return redirect('login')  # Redirect to login if the user is not authenticated
+    
+    # Get the logged-in user object
+    user_signup = get_object_or_404(UserSignup, name=user_name)
+    
+    # Fetch all bookings for the logged-in user
+    bookings = Booking.objects.filter(user=user_signup)
+    
+    # If the request is POST, handle booking cancellation
+    if request.method == 'POST':
+        booking_id = request.POST.get('booking_id')
+        cancellation_reason = request.POST.get('cancellation_reason')
+        
+        # Get the booking object for the current user
+        booking = get_object_or_404(Booking, id=booking_id, user=user_signup)
+        
+        # Update booking status and save the cancellation details
+        booking.book_status = 3
+        booking.canceled_by_user = True
+        booking.cancellation_reason = cancellation_reason
+        booking.vendor_confirmed_at = None  # Reset vendor confirmation if needed
+        booking.save()
+
+        # Display success message after cancellation
+        messages.success(request, "Your booking has been canceled successfully.")
+        return redirect('user_booking_details')
+
+    # Render the booking details page
+    return render(request, 'dreamknot1/user_booking_details.html', {
+        'bookings': bookings,
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from .models import Service, UserSignup, UserProfile, Booking
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
+from .models import Service, UserSignup, UserProfile, Booking
+from django.utils import timezone
+
+def book_service(request, service_id):
+    # Get the user's name from the session
+    user_name = request.session.get('user_name', 'user')
+
+    try:
+        # Fetch the service being booked
+        service = Service.objects.get(id=service_id)
+        
+        # Fetch the user making the booking
         user = UserSignup.objects.get(name=user_name)
+        
+        # Fetch the user's profile, if it exists
         user_profile = UserProfile.objects.get(user=user)
+
+    # Handle cases where the service or user is not found
     except Service.DoesNotExist:
         return HttpResponse("Service not found.")
     except UserSignup.DoesNotExist:
         return HttpResponse("User not found.")
     except UserProfile.DoesNotExist:
-        user_profile = None  # In case the user profile is not yet created
+        user_profile = None  # If no user profile, leave it as None
 
+    # If the request is a POST request, process the form data
     if request.method == "POST":
+        # Get event details from the form
         event_date = request.POST.get('event_date')
-        address = request.POST.get('address', user.place)  # Use the user's existing address as default
-        phone_number = request.POST.get('phone', user.phone)
-        email = request.POST.get('email', user.email)
+        event_address = request.POST.get('event_address')  # Retrieve event address from form
+        phone_number = request.POST.get('phone', user.phone)  # Default to user's saved phone
+        email = request.POST.get('email', user.email)  # Default to user's saved email
 
-        # Update the wedding date if provided by the user
+        # If the user provides a wedding date and they have a profile, update it
         wedding_date = request.POST.get('wedding_date')
         if wedding_date and user_profile:
             user_profile.wedding_date = wedding_date
             user_profile.save()
 
-        # Book the service
-        booking = Booking(user=user, service=service, event_date=event_date)
+        # Create a new booking entry (status defaults to 'Pending')
+        booking = Booking(
+            user=user,
+            service=service,
+            event_date=event_date,
+            event_address=event_address,  # Use the event address from the form
+            book_status=0  # Pending status
+        )
         booking.save()
 
+        # Redirect to the user's dashboard after booking
         return redirect('user_dashboard')
 
+    # Render the booking form, pre-filling user and service details
     return render(request, 'dreamknot1/book_service.html', {
         'service': service,
         'user': user,
-        'user_profile': user_profile
+        'user_profile': user_profile,  # Could be None if the profile doesn't exist
     })
 
 # Add to Favorite
@@ -1176,9 +1470,12 @@ def view_users(request):
     }
     return render(request, 'dreamknot1/view_users.html', context)
 
+
 from django.shortcuts import redirect, get_object_or_404
-from .models import UserSignup
 from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+from .models import UserSignup
 
 def toggle_user_status(request, user_id):
     # Fetch the user by ID
@@ -1188,14 +1485,29 @@ def toggle_user_status(request, user_id):
     user.status = not user.status
     user.save()
     
+    # Send email notification based on the user's new status
+    subject = f"Your account has been {'activated' if user.status else 'deactivated'}"
+    message = f"Dear {user.name},\n\nYour account has been {'activated' if user.status else 'deactivated'} by the admin. You can {'now access' if user.status else 'no longer access'} your account.\n\nBest regards,\nDream Knot Team"
+    recipient_email = user.email
+
+    # Send the email
+    send_mail(
+        subject,
+        message,
+        settings.EMAIL_HOST_USER,  # This should be your configured email, e.g., dreamknot0@gmail.com
+        [recipient_email],
+        fail_silently=False,
+    )
+    
     # Add a success message
     if user.status:
-        messages.success(request, f"{user.name} has been activated.")
+        messages.success(request, f"{user.name} has been activated and an email has been sent.")
     else:
-        messages.success(request, f"{user.name} has been deactivated.")
+        messages.success(request, f"{user.name} has been deactivated and an email has been sent.")
     
     # Redirect to the same page or the users list
     return redirect('view_users')
+
 
 
 

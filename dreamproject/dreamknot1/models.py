@@ -19,6 +19,8 @@ class UserSignup(models.Model):
     role = models.CharField(max_length=10, choices=[('vendor', 'Vendor'), ('user', 'User')])  
     reset_token = models.CharField(max_length=100, blank=True, null=True)
     reset_token_created_at = models.DateTimeField(blank=True, null=True)
+    is_verified = models.BooleanField(default=False)  # Field to check if email is verified
+    verification_code = models.CharField(max_length=64, blank=True, null=True)  # Store verification code
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.BooleanField(default=True)
@@ -151,7 +153,9 @@ class Booking(models.Model):
     booking_date = models.DateTimeField(default=timezone.now)
     event_date = models.DateField()
     event_address = models.CharField(max_length=255, blank=True, null=True)  # Optional event address
-
+    vendor_confirmed_at = models.DateTimeField(null=True, blank=True)  # Tracks confirmation time
+    canceled_by_user = models.BooleanField(default=False)  # Distinguishes cancellation
+    cancellation_reason = models.TextField(blank=True, null=True)  # Reason for cancellation
     book_status = models.IntegerField(default=0, choices=[(0, 'Pending'), (1, 'Confirmed'), (2, 'Completed'), (3, 'Canceled')])
 
     def __str__(self):

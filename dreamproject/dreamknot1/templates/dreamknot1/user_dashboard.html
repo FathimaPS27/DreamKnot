@@ -110,6 +110,7 @@
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             padding-top: 50px;
+            padding-left: 30px;
         }
         .card {
             background-color: #fff;
@@ -118,34 +119,55 @@
             overflow: hidden;
             transition: transform 0.3s, box-shadow 0.3s;
             border: 1px solid #ddd; /* Added border for more definition */
+            display: flex;
+            flex-direction: column; /* Stack children vertically */
+
         }
-        .card:hover {
-            transform: translateY(-5px); /* Slight lift effect on hover */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
-        }
+        
         .card img {
             width: 100%;
-            height: 200px;
+            height: 200px; /* Fixed height for uniformity */
             object-fit: cover;
-            border-bottom: 2px solid #ffc107; /* Bottom border for visual separation */
+            border-bottom: 2px solid #400907; /* Bottom border for visual separation */
         }
+        
         .card .card-body {
-            padding: 20px;
+            padding: 0px 20px 5px 20px;
             text-align: center; /* Center-align text for better aesthetics */
+            height:100%;
+            display: flex;
+            flex-direction: column; /* Stack contents vertically */
+            justify-content: space-between; /* Distribute space evenly */
         }
+        
         .card-title {
             font-size: 1.6rem;
-            margin-bottom: 10px;
+            margin-bottom: 1px;
             color: #333; /* Darker color for better contrast */
         }
+        
         .card-text {
             font-size: 1rem;
             color: #6c757d;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            flex-grow: 1; /* Allow description to grow to fill space */
         }
+        
         .card-footer {
             display: flex;
             justify-content: center; /* Center the button */
+            padding: 5px 0; /* Add padding for visual spacing */
+        }
+
+        .location-price {
+            display: flex; /* Align items in a row */
+            justify-content: center; /* Center the location and price */
+            margin: 5px 0; /* Add some margin for spacing */
+        }
+        
+        .location-price .card-text {
+            margin: 0 10px; /* Add some margin between location and price */
+            font-size: 0.9rem; /* Adjust font size if needed */
         }
         .btn-primary {
             display: inline-block;
@@ -156,11 +178,14 @@
             cursor: pointer;
             text-align: center;
             transition: background-color 0.3s, transform 0.3s; /* Added transition for button */
+            width: 100%; /* Make the button full width for uniformity */
         }
+        
         .btn-primary:hover {
             background-color: #e0a800;
             transform: translateY(-2px); /* Slight lift effect on button hover */
         }
+        
 
         /* Footer */
         .footer {
@@ -235,7 +260,7 @@
         <div class="logo">Dream Knot</div>
         <ul>
             <li><a href="{% url 'user_home' %}">Dashboard</a></li>
-            <li><a href="#">My Bookings</a></li>
+            <li><a href="{% url 'user_booking_details' %}">My Bookings</a></li>
             <li><a href="{% url 'favorite_list' %}">My Favorite Services</a></li>
     
             <!-- Profile and Logout Dropdown -->
@@ -308,7 +333,10 @@
                             <h3 class="card-title">{{ vendor.company_name }}</h3>
                             <p class="card-text">{{ vendor.bio|default:"No bio available." }}</p>
 
-                            <p class="card-text"><i class="fas fa-map-marker-alt"></i> {{ vendor.user.place|default:"Not specified" }}</p>
+                            <div class="location-price">
+                                <p class="card-text"><i class="fas fa-map-marker-alt"></i> {{ vendor.user.place|default:"Not specified" }}</p>
+                                <p class="card-text"><strong>Phone:</strong>  {{ user_signup.phone|default:"Not specified" }}</p>
+                            </div>
                             <div class="card-footer">
                                 <a href="{% url 'vendor_services' vendor.id %}" class="btn-primary">View Services</a>
                             </div>

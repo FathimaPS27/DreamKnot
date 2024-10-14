@@ -9,11 +9,12 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h2>Book {{ service.name }}</h2>
+        <h2 class="mb-4">Book {{ service.name }}</h2>
+
         <form method="POST">
             {% csrf_token %}
-            
-            <!-- User Info -->
+
+            <!-- User Info Section -->
             <div class="form-group">
                 <label for="name">Name:</label>
                 <input type="text" name="name" value="{{ user.name }}" class="form-control" readonly>
@@ -30,16 +31,21 @@
             </div>
 
             <div class="form-group">
-                <label for="address">Address:</label>
-                <input type="text" name="address" value="{{ user.place }}" class="form-control" required>
+                <label for="event_address">Event Address:</label>
+                <input type="text" name="event_address" class="form-control" required>
             </div>
+            
 
-            <!-- Wedding Date (Optional if profile exists) -->
+            <!-- Wedding Date (Readonly if already set in profile) -->
             <div class="form-group">
                 <label for="wedding_date">Wedding Date:</label>
                 <input type="date" name="wedding_date" 
                     value="{{ user_profile.wedding_date|date:'Y-m-d' }}" 
-                    class="form-control" {% if user_profile and user_profile.wedding_date %} readonly {% endif %}>
+                    class="form-control" 
+                    {% if user_profile and user_profile.wedding_date %} readonly {% endif %}>
+                {% if not user_profile or not user_profile.wedding_date %}
+                    <small class="form-text text-muted">You can set or update your wedding date.</small>
+                {% endif %}
             </div>
 
             <!-- Event Date for Service Booking -->
@@ -48,9 +54,19 @@
                 <input type="date" name="event_date" class="form-control" required>
             </div>
 
-            <button type="submit" class="btn btn-primary">Confirm Booking</button>
-            <a href="{% url 'vendor_services' service.vendor.id %}" class="btn btn-secondary">Cancel</a>
+            <!-- Buttons -->
+            <div class="form-group d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Confirm Booking</button>
+                <a href="{% url 'booking_calendar' service.id %}" class="btn btn-primary">View Booking Calendar</a>
+
+                <a href="{% url 'vendor_services' service.vendor.id %}" class="btn btn-secondary">Cancel</a>
+            </div>
         </form>
     </div>
+
+    <!-- Optionally include Bootstrap JS and dependencies for interactivity -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
