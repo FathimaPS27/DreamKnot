@@ -94,11 +94,12 @@
     <div class="container mt-5">
         <h2>{{ service.name }}</h2>
         <img src="{{ service.images.first.image.url }}" alt="{{ service.name }}" class="img-fluid mb-3 service-image">
-        <p><strong>Description:</strong> {{ service.description }}</p>
-        <p><strong>Price:</strong> ${{ service.price }}</p>
-        <p><strong>Category:</strong> {{ service.category }}</p>
+        <p><strong>Description:</strong> {{ service.description|linebreaksbr }}</p>
+        <p><strong>  Starting Price -:</strong> ₹{{ service.price }}</p>
+      <!--  <p><strong>Category:</strong> {{ service.category }}</p>-->
         <p><strong>Vendor:</strong> {{ service.vendor.company_name }}</p>
         <p><strong>Availability:</strong> {% if service.availability %} Available {% else %} Not Available {% endif %}</p>
+        <p><strong>Contact Now :</strong> {{ vendor_phone }}</p>
         
         <div class="mt-3">
             <a href="{% url 'book_service' service.id %}" class="btn btn-primary">Book Now</a>

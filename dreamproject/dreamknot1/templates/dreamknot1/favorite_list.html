@@ -140,7 +140,7 @@
                     <li>
                         <h2>{{ favorite.service.name }}</h2>
                         <p>Description: {{ favorite.service.description }}</p>
-                        <p>Price: ${{ favorite.service.price }}</p>
+                        <p>Price: ₹{{ favorite.service.price }}</p>
                         <p>Category: {{ favorite.service.category }}</p>
                         <a class="service-link" href="{% url 'service_detail' favorite.service.id %}">View Details</a>
                     </li>

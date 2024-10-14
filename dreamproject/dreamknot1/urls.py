@@ -53,7 +53,7 @@ urlpatterns = [
     path('user/', views.user_dashboard, name='user_dashboard'),
     path('vendor_services/<int:vendor_id>/', views.vendor_services, name='vendor_services'),
     path('service_detail/<int:service_id>/', views.service_detail, name='service_detail'), 
-    path('vendor/approve-booking/<int:booking_id>/', views.vendor_approve_booking, name='vendor_approve_booking'),
+    path('approve-booking/', views.vendor_approve_booking, name='vendor_approve_booking'),
     path('vendor/calendar/<int:service_id>/', views.booking_calendar_view, name='booking_calendar'),
 
 

@@ -117,8 +117,8 @@
                     <img src="{{ service.images.first.image.url }}" alt="{{ service.name }}" class="card-img-top">
                     <div class="card-body">
                         <h5 class="card-title">{{ service.name }}</h5>
-                        <p class="card-text">{{ service.description|linebreaksbr }}</p>
-                        <p class="card-text"><strong>Price:</strong> ₹{{ service.price }}</p>
+                       <!-- <p class="card-text">{{ service.description|linebreaksbr }}</p>-->
+                        <p class="card-text"><strong>Starting Price:</strong> ₹{{ service.price }}</p>
                         <a href="{% url 'service_detail' service.id %}" class="btn btn-primary">More Details</a>
                     </div>
                 </div>

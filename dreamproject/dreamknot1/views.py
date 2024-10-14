@@ -911,6 +911,7 @@ from .models import VendorProfile, Service, ServiceImage, Booking, Rating, Favor
 
 
 # Vendor Dashboard - Add and Manage Services
+# Vendor Dashboard - Add and Manage Services
 def vendor_dashboard(request):
     vendor_name = request.session.get('user_name', 'vendor')
 
@@ -919,24 +920,20 @@ def vendor_dashboard(request):
         
         # Check if required profile details are missing
         if not vendor_instance.company_name or not vendor_instance.bio or not vendor_instance.business_category:
-            # Add a flash message and redirect to the profile update page
             messages.warning(request, "Please complete your profile before accessing the dashboard.")
-            return redirect('update_vendor_profile')  # Redirect to the profile update page
+            return redirect('update_vendor_profile')
 
     except VendorProfile.DoesNotExist:
-        # Add a flash message and redirect to the profile update page if profile does not exist
         messages.warning(request, "Vendor not found. Please add your details in the profile first.")
         return redirect('update_vendor_profile')
 
-    # Fetch services related to the vendor
+    # Fetch services and related bookings
     services = Service.objects.filter(vendor=vendor_instance)
+    bookings = Booking.objects.filter(service__in=services)
 
     # Initialize empty error dictionary and variables to retain form data
     errors = {}
-    service_name = ""
-    description = ""
-    price = ""
-    category = ""
+    service_name = description = price = category = ""
     availability = False
 
     if request.method == "POST":
@@ -944,7 +941,7 @@ def vendor_dashboard(request):
         description = request.POST.get('description', '')
         price = request.POST.get('price', '')
         category = request.POST.get('category', '')
-        availability = 'availability' in request.POST  # Checkbox handling
+        availability = 'availability' in request.POST
 
         # Validate inputs
         if not re.match(r'^[A-Za-z\s]+$', service_name):
@@ -959,7 +956,7 @@ def vendor_dashboard(request):
             except ValueError:
                 errors['price'] = "Invalid price format."
 
-        # If there are no errors, save the service
+        # Save the service if no errors
         if not errors:
             service = Service(
                 vendor=vendor_instance,
@@ -981,6 +978,7 @@ def vendor_dashboard(request):
 
     return render(request, 'dreamknot1/vendor_dashboard.html', {
         'services': services,
+        'bookings': bookings,
         'vendor_name': vendor_name,
         'errors': errors,
         'form_data': {
@@ -990,8 +988,8 @@ def vendor_dashboard(request):
             'category': category,
             'availability': availability,
         },
-        
     })
+
 def edit_service(request, service_id):
     # Fetch the service instance
     service = get_object_or_404(Service, id=service_id)
@@ -1092,40 +1090,43 @@ def vendor_services(request, vendor_id):
 
 def service_detail(request, service_id):
     service = get_object_or_404(Service, id=service_id)
-    return render(request, 'dreamknot1/service_detail.html', {'service': service})
+    vendor_phone = service.vendor.user.phone  # Adjust if necessary
 
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from .models import Booking
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.utils import timezone
-from django.contrib import messages
-from .models import Booking
-
-def vendor_approve_booking(request, booking_id):
-    """View for vendors to approve or reject a booking."""
-    booking = get_object_or_404(Booking, id=booking_id)
-
-    if request.method == "POST":
-        action = request.POST.get('action', 'approve')  # Get action (approve/reject)
-        
-        if action == 'approve':
-            booking.book_status = 1  # Confirm booking
-            booking.vendor_confirmed_at = timezone.now()  # Set confirmation time
-            messages.success(request, "Booking approved successfully!")
-        elif action == 'reject':
-            booking.book_status = 3  # Cancel booking
-            booking.cancellation_reason = request.POST.get('cancellation_reason', '')
-            messages.error(request, "Booking rejected successfully.")
-
-        booking.save()
-        return redirect('vendor_dashboard')  # Redirect to the dashboard after processing
-
-    return render(request, 'dreamknot1/vendor_approve_booking.html', {
-        'booking': booking,
+    return render(request, 'dreamknot1/service_detail.html', {
+        'service': service,
+        'vendor_phone': vendor_phone,  # Pass the vendor phone number to the template
     })
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import Booking
+
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+from django.utils import timezone
+from .models import Booking  # Assuming Booking model is in the same app
+
+def vendor_approve_booking(request):
+    # Check if user_id exists in session
+    user_id = request.session.get('user_id')
+    
+    if user_id:
+        try:
+            vendor_instance = VendorProfile.objects.get(user__id=user_id)
+            
+            # Fetch bookings related to this vendor's services
+            bookings = Booking.objects.filter(service__vendor=vendor_instance)
+            
+            return render(request, 'dreamknot1/vendor_approve_booking.html', {'bookings': bookings})
+
+        except VendorProfile.DoesNotExist:
+            messages.warning(request, "Vendor profile not found. Please complete your profile.")
+            return redirect('update_vendor_profile')
+
+    else:
+        messages.warning(request, "You need to log in to access this page.")
+        return redirect('login')  # Redirect to the login page
+
 
 from django.http import JsonResponse
 from django.utils import timezone
