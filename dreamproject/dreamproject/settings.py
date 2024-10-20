@@ -84,8 +84,8 @@ SOCIALACCOUNT_PROVIDERS = {
             'access_type': 'online',
         },
         'APP': {
-            'client_id': '1065788298730-p71tgg6i5lnah29fjmajkiumqccpuo6v.apps.googleusercontent.com',  # Replace with your Google Client ID
-            'secret': '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',  # Replace with your Google Client Secret
+            'client_id': '777',  # Replace with your Google Client ID
+            'secret': '777',  # Replace with your Google Client Secret
             'key': ''
         }
     }
@@ -197,8 +197,8 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'dreamknot0@gmail.com'
-EMAIL_HOST_PASSWORD = 'rukr niio gzfy rrna'  # Replace with the App Password generated
-DEFAULT_FROM_EMAIL = 'dreamknot0@gmail.com'
+EMAIL_HOST_PASSWORD = '888'  # Replace with the App Password generated
+DEFAULT_FROM_EMAIL = '888'
 
 UNFOLD = {
     "SITE_HEADER":"Dream Knot Admin",
