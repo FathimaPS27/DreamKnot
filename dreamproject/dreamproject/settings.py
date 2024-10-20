@@ -83,7 +83,11 @@ SOCIALACCOUNT_PROVIDERS = {
         'AUTH_PARAMS': {
             'access_type': 'online',
         },
-        
+        'APP': {
+            'client_id': '1065788298730-p71tgg6i5lnah29fjmajkiumqccpuo6v.apps.googleusercontent.com',  # Replace with your Google Client ID
+            'secret': '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',  # Replace with your Google Client Secret
+            'key': ''
+        }
     }
 }
 
@@ -192,6 +196,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'dreamknot0@gmail.com'
+EMAIL_HOST_PASSWORD = 'rukr niio gzfy rrna'  # Replace with the App Password generated
+DEFAULT_FROM_EMAIL = 'dreamknot0@gmail.com'
 
 UNFOLD = {
     "SITE_HEADER":"Dream Knot Admin",
