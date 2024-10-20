@@ -27,36 +27,32 @@ from .models import Service, ServiceImage, Rating
 def index(request):
     return render(request, 'dreamknot1/index.html')
 
+
+from django.core.paginator import Paginator
+from django.utils import timezone
+from django.shortcuts import render
+from .models import UserSignup, UserProfile, Service
+
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-
 def user_home(request):
-    user_name = request.session.get('user_name', 'user')  # Assuming you're storing the email in the session
+    user_name = request.session.get('user_name', 'user')
 
-    try:
-        # Fetch the user instance using the session data
-        user_instance = UserSignup.objects.get(name=user_name)  # Adjust if needed based on your session key
-    except UserSignup.DoesNotExist:
-        user_instance = None
+    user_instance = UserSignup.objects.filter(name=user_name).first()
 
     time_left = None
     wedding_date = None
     message = None
 
-    # Check if the user instance exists and has a related UserProfile
     if user_instance:
-        try:
-            wedding_date = user_instance.userprofile.wedding_date
-        except UserProfile.DoesNotExist:
-            wedding_date = None
+        user_profile, created = UserProfile.objects.get_or_create(user=user_instance)
+        wedding_date = getattr(user_profile, 'wedding_date', None)
 
-        # Calculate the time left if wedding_date is present
         if wedding_date:
-            now = timezone.now()  # This is a timezone-aware datetime object
-            
-            # Convert wedding_date to a timezone-aware datetime
-            wedding_datetime = timezone.make_aware(timezone.datetime.combine(wedding_date, timezone.datetime.min.time()))
+            now = timezone.now()
+            wedding_datetime = timezone.make_aware(
+                timezone.datetime.combine(wedding_date, timezone.datetime.min.time())
+            )
 
-            # Compare wedding_datetime and now
             if wedding_datetime >= now:
                 total_seconds = (wedding_datetime - now).total_seconds()
                 days = int(total_seconds // (24 * 3600))
@@ -70,12 +66,73 @@ def user_home(request):
         else:
             message = "Please set your wedding date in your profile."
 
+    # Fetch all active services
+    services = Service.objects.filter(status=1, availability=True)
+
+    # Apply location filter by city
+    city = request.GET.get('city')
+    if city:
+        services = services.filter(city__icontains=city)
+
+    # Apply other filters based on query parameters
+    category = request.GET.get('category')
+    if category:
+        services = services.filter(category=category)
+
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+    if min_price and max_price:
+        services = services.filter(price__gte=min_price, price__lte=max_price)
+
+    service_type = request.GET.get('service_type')
+    if service_type:
+        services = services.filter(service_type=service_type)
+
+    # Apply search filter
+    search_query = request.GET.get('search')
+    if search_query:
+        services = services.filter(name__icontains=search_query)
+
+    # Pagination
+    paginator = Paginator(services, 9)
+    page_number = request.GET.get('page')
+    page_services = paginator.get_page(page_number)
+
+    # Fetch service images
+    services_with_images = [
+        {
+            'service': service,
+            'main_image': service.main_image if service.main_image else None,
+            'vendor_company_name': service.vendor.company_name if service.vendor else None
+
+        }
+        for service in page_services
+    ]
+
+    # Add is_paginated to check if the queryset is paginated
+    is_paginated = page_services.has_other_pages()
+
     return render(request, 'dreamknot1/user_home.html', {
         'name': user_name,
         'time_left': time_left,
         'wedding_date': wedding_date,
-        'message': message
+        'message': message,
+        'services_with_images': services_with_images,
+        'category': category,
+        'min_price': min_price,
+        'max_price': max_price,
+        'service_type': service_type,
+        'city': city,  # Pass city to the template
+        'search_query': search_query,
+        'is_paginated': is_paginated,
+        'page_obj': page_services,
     })
+
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+
+
+
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def vendor_home(request):
     user_name = request.session.get('user_name', 'vendor')
@@ -165,7 +222,7 @@ def signup(request):
         hashed_password = make_password(password)
 
         # Generate a unique verification code using uuid
-        verification_code = str(uuid.uuid4())
+        verification_code = get_random_string(length=64)
 
         # Save the user with the verification code
         user_signup = UserSignup(
@@ -182,11 +239,13 @@ def signup(request):
         user_signup.save()
 
         # Send email with the verification link
-        verification_link = request.build_absolute_uri(f"/verify-email/{verification_code}/")
+        verification_link = request.build_absolute_uri(
+            reverse('verify_email', args=[verification_code])
+        )
         send_mail(
-            'Email Verification - Dream Knot',
-            f'Please verify your email by clicking on this link: {verification_link}',
-            settings.EMAIL_HOST_USER,
+            'Verify your email',
+            f'Please click on this link to verify your email: {verification_link}',
+            'from@example.com',  # Replace with your email
             [email],
             fail_silently=False,
         )
@@ -239,6 +298,14 @@ def login_view(request):
                 messages.error(request, "Your account is deactivated. Please contact the admin.")
                 print("Deactivated user attempted to log in.") 
                 return redirect('login')
+
+            # Check if the user is verified
+            if not user.is_verified:
+                messages.error(request, "Please verify your email before logging in. Check your inbox for the verification link.")
+                return redirect('login')
+
+
+
 
             if check_password(password, user.password):
                 request.session['user_id'] = user.id
@@ -910,15 +977,25 @@ from .models import VendorProfile, Service, ServiceImage, Booking, Rating, Favor
 
 
 
-# Vendor Dashboard - Add and Manage Services
-# Vendor Dashboard - Add and Manage Services
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.utils import timezone
+from django.db import transaction
+from decimal import Decimal, InvalidOperation
+from .models import (
+    VendorProfile, Service, ServiceImage, VenueService, CateringService,
+    PhotographyService, MusicEntertainmentService, MakeupHairService,
+    RentalsService, MehendiArtistService, DecorationService, Booking
+)
+import re
+def parse_boolean(value):
+    return value == 'on' or value == 'true' or value == 'True' or value is True
 def vendor_dashboard(request):
     vendor_name = request.session.get('user_name', 'vendor')
 
     try:
         vendor_instance = VendorProfile.objects.get(user__name=vendor_name)
-        
-        # Check if required profile details are missing
+
         if not vendor_instance.company_name or not vendor_instance.bio or not vendor_instance.business_category:
             messages.warning(request, "Please complete your profile before accessing the dashboard.")
             return redirect('update_vendor_profile')
@@ -927,111 +1004,324 @@ def vendor_dashboard(request):
         messages.warning(request, "Vendor not found. Please add your details in the profile first.")
         return redirect('update_vendor_profile')
 
-    # Fetch services and related bookings
     services = Service.objects.filter(vendor=vendor_instance)
     bookings = Booking.objects.filter(service__in=services)
 
-    # Initialize empty error dictionary and variables to retain form data
     errors = {}
-    service_name = description = price = category = ""
-    availability = False
+    service_data = {
+        'name': '',
+        'description': '',
+        'price': '',
+        'category': '',
+        'city': '',
+        'availability': False,
+        'additional_fields': {},
+        'brochure': None,
+    }
 
     if request.method == "POST":
-        service_name = request.POST.get('name', '')
-        description = request.POST.get('description', '')
-        price = request.POST.get('price', '')
-        category = request.POST.get('category', '')
-        availability = 'availability' in request.POST
+        service_data['name'] = request.POST.get('name', '')
+        service_data['description'] = request.POST.get('description', '')
+        service_data['price'] = request.POST.get('price', '')
+        service_data['category'] = request.POST.get('category', '')
+        service_data['city'] = request.POST.get('city', '')
+        service_data['availability'] = 'availability' in request.POST
+        service_data['brochure'] = request.FILES.get('brochure', None)
 
-        # Validate inputs
-        if not re.match(r'^[A-Za-z\s]+$', service_name):
+        # Validate general service fields
+        if not re.match(r'^[A-Za-z\s]+$', service_data['name']):
             errors['name'] = "Service name can only contain alphabets and spaces."
-        if not price:
+        if not service_data['price']:
             errors['price'] = "Price is required."
         else:
             try:
-                price_value = float(price)
+                price_value = float(service_data['price'])
                 if price_value <= 0:
                     errors['price'] = "Price must be a positive number."
             except ValueError:
                 errors['price'] = "Invalid price format."
+        if Service.objects.filter(vendor=vendor_instance, name=service_data['name']).exists():
+            errors['name'] = f"A service with the name '{service_data['name']}' already exists."
 
-        # Save the service if no errors
+        # Save the service object if no errors
         if not errors:
-            service = Service(
-                vendor=vendor_instance,
-                name=service_name,
-                description=description,
-                price=price_value,
-                category=category,
-                availability=availability,
-                created_at=timezone.now(),
-            )
-            service.save()
+            try:
+                with transaction.atomic():
+                    service = Service.objects.create(
+                        vendor=vendor_instance,
+                        name=service_data['name'],
+                        description=service_data['description'],
+                        price=service_data['price'],
+                        category=service_data['category'],
+                        city=service_data['city'],
+                        created_at=timezone.now(),
+                        availability=service_data['availability'],
+                        brochure=service_data['brochure']
+                    )
 
-            if 'image' in request.FILES:
-                image = request.FILES['image']
-                service_image = ServiceImage(service=service, image=image)
-                service_image.save()
+                    # Handle the main service image (single image)
+                    if 'main_image' in request.FILES:
+                        service.main_image = request.FILES['main_image']
+                        service.save()
 
-            return redirect('vendor_dashboard')
+                    # Handle multiple service images
+                    if 'service_images' in request.FILES:
+                        for image in request.FILES.getlist('service_images'):
+                            ServiceImage.objects.create(service=service, image=image)
+
+                    # Sub-service handling based on service type
+                    if service_data['category'] == 'Venue':
+                        VenueService.objects.create(
+                            service=service,
+                            type_of_venue=request.POST.get('type_of_venue', ''),
+                            location=request.POST.get('location', ''),
+                            capacity=request.POST.get('capacity', ''),
+                            pre_post_wedding_availability=parse_boolean(request.POST.get('pre_post_wedding_availability')),
+                            base_price=float(request.POST.get('base_price', 0.00)),
+                            hourly_rate=float(request.POST.get('hourly_rate', 0.00)),
+                            day_rate=float(request.POST.get('day_rate', 0.00)),
+                            setup_fee=float(request.POST.get('setup_fee', 0.00)),
+                        )
+                    elif service_data['category'] == 'Catering':
+                        CateringService.objects.create(
+                            service=service,
+                            menu_planning=request.POST.get('menu_planning', ''),
+                            meal_service_type=request.POST.get('meal_service_type', ''),
+                            dietary_options=request.POST.get('dietary_options', ''),
+                            price_per_person=float(request.POST.get('price_per_person', 0.00)),
+                            setup_fee=float(request.POST.get('setup_fee', 0.00)),
+                            minimum_guest_count=int(request.POST.get('minimum_guest_count', 1)),
+                        )
+                    elif service_data['category'] == 'Photography':
+                        PhotographyService.objects.create(
+                            service=service,
+                            package_duration=request.POST.get('package_duration', ''),
+                            styles=request.POST.get('styles', ''),
+                            engagement_shoots=parse_boolean(request.POST.get('engagement_shoots')),
+                            videography_options=parse_boolean(request.POST.get('videography_options')),
+                            base_price=float(request.POST.get('base_price', 0.00)),
+                            hourly_rate=float(request.POST.get('hourly_rate', 0.00)),
+                        )
+                    elif service_data['category'] == 'MusicEntertainment':
+                        MusicEntertainmentService.objects.create(
+                            service=service,
+                            entertainment_options=request.POST.get('entertainment_options', ''),
+                            sound_system_setup=parse_boolean(request.POST.get('sound_system_setup')),
+                            multiple_entertainment_acts=parse_boolean(request.POST.get('multiple_entertainment_acts')),
+                            emcee_services=parse_boolean(request.POST.get('emcee_services')),
+                            playlist_customization=parse_boolean(request.POST.get('playlist_customization')),
+                            base_price=float(request.POST.get('base_price', 0.00)),
+                            hourly_rate=float(request.POST.get('hourly_rate', 0.00)),
+                        )
+                    elif service_data['category'] == 'MakeupHair':
+                        MakeupHairService.objects.create(
+                            service=service,
+                            grooming_services=request.POST.get('grooming_services', ''),
+                            trial_sessions=parse_boolean(request.POST.get('trial_sessions')),
+                            high_end_products=parse_boolean(request.POST.get('high_end_products')),
+                            base_price=float(request.POST.get('base_price', 0.00)),
+                            hourly_rate=float(request.POST.get('hourly_rate', 0.00)),
+                        )
+                    elif service_data['category'] == 'Rentals':
+                        RentalsService.objects.create(
+                            service=service,
+                            rental_items=request.POST.get('rental_items', ''),
+                            setup_services=parse_boolean(request.POST.get('setup_services')),
+                            rental_price_per_item=float(request.POST.get('rental_price_per_item', 0.00)),
+                            deposit_required=float(request.POST.get('deposit_required', 0.00)),
+                            duration_of_rental=request.POST.get('duration_of_rental', ''),
+                        )
+                    elif service_data['category'] == 'MehendiArtist':
+                        MehendiArtistService.objects.create(
+                            service=service,
+                            design_styles=request.POST.get('design_styles', ''),
+                            duration_per_hand=float(request.POST.get('duration_per_hand', 0.00)),
+                            use_of_organic_henna=parse_boolean(request.POST.get('use_of_organic_henna')),
+                            base_price=float(request.POST.get('base_price', 0.00)),
+                            hourly_rate=float(request.POST.get('hourly_rate', 0.00)),
+                        )
+                    elif service_data['category'] == 'Decoration':
+                        DecorationService.objects.create(
+                            service=service,
+                            decor_themes=request.POST.get('decor_themes', ''),
+                            floral_arrangements=parse_boolean(request.POST.get('floral_arrangements')),
+                            lighting_options=parse_boolean(request.POST.get('lighting_options')),
+                            stage_decor=parse_boolean(request.POST.get('stage_decor')),
+                            base_price=float(request.POST.get('base_price', 0.00)),
+                            hourly_rate=float(request.POST.get('hourly_rate', 0.00)),
+                        )
+
+                    messages.success(request, f"{service_data['category']} service has been successfully created!")
+
+            except Exception as e:
+                messages.error(request, f"An error occurred while creating the service: {str(e)}")
+        else:
+            messages.error(request, "There were errors in the form submission. Please check your inputs.")
 
     return render(request, 'dreamknot1/vendor_dashboard.html', {
+        'vendor': vendor_instance,
         'services': services,
         'bookings': bookings,
-        'vendor_name': vendor_name,
         'errors': errors,
-        'form_data': {
-            'name': service_name,
-            'description': description,
-            'price': price,
-            'category': category,
-            'availability': availability,
-        },
+        'service_data': service_data,
+        'categories': Service.CATEGORY_CHOICES,
     })
+from decimal import Decimal, InvalidOperation
+def parse_boolean(value):
+    return value in ['on', 'true', 'True', True]
 
+def parse_decimal(value, default=0):
+    try:
+        return Decimal(value) if value else Decimal(default)
+    except InvalidOperation:
+        raise ValueError(f"Invalid decimal value: {value}")
 def edit_service(request, service_id):
-    # Fetch the service instance
     service = get_object_or_404(Service, id=service_id)
     vendor_name = request.session.get('user_name', 'vendor')
     
-    # Ensure the user is the owner of the service
     if service.vendor.user.name != vendor_name:
         return HttpResponse("You do not have permission to edit this service.")
 
     if request.method == "POST":
-        # Validate and update service fields
-        service.name = request.POST['name']
-        service.description = request.POST['description']
-        service.price = request.POST['price']
-        service.category = request.POST['category']
-        
-        # Check availability based on the presence of the checkbox
-        service.availability = 'availability' in request.POST
+        try:
+            with transaction.atomic():
+                # Update main Service fields
+                service.name = request.POST['name']
+                service.description = request.POST['description']
+                service.price = Decimal(request.POST['price'])
+                service.category = request.POST['category']
+                service.city = request.POST['city']
+                service.availability = 'availability' in request.POST
+                service.updated_at = timezone.now()
 
-        # Validate fields
-        if not service.name or not service.description or not service.price or not service.category:
-            return render(request, 'dreamknot1/edit_service.html', {
-                'service': service,
-                'error_message': "All fields are required."
-            })
-        
-        # Save the updated service
-        service.updated_at = timezone.now()
-        service.save()
+                # Handle brochure update
+                if 'brochure' in request.FILES:
+                    service.brochure = request.FILES['brochure']
 
-        # Handle image upload (if a new image is uploaded)
-        if 'image' in request.FILES:
-            # Delete existing image if necessary
-            ServiceImage.objects.filter(service=service).delete()  # You can choose to keep this or just overwrite
-            image = request.FILES['image']
-            service_image = ServiceImage(service=service, image=image)
-            service_image.save()
+                service.save()
 
-        return redirect('vendor_dashboard')
+                # Handle main image update
+                if 'main_image' in request.FILES:
+                    service.main_image = request.FILES['main_image']
+                    service.save()
 
-    return render(request, 'dreamknot1/edit_service.html', {'service': service})
-# Delete Service
+                # Handle additional images
+                new_images = request.FILES.getlist('new_service_images')
+                for image in new_images:
+                    ServiceImage.objects.create(service=service, image=image)
+                
+                # Update category-specific fields
+                if service.category == 'Venue':
+                    venue_service = VenueService.objects.get(service=service)
+                    venue_service.type_of_venue = request.POST.get('type_of_venue', '')
+                    venue_service.location = request.POST.get('location', '')
+                    venue_service.capacity = int(request.POST.get('capacity', 0))
+                    venue_service.pre_post_wedding_availability = parse_boolean(request.POST.get('pre_post_wedding_availability'))
+                    venue_service.base_price =parse_decimal(request.POST.get('base_price', 0))
+                    venue_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate', 0))
+                    venue_service.day_rate = parse_decimal(request.POST.get('day_rate', 0))
+                    venue_service.setup_fee = parse_decimal(request.POST.get('setup_fee'))
+                    venue_service.save()
+
+                elif service.category == 'Catering':
+                    catering_service = CateringService.objects.get(service=service)
+                    catering_service.menu_planning = request.POST.get('menu_planning', '')
+                    catering_service.meal_service_type = request.POST.get('meal_service_type', '')
+                    catering_service.dietary_options = request.POST.get('dietary_options', '')
+                    catering_service.price_per_person = parse_decimal(request.POST.get('price_per_person'))
+                    catering_service.setup_fee = parse_decimal(request.POST.get('setup_fee'))
+                    catering_service.minimum_guest_count = int(request.POST.get('minimum_guest_count', 1))
+                    catering_service.save()
+
+                elif service.category == 'Photography':
+                    photo_service = PhotographyService.objects.get(service=service)
+                    photo_service.package_duration = request.POST.get('package_duration', '')
+                    photo_service.styles = request.POST.get('styles', '')
+                    photo_service.engagement_shoots = parse_boolean(request.POST.get('engagement_shoots'))
+                    photo_service.videography_options = parse_boolean(request.POST.get('videography_options'))
+                    photo_service.base_price = parse_decimal(request.POST.get('base_price'))
+                    photo_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate'))
+                    photo_service.save()
+
+                elif service.category == 'MusicEntertainment':
+                    music_service = MusicEntertainmentService.objects.get(service=service)
+                    music_service.entertainment_options = request.POST.get('entertainment_options', '')
+                    music_service.sound_system_setup = parse_boolean(request.POST.get('sound_system_setup'))
+                    music_service.multiple_entertainment_acts = parse_boolean(request.POST.get('multiple_entertainment_acts'))
+                    music_service.emcee_services = parse_boolean(request.POST.get('emcee_services'))
+                    music_service.playlist_customization = parse_boolean(request.POST.get('playlist_customization'))
+                    music_service.base_price = parse_decimal(request.POST.get('base_price'))
+                    music_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate'))
+                    music_service.save()
+
+                elif service.category == 'MakeupHair':
+                    makeup_service = MakeupHairService.objects.get(service=service)
+                    makeup_service.grooming_services = request.POST.get('grooming_services', '')
+                    makeup_service.trial_sessions = parse_boolean(request.POST.get('trial_sessions'))
+                    makeup_service.high_end_products = parse_boolean(request.POST.get('high_end_products'))
+                    makeup_service.base_price = parse_decimal(request.POST.get('base_price'))
+                    makeup_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate'))
+                    makeup_service.save()
+
+                elif service.category == 'Rentals':
+                    rental_service = RentalsService.objects.get(service=service)
+                    rental_service.rental_items = request.POST.get('rental_items', '')
+                    rental_service.setup_services = parse_boolean(request.POST.get('setup_services'))
+                    rental_service.rental_price_per_item = parse_decimal(request.POST.get('rental_price_per_item'))
+                    rental_service.deposit_required = parse_decimal(request.POST.get('deposit_required'))
+                    rental_service.duration_of_rental = request.POST.get('duration_of_rental', '')
+                    rental_service.save()
+
+                elif service.category == 'MehendiArtist':
+                    mehendi_service = MehendiArtistService.objects.get(service=service)
+                    mehendi_service.design_styles = request.POST.get('design_styles', '')
+                    mehendi_service.duration_per_hand = parse_decimal(request.POST.get('duration_per_hand'))
+                    mehendi_service.use_of_organic_henna = parse_boolean(request.POST.get('use_of_organic_henna'))
+                    mehendi_service.base_price = parse_decimal(request.POST.get('base_price'))
+                    mehendi_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate'))
+                    mehendi_service.save()
+
+                elif service.category == 'Decoration':
+                    decor_service = DecorationService.objects.get(service=service)
+                    decor_service.decor_themes = request.POST.get('decor_themes', '')
+                    decor_service.floral_arrangements = parse_boolean(request.POST.get('floral_arrangements'))
+                    decor_service.lighting_options = parse_boolean(request.POST.get('lighting_options'))
+                    decor_service.stage_decor = parse_boolean(request.POST.get('stage_decor'))
+                    decor_service.base_price = parse_decimal(request.POST.get('base_price'))
+                    decor_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate'))
+                    decor_service.save()
+
+            messages.success(request, f"{service.category} service has been successfully updated!")
+            return redirect('vendor_dashboard')
+
+        except Exception as e:
+            messages.error(request, f"An error occurred while updating the service: {str(e)}")
+
+    # Prepare context for rendering the edit form
+    context = {
+        'service': service,
+        'categories': Service.CATEGORY_CHOICES,
+    }
+
+    # Add category-specific data to the context
+    if service.category == 'Venue':
+        context['venue_service'] = VenueService.objects.get(service=service)
+    elif service.category == 'Catering':
+        context['catering_service'] = CateringService.objects.get(service=service)
+    elif service.category == 'Photography':
+        context['photo_service'] = PhotographyService.objects.get(service=service)
+    elif service.category == 'MusicEntertainment':
+        context['music_service'] = MusicEntertainmentService.objects.get(service=service)
+    elif service.category == 'MakeupHair':
+        context['makeup_service'] = MakeupHairService.objects.get(service=service)
+    elif service.category == 'Rentals':
+        context['rental_service'] = RentalsService.objects.get(service=service)
+    elif service.category == 'MehendiArtist':
+        context['mehendi_service'] = MehendiArtistService.objects.get(service=service)
+    elif service.category == 'Decoration':
+        context['decor_service'] = DecorationService.objects.get(service=service)
+
+    return render(request, 'dreamknot1/edit_service.html', context)
 def delete_service(request, service_id):
     try:
         service = Service.objects.get(id=service_id)
@@ -1039,7 +1329,19 @@ def delete_service(request, service_id):
         return redirect('vendor_dashboard')
     except Service.DoesNotExist:
         return HttpResponse("Service not found.")
-    
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+@require_POST
+def delete_service_image(request, image_id):
+    try:
+        image = ServiceImage.objects.get(id=image_id)
+        image.delete()
+        return JsonResponse({'status': 'success'})
+    except ServiceImage.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Image not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)  
 
     # User Dashboard - View Vendor Services, Book, Rate, Favorite
 def user_dashboard(request):
@@ -1088,18 +1390,40 @@ def vendor_services(request, vendor_id):
     services = Service.objects.filter(vendor=vendor, status=1, availability=True)
     return render(request, 'dreamknot1/vendor_services.html', {'vendor': vendor, 'services': services})
 
+from django.shortcuts import render, get_object_or_404
+from .models import Service, VenueService, CateringService, PhotographyService, MusicEntertainmentService, MakeupHairService, RentalsService, MehendiArtistService, DecorationService
+
 def service_detail(request, service_id):
     service = get_object_or_404(Service, id=service_id)
-    vendor_phone = service.vendor.user.phone  # Adjust if necessary
+    vendor_phone = service.vendor.user.phone
 
-    return render(request, 'dreamknot1/service_detail.html', {
+    # Get category-specific details
+    category_details = None
+    if service.category == 'Venue':
+        category_details = VenueService.objects.filter(service=service).first()
+    elif service.category == 'Catering':
+        category_details = CateringService.objects.filter(service=service).first()
+    elif service.category == 'Photography':
+        category_details = PhotographyService.objects.filter(service=service).first()
+    elif service.category == 'MusicEntertainment':
+        category_details = MusicEntertainmentService.objects.filter(service=service).first()
+    elif service.category == 'MakeupHair':
+        category_details = MakeupHairService.objects.filter(service=service).first()
+    elif service.category == 'Rentals':
+        category_details = RentalsService.objects.filter(service=service).first()
+    elif service.category == 'MehendiArtist':
+        category_details = MehendiArtistService.objects.filter(service=service).first()
+    elif service.category == 'Decoration':
+        category_details = DecorationService.objects.filter(service=service).first()
+
+    context = {
         'service': service,
-        'vendor_phone': vendor_phone,  # Pass the vendor phone number to the template
-    })
+        'vendor_phone': vendor_phone,
+        'category_details': category_details,
+    }
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from .models import Booking
+    return render(request, 'dreamknot1/service_detail.html', context)
+
 
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
@@ -1317,14 +1641,6 @@ def user_booking_details(request):
 
 
 
-
-
-
-
-
-
-
-
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import Service, UserSignup, UserProfile, Booking
@@ -1420,6 +1736,31 @@ def favorite_list(request):
     # Pass the favorites to the template for display
     return render(request, 'dreamknot1/favorite_list.html', {'favorites': favorites})
 
+# Remove from Favorite
+from django.http import JsonResponse
+
+def remove_from_favorite(request, service_id):
+    if request.method == "POST":
+        user_name = request.session.get('user_name', 'user')
+        try:
+            service = Service.objects.get(id=service_id)
+            user = UserSignup.objects.get(name=user_name)
+        except Service.DoesNotExist:
+            return JsonResponse({'error': "Service not found."}, status=404)
+        except UserSignup.DoesNotExist:
+            return JsonResponse({'error': "User not found."}, status=404)
+
+        # Remove the service from favorites
+        try:
+            favorite = Favorite.objects.get(user=user, service=service)
+            favorite.delete()
+            return JsonResponse({'message': "Service removed from favorites successfully."}, status=200)
+        except Favorite.DoesNotExist:
+            return JsonResponse({'error': "Favorite not found."}, status=404)
+
+    return JsonResponse({'error': "Invalid request method."}, status=400)
+
+
 # Rate a Service
 def rate_service(request, service_id):
     user_name = request.session.get('user_name', 'user')
@@ -1437,6 +1778,19 @@ def rate_service(request, service_id):
         return redirect('user_dashboard')
 
     return render(request, 'dreamknot1/rate_service.html', {'service': service})
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1557,4 +1911,13 @@ def delete_venue(request, id):
         return redirect('view_venues')
     else:
         return redirect('login')
+
+
+
+
+
+
+
+
+
 

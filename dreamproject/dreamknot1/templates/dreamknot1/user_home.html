@@ -20,7 +20,11 @@
        
         <!--font-awesome.min.css-->
         <link rel="stylesheet" href="{% static 'assets/css/font-awesome.min.css'%}">
+<!-- SweetAlert2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <!--linear icon css-->
 		<link rel="stylesheet" href="{% static 'assets/css/linearicons.css'%}">
 
@@ -54,6 +58,62 @@
 			<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
 <style>
+
+	
+	.service-list {
+		margin-top: 30px;
+	}
+	.service-item {
+		margin-bottom: 20px;
+		background-color: #f9f9f9;
+		padding: 15px;
+		border-radius: 8px;
+		box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+	}
+	.service-item h4 {
+		margin-bottom: 10px;
+	}
+	.service-item p {
+		margin-bottom: 8px;
+	}
+	.filter-box {
+		margin-bottom: 20px;
+	}
+	.pagination {
+		margin-top: 30px;
+		justify-content: center;
+	}
+
+	.card {
+		border: none;
+		transition: transform 0.2s;
+	}
+	
+	.card:hover {
+		transform: translateY(-10px);
+	}
+	
+	.card-title {
+		font-size: 18px;
+		font-weight: bold;
+	}
+	
+	.card-text {
+		color: #666;
+		margin-bottom: 15px;
+	}
+	
+	.btn-primary {
+		background-color: #410b08;
+		border: none;
+	}
+	
+	.btn-primary:hover {
+		background-color: #410b08;
+	}
+	
+
+
 	/* Footer */
 	.footer {
 		background-color: #333;
@@ -69,167 +129,260 @@
 	.footer a:hover {
 		text-decoration: underline;
 	}
+	/* Styling for Search Bar */
+	.search-bar {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 15px;
+		background-color: #5c363673;
+		border-radius: 10px;
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+		margin-bottom: 20px;
+	}
+	
+	.search-bar input,
+	.search-bar select {
+		width: 100%;
+		border: 2px solid #ddd;
+		padding: 4px;
+		border-radius: 8px;
+		font-size: 16px;
+		margin-right: 10px;
+		outline: none;
+		transition: 0.3s;
+	}
+	
+	.search-bar input:focus,
+	.search-bar select:focus {
+		border-color: #410b08;
+		box-shadow: 0 0 5px rgba(255, 102, 0, 0.5);
+	}
+	
+	.search-bar button {
+		background-color: #410b08;
+		color: white;
+		padding: 12px 20px;
+		border-radius: 8px;
+		font-size: 16px;
+		border: none;
+		cursor: pointer;
+		transition: background-color 0.3s;
+	}
+	
+	.search-bar button:hover {
+		background-color: #8f4a3fcf;
+	}
+
+	/* Add small magnifying glass icon */
+	.search-bar input::before {
+		content: "\f002";
+		font-family: FontAwesome;
+		position: absolute;
+		left: 10px;
+	}
+	.favorite-icon {
+		font-size: 2rem;
+		cursor: pointer;
+		transition: color 0.3s ease;
+	}
+	.favorite-icon:hover {
+		color: #ff4081;
+	}
+	.favorite-icon.favorited {
+		color: #ff4081;
+	}
 </style>
     </head>
 	
 	<body onload="noBack();" onpageshow="if (event.persisted) noBack();">
 
-		<!--[if lte IE 9]>
-            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
-        <![endif]-->
-		
-		<!--header-top start -->
-		<!--<header id="header-top" class="header-top">
-			<ul>
-				<li>
-					<div class="header-top-left">
-						<ul>
-							<li class="select-opt">
-								<select name="language" id="language">
-									<option value="default">EN</option>
-									<option value="Bangla">BN</option>
-									<option value="Arabic">AB</option>
-								</select>
-							</li>
-							<li class="select-opt">
-								<select name="currency" id="currency">
-									<option value="usd">USD</option>
-									<option value="euro">Euro</option>
-									<option value="bdt">BDT</option>
-								</select>
-							</li>
-							<li class="select-opt">
-								<a href="#"><span class="lnr lnr-magnifier"></span></a>
-							</li>
-						</ul>
-					</div>
-				</li>
-				<li class="head-responsive-right pull-right">
-					<div class="header-top-right">
-						<ul>
-							<li class="header-top-contact">
-								+1 222 777 6565
-							</li>
-							<li class="header-top-contact">
-								<a href="#">sign in</a>
-							</li>
-							<li class="header-top-contact">
-								<a href="#">register</a>
-							</li>
-						</ul>
-					</div>
-				</li>
-			</ul>
-	
-		</header><!--/.header-top-->
-		<!--header-top end -->
-	
-		<!-- top-area Start -->
-		<section class="top-area">
-			<div class="header-area">
-				<!-- Start Navigation -->
-			    <nav class="navbar navbar-default bootsnav  navbar-sticky navbar-scrollspy"  data-minus-value-desktop="70" data-minus-value-mobile="55" data-speed="1000">
+	 <!-- Navigation Section -->
+	 <header class="header-area">
+        <nav class="navbar navbar-default bootsnav navbar-sticky navbar-scrollspy" data-minus-value-desktop="70" data-minus-value-mobile="55" data-speed="1000">
+            <div class="container">
+                <!-- Navbar Header -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-menu">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <a class="navbar-brand" href="{% url 'user_home' %}">Dream Knot</a>
+                </div>
+                <!-- Navbar Menu -->
+                <div class="collapse navbar-collapse menu-ui-design" id="navbar-menu">
+                    <ul class="nav navbar-nav navbar-right" data-in="fadeInDown" data-out="fadeOutUp">
+                        <li><a href="{% url 'user_home' %}">Home</a></li>
+                        <li><a href="{% url 'user_dashboard' %}">Service Page</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Planning Tools <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'send_rsvp_invitation' %}">Invitation</a></li>
+                                <li><a href="{% url 'current_month_todolist' %}">Todo List</a></li>
+                            </ul>
+                        </li>
+                        <!-- Profile Dropdown -->
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <i class="fa fa-user-circle fa-2x"></i> {{ name }} <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'update_user_profile' %}">View Profile</a></li>
+                                <li><a href="{% url 'logout' %}" class="logout-button">Logout</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
 
-			        <div class="container">
+    <!-- Hero Section -->
+    <section class="welcome-hero" id="home">
+        <div class="container">
+            {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="welcome-hero-txt">
+                <h3 style="font-size: 25px; font-family: 'Comic Sans MS', cursive; color: white; padding-bottom: 30px;">
+                    <i>Welcome, {{ name }}!</i>
+                </h3>
+                <h2>Best place to find and explore <br> all that you need</h2>
+                <p>Manage your upcoming events, keep track of your wedding checklist, and ensure every detail is perfectly taken care of.</p>
+                <a href="{% url 'user_dashboard' %}" class="btn btn-primary" style="background-color: orange; padding: 5px 25px; margin-top: 29px;">Explore Services</a>
 
-			            <!-- Start Header Navigation -->
-			            <div class="navbar-header">
-			                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-menu">
-			                    <i class="fa fa-bars"></i>
-			                </button>
-							<!--<div class="logo">
-								<img src="{% static 'assets/logo/logo1.png'%}">
-								</div>-->
-	
-			                <a class="navbar-brand" href="index.html">Dream Knot</a>
-							
-			            </div><!--/.navbar-header-->
-			            <!-- End Header Navigation -->
+                {% if time_left %}
+                <p style="font-size: 20px; font-weight: bold; color: #ffffff;">{{ time_left }}</p>
+                {% endif %}
 
-			            <!-- Collect the nav links, forms, and other content for toggling -->
-			            <div class="collapse navbar-collapse menu-ui-design" id="navbar-menu">
-							<ul class="nav navbar-nav navbar-right" data-in="fadeInDown" data-out="fadeOutUp">
-								<li class="sc"><a href="{% url 'user_home' %}">home</a></li>
-								
-								<li class="serv"><a href="{% url 'user_dashboard' %}">SERVICE Page</a></li>
-								<li class="scroll"><a href="#contact">contact</a></li>
+                {% if message %}
+                <div style="background-color: #d9edf7; border: 1px solid #bcdff1; border-radius: 5px; padding: 10px; margin-top: 20px;">
+                    <p style="color: #31708f;">{{ message }}</p>
+                </div>
+                {% endif %}
 
-								<li class="dropdown">
-									<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-										Planning Tools <span class="caret"></span>
-									</a>
-									<ul class="dropdown-menu">
-										<li><a href="{% url 'send_rsvp_invitation' %}">RSVP Invitation</a></li>
-										<li><a href="{% url 'current_month_todolist' %}">Todo List</a></li>
-									</ul>
-								</li>
-								
-								<!-- Dropdown for Profile -->
-								<li class="dropdown">
-									<!-- User Icon and Name -->
-									<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-										<i class="fa fa-user-circle fa-2x"></i>  <!-- Font Awesome user icon -->
-										{{ name }}  <!-- Display username -->
-										<span class="caret"></span>  <!-- Dropdown caret -->
-									</a>
-									<ul class="dropdown-menu">
-										<li><a href="{% url 'update_user_profile' %}">View Profile</a></li>
-										<li><a href="{% url 'logout' %}">Logout</a></li>
-									</ul>
-								</li>
-								
-								
-			        </div><!--/.container-->
-			    </nav><!--/nav-->
-			    <!-- End Navigation -->
-			</div><!--/.header-area-->
-		    <div class="clearfix"></div>
-
-		</section><!-- /.top-area-->
-		<!-- top-area End -->
-		
-		<!--welcome-hero start -->
-		<section id="home" class="welcome-hero">
-			<div class="container">
-				{% if messages %}
-		<ul class="messages">
-			{% for message in messages %}
-				<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-			{% endfor %}
-		</ul>
-	{% endif %}
-
-				<div class="welcome-hero-txt">
-					<h3 style="font-size: 35px; font-family: Comic Sans MS , cursive; color: white; padding-bottom:30px;"><i>Welcome, {{ name }}!</i></h3>
-					<h2>best place to find and explore <br> that all you need </h2>
-					<p>
-						manage your upcoming events, keep track of your wedding checklist, and ensure every detail is perfectly taken care of. Let us help you create unforgettable memories and a wedding day you’ll cherish forever. 
-					</p>
-					<a href="{% url 'user_dashboard' %}" class="btn btn-primary" style="background-color:orange; border-color: rgb(61, 22, 22); padding: 5px 25px 5px 25px; margin-top: 29px;">Explore Services</a>
-
-							
-					
-				
-					{% if time_left %}
-    <!--<h2 style="color: #5c0e07; font-family: Lucida Handwriting, cursive; font-size: 10px;">Time until your wedding:</h2>-->
-    <p style="font-size: 40px; font-weight: bold; font-family: Didot ,serif; color: #ffffff; background:rgba(30, 28, 29, 0.65)">{{ time_left }}</p>
-{% endif %}
-
-{% if message %}
-    <div style="background-color: #d9edf7; border: 1px solid #bcdff1; border-radius: 5px; padding: 10px; margin-top: 20px;">
-        <p style="color: #31708f; font-family: Arial, sans-serif;">{{ message }}</p>
-    </div>
-{% endif %}
-
-
-		<div class="profile">
-            <p><strong>Wedding Date:</strong> {% if wedding_date %}{{ wedding_date }}{% else %}Not set{% endif %}</p>
+                <div class="profile">
+                    <p><strong>Wedding Date:</strong> {% if wedding_date %}{{ wedding_date }}{% else %}Not set{% endif %}</p>
+                </div>
+            </div>
         </div>
+    </section>
 
-		
+   <!-- Service List Section -->
+<section class="service-list">
+    <div class="container">
+        <!-- Filters and Search -->
+      <!-- Filters and Search -->
+<div class="filter-box">
+	<form method="GET" action="{% url 'user_home' %}">
+		<div class="row search-bar">
+			<div class="col-md-3">
+				<input type="text" name="search" class="form-control" placeholder="Search services..." value="{{ request.GET.search }}">
+			</div>
+			<div class="col-md-3">
+				<select name="category" class="form-control">
+					<option value="">Select Category</option>
+					<option value="Photography" {% if request.GET.category == 'Photography' %}selected{% endif %}>Photography</option>
+					<option value="Catering" {% if request.GET.category == 'Catering' %}selected{% endif %}>Catering</option>
+					<option value="Venue" {% if request.GET.category == 'Venue' %}selected{% endif %}>Venue</option>
+					<option value="Decoration" {% if request.GET.category == 'Decoration' %}selected{% endif %}>Decoration</option>
+					<option value="Music" {% if request.GET.category == 'Music' %}selected{% endif %}>Music</option>
+					<option value="Makeup" {% if request.GET.category == 'Makeup' %}selected{% endif %}>Makeup</option>
+					<option value="Transportation" {% if request.GET.category == 'Transportation' %}selected{% endif %}>Transportation</option>
+					<option value="Wedding Planners" {% if request.GET.category == 'Wedding Planners' %}selected{% endif %}>Wedding Planners</option>
+					<option value="Florists" {% if request.GET.category == 'Florists' %}selected{% endif %}>Florists</option>
+					<option value="Bakeries" {% if request.GET.category == 'Bakeries' %}selected{% endif %}>Bakeries</option>
+					<option value="Videography" {% if request.GET.category == 'Videography' %}selected{% endif %}>Videography</option>
+					<option value="Invitations" {% if request.GET.category == 'Invitations' %}selected{% endif %}>Invitations</option>
+					<option value="Rentals" {% if request.GET.category == 'Rentals' %}selected{% endif %}>Rentals</option>
+					<option value="Bride and Groom Wear" {% if request.GET.category == 'Bride and Groom Wear' %}selected{% endif %}>Bride and Groom Wear</option>
+					<option value="Jewelry" {% if request.GET.category == 'Jewelry' %}selected{% endif %}>Jewelry</option>
+					<option value="Accessories" {% if request.GET.category == 'Accessories' %}selected{% endif %}>Accessories</option>
+					<option value="Mehndi" {% if request.GET.category == 'Mehndi' %}selected{% endif %}>Mehndi</option>
+				</select>
+			</div>
+			
+			<div class="col-md-3">
+				<input type="text" name="city" class="form-control" placeholder="Enter city..." value="{{ request.GET.city }}">
+			</div>
+			
+			
+			<div class="col-md-3">
+				<select name="price_range" class="form-control">
+					<option value="">Select Price Range</option>
+					<option value="0-500" {% if request.GET.price_range == '0-500' %}selected{% endif %}>₹0 - ₹500</option>
+					<option value="501-1000" {% if request.GET.price_range == '501-1000' %}selected{% endif %}>₹501 - ₹1000</option>
+					<option value="1001-2000" {% if request.GET.price_range == '1001-2000' %}selected{% endif %}>₹1001 - ₹2000</option>
+					<option value="2001" {% if request.GET.price_range == '2001' %}selected{% endif %}>₹2000+</option>
+				</select>
+			</div>
+			<div class="col-md-2">
+				<button type="submit" class="btn btn-primary btn-block">Search</button>
+			</div>
+		</div>
+	</form>
+</div>
 
-		
+       <!-- Service Cards -->
+	   <div class="row">
+		{% if services_with_images %}
+		{% for entry in services_with_images %}
+		<div class="col-md-4">
+			<div class="service-item" style="border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 8px; background-color: #f7f7f7; height: 100%; display: flex; flex-direction: column;">
+				
+				<!-- Display Service Images at the Top -->
+				{% if entry.main_image %}
+				<div class="service-image" style="margin-bottom: 10px; flex: 0 0 auto;height: 200px; overflow: hidden;">
+					<img src="{{ entry.main_image.url }}" alt="{{ entry.service.name }}" class="img-responsive" style="width: 100%; height: 100%; object-fit: cover; border-radius: 5px;">
 				</div>
+				{% else %}
+				<p>No main image available for this service.</p>
+				{% endif %}
+				
+				<!-- Service Details -->
+				<div style="flex: 1 0 auto;">
+					<h4 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{ entry.service.name }}</h4>
+					<p><strong>Service Provider:</strong> {{ entry.vendor_company_name|default:"No company name" }}</p>
+					<p><strong>Price:</strong> ₹{{ entry.service.price }}</p>
+					<p><strong>Description:</strong> {{ entry.service.description|truncatewords:8 }}</p>
+				</div>
+	
+				<div style="margin-top: auto;">
+					<a href="{% url 'service_detail' entry.service.id %}" class="btn-primary" style="margin-top: 8px; padding: 5px 15px;">View Details</a>
+					
+					<!-- Add margin-left to create space and increase font size -->
+				<!--	<i class="fa fa-heart favorite-icon" style="margin-left: 15px; font-size: 1.8rem; " data-service-id="{{ entry.service.id }}"></i>-->
+				</div>
+				
+			</div>
+		</div>
+		{% endfor %}
+		{% else %}
+		<div class="col-12">
+			<p>No services found. Try adjusting your filters.</p>
+		</div>
+		{% endif %}
+	</div>
+<!-- Pagination -->
+<div class="pagination-box">
+    {% if is_paginated %}
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li><a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        <li><span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+        <li><a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+    </ul>
+    {% endif %}
+</div>
+
+
 				<!--<div class="welcome-hero-serch-box">
 					<div class="welcome-hero-form">
 						<div class="single-welcome-hero-form">
@@ -1197,6 +1350,16 @@
 		     
         <!--Custom JS-->
         <script src="{% static 'assets/js/custom.js'%}"></script>
+		<script>
+			document.querySelectorAll('.favorite-icon').forEach(function (icon) {
+				icon.addEventListener('click', function () {
+					this.classList.toggle('favorited');  // Toggle filled heart
+					// You can add AJAX here to handle saving the favorite status
+				});
+			});
+
+					
+		</script>
 
         <script type="text/javascript">
 			window.history.forward();
@@ -1204,6 +1367,33 @@
 				window.history.forward();
 			}
 		</script>
+		<!-- JavaScript Files -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Logout Confirmation
+        const logoutLinks = document.querySelectorAll('.logout-button, .nav-links a[href="{% url 'logout' %}"]');
+
+        logoutLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, log me out!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = this.href;
+                    }
+                });
+            });
+        });
+    });
+</script>
     </body>
 	
 </html>

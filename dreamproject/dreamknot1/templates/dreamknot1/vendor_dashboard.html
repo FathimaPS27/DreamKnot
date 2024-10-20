@@ -6,115 +6,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendor Dashboard</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         body {
             background-color: #f8f9fa;
         }
-        header {
-            background-color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        header a {
-            text-decoration: none;
-            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 30px;
-            font-weight: 600;
-            font-family: 'Lucida Handwriting', cursive;
-            transition: background 0.3s ease;
-            padding-top: 20px;
-        }
         .sidebar {
+            height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            height: 100%;
+            padding-top: 60px;
+            background-color: #343a40;
             width: 250px;
-            background-color: rgba(45, 12, 2, 1);
-            padding-top: 20px;
-            padding-right: 15px;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
         }
         .sidebar a {
-            color: white;
-            text-decoration: none;
+            color: #fff;
             padding: 15px;
             display: block;
-            transition: background 0.3s;
         }
         .sidebar a:hover {
-            background-color: rgba(232, 121, 121, 1);
+            background-color: #495057;
+            text-decoration: none;
         }
         .content {
             margin-left: 250px;
             padding: 20px;
         }
-        h2, h3 {
-            color: rgba(45, 12, 2, 1);
-            text-align: center;
+        .card {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .table th, .table td {
-            vertical-align: middle;
+        .add-service-card {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
         }
         .service-image {
             max-width: 100px;
             max-height: 100px;
-        }
-        .btn-primary, .btn-danger {
-            margin-top: 20px;
-        }
-        .add-service-card {
-            background-color: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            margin: 20px auto;
-            padding: 30px;
-            max-width: 600px;
-        }
-        .add-service-card label {
-            font-weight: bold;
-        }
-        .add-service-card input,
-        .add-service-card select,
-        .add-service-card textarea {
-            border-radius: 10px;
-        }
-        #imagePreview {
-            margin-top: 10px;
-            max-width: 100%;
-            border-radius: 10px;
-            display: none;
-        }
-        .error {
-            color: red;
-            font-weight: bold;
-            margin-top: 5px;
-            font-size: 0.9em;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
-    <header>
-        <a href="#">Dream Knot</a>
-    </header>
-
-    <div class="sidebar">
+    <div class="sidebar bg-dark">
         <nav class="nav flex-column">
-            <a href="{% url 'vendor_home' %}">Home</a>
-            <a href="{% url 'logout' %}">Logout</a>
-								
-            <a href="#your-services" class="nav-link">Your Services</a>
-            <a href="#add-new-service" class="nav-link">Add New Service</a>
-
-
+            <a href="{% url 'vendor_home' %}" <i class="fas fa-home"></i> Home</a>
+            <a href="#your-services" class="nav-link"><i class="fas fa-list"></i> Your Services</a>
+            <a href="#add-new-service" class="nav-link"><i class="fas fa-plus"></i> Add New Service</a>
+            <a href="{% url 'logout' %}" <i class="fas fa-sign-out-alt"></i> Logout</a>
         </nav>
     </div>
 
     <div class="content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <div id="your-services" class="container mb-5">
-            <h3>Your Services</h3>
+            <h2 class="mb-4">Your Services</h2>
             <div class="card">
                 <div class="card-body">
                     <table class="table table-striped table-bordered">
@@ -126,6 +88,8 @@
                                 <th>Price</th>
                                 <th>Category</th>
                                 <th>Status</th>
+                                <th>City</th>
+                                <th>Brochure</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -133,17 +97,25 @@
                             {% for service in services %}
                             <tr>
                                 <td>
-                                    {% if service.images.exists %}
-                                        <img src="{{ service.images.first.image.url }}" alt="{{ service.name }}" class="service-image">
+                                    {% if service.main_image %}
+                                        <img src="{{ service.main_image.url }}" alt="{{ service.name }}" class="service-image">
                                     {% else %}
                                         No Image
                                     {% endif %}
                                 </td>
                                 <td>{{ service.name }}</td>
-                                <td>{{ service.description }}</td>
-                                <td>${{ service.price }}</td>
+                                <td>{{ service.description|truncatewords:8 }}</td>
+                                <td>₹{{ service.price }}</td>
                                 <td>{{ service.category }}</td>
                                 <td>{{ service.availability }}</td>
+                                <td>{{ service.city }}</td>
+                                <td>
+                                    {% if service.brochure %}
+                                        <a href="{{ service.brochure.url }}" target="_blank">View Brochure</a>
+                                    {% else %}
+                                        No Brochure
+                                    {% endif %}
+                                </td>
                                 <td>
                                     <a href="{% url 'edit_service' service.id %}" class="btn btn-primary btn-sm">Edit</a>
                                     <form action="{% url 'delete_service' service.id %}" method="POST" style="display:inline;">
@@ -154,7 +126,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="text-center">No services available. Add a new service below.</td>
+                                <td colspan="9" class="text-center">No services available. Add a new service below.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -164,62 +136,71 @@
         </div>
 
         <div id="add-new-service" class="container">
-            <h3>Add New Service</h3>
+            <h2 class="mb-4">Add New Service</h2>
             <div class="add-service-card">
-                <form method="POST" enctype="multipart/form-data" action="{% url 'vendor_dashboard' %}">
+                <form method="POST" enctype="multipart/form-data" action="{% url 'vendor_dashboard' %}" id="addServiceForm">
                     {% csrf_token %}
-                    <div class="form-group">
-                        <label for="name">Service Name</label>
-                        <input type="text" class="form-control" name="name" placeholder="Service Name" value="{{ request.POST.name }}" required>
-                        {% if errors.name %}
-                            <div class="error">{{ errors.name }}</div>
-                        {% endif %}
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="name">Service Name</label>
+                            <input type="text" class="form-control" name="name" id="name" placeholder="Service Name"  required>
+                            {% if errors.name %}<div class="error">{{ errors.name }}</div>{% endif %}
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="category">Category</label>
+                            <select class="form-control" name="category" id="category" required onchange="showFields(this.value)">
+                                <option value="">Select a category</option>
+                                {% for category, display_name in categories %}
+                                    <option value="{{ category }}" {% if service_data.category == category %}selected{% endif %}>{{ display_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="description">Description</label>
-                        <textarea class="form-control" name="description" placeholder="Description" required>{{ request.POST.description }}</textarea>
+                        <textarea class="form-control" name="description" id="description" placeholder="Description" required></textarea>
                     </div>
-                    <div class="form-group">
-                        <label for="price">Price</label>
-                        <input type="number" class="form-control" name="price" placeholder="Price" value="{{ request.POST.price }}" required>
-                        {% if errors.price %}
-                            <div class="error">{{ errors.price }}</div>
-                        {% endif %}
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="price">Price</label>
+                            <input type="number" class="form-control" name="price" id="price" placeholder="Price"  required>
+                            {% if errors.price %}<div class="error">{{ errors.price }}</div>{% endif %}
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="city">City</label>
+                            <input type="text" class="form-control" name="city" id="city" placeholder="City" ">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="category">Category</label>
-                        <select class="form-control" name="category" id="category" required>
-                            <option value="" disabled {% if not request.POST.category %} selected {% endif %}>Select a category</option>
-                            <option value="Photography" {% if request.POST.category == 'Photography' %} selected {% endif %}>Photography</option>
-                            <option value="Catering" {% if request.POST.category == 'Catering' %} selected {% endif %}>Catering</option>
-                            <option value="Venue" {% if request.POST.category == 'Venue' %} selected {% endif %}>Venue</option>
-                            <option value="Decoration" {% if request.POST.category == 'Decoration' %} selected {% endif %}>Decoration</option>
-                            <option value="Music" {% if request.POST.category == 'Music' %} selected {% endif %}>Music</option>
-                            <option value="Makeup" {% if request.POST.category == 'Makeup' %} selected {% endif %}>Makeup</option>
-                            <option value="Transportation" {% if request.POST.category == 'Transportation' %} selected {% endif %}>Transportation</option>
-                            <option value="Wedding Planners" {% if request.POST.category == 'Wedding Planners' %} selected {% endif %}>Wedding Planners</option>
-                            <option value="Florists" {% if request.POST.category == 'Florists' %} selected {% endif %}>Florists</option>
-                            <option value="Bakeries" {% if request.POST.category == 'Bakeries' %} selected {% endif %}>Bakeries</option>
-                            <option value="Videography" {% if request.POST.category == 'Videography' %} selected {% endif %}>Videography</option>
-                            <option value="Invitations" {% if request.POST.category == 'Invitations' %} selected {% endif %}>Invitations</option>
-                            <option value="Rentals" {% if request.POST.category == 'Rentals' %} selected {% endif %}>Rentals</option>
-                            <option value="Bride and Groom Wear" {% if request.POST.category == 'Bride and Groom Wear' %} selected {% endif %}>Bride and Groom Wear</option>
-                            <option value="Mehndi" {% if request.POST.category == 'Mehndi' %} selected {% endif %}>Mehndi</option>
-                            <option value="Jewelry and Accessories" {% if request.POST.category == 'Jewelry and Accessories' %} selected {% endif %}>Jewelry and Accessories</option>
-                            <option value="Food" {% if request.POST.category == 'Food' %} selected {% endif %}>Food</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="brochure">Upload Brochure (PDF)</label>
+                            <input type="file" class="form-control-file" id="brochure" name="brochure" accept="application/pdf">
+                            {% if service_data.brochure %}
+                                <a href="{{ service_data.brochure.url }}" target="_blank">View Existing Brochure</a>
+                            {% endif %}
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="availability">Availability</label>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="availability" id="availability" {% if request.POST.availability %}checked{% endif %}>
+                                <label class="form-check-label" for="availability">Available</label>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="availability">Availability</label>
-                        <input type="checkbox" name="availability" id="availability" {% if request.POST.availability %} checked {% endif %}> Available
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="main_image">Main Service Image</label>
+                            <input type="file" class="form-control-file" name="main_image" id="main_image" accept="image/*" onchange="previewImage(event)" required>
+                            <img id="imagePreview" src="#" alt="Image Preview" style="display: none; max-width: 200px; max-height: 200px;" />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="service_images">Additional Service Images</label>
+                            <input type="file" class="form-control-file" id="service_images" name="service_images" multiple accept="image/*" onchange="previewImages(event)">
+                            <div id="imagePreviews" class="mt-2"></div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="image">Service Image</label>
-                        <input type="file" class="form-control-file" name="image" id="image" accept="image/*" onchange="previewImage(event)" required>
-                    </div>
-                    <img id="imagePreview" src="#" alt="Image Preview" />
-                    <button type="submit" class="btn btn-primary">Add Service</button>
+                    <div id="dynamic-fields"></div>
+                    <button type="submit" class="btn btn-primary mt-3">Add Service</button>
                 </form>
             </div>
         </div>
@@ -241,23 +222,372 @@
         });
 
         function previewImage(event) {
-            const input = event.target;
-            const preview = document.getElementById('imagePreview');
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const imagePreview = document.getElementById('imagePreview');
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
 
-            if (input.files && input.files[0]) {
+        function previewImages(event) {
+            const files = event.target.files;
+            const imagePreviews = document.getElementById('imagePreviews');
+            imagePreviews.innerHTML = '';
+            Array.from(files).forEach(file => {
                 const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('mr-2', 'mb-2', 'service-image');
+                    imagePreviews.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
 
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                }
+        function showFields(category) {
+            const dynamicFieldsContainer = document.getElementById('dynamic-fields');
+            dynamicFieldsContainer.innerHTML = '';
 
-                reader.readAsDataURL(input.files[0]);
-            } else {
-                preview.src = '#';
-                preview.style.display = 'none';
+            switch (category) {
+                case 'Photography':
+                    dynamicFieldsContainer.innerHTML = `
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="package_duration">Package Duration</label>
+                                <select class="form-control" name="package_duration" required>
+                                    <option value="Half-day">Half-day</option>
+                                    <option value="Full-day">Full-day</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="styles">Styles</label>
+                                <textarea class="form-control" name="styles" placeholder="Describe styles" required></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="engagement_shoots" id="engagement_shoots">
+                                    <label class="form-check-label" for="engagement_shoots">Engagement Shoots Available</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="videography_options" id="videography_options">
+                                    <label class="form-check-label" for="videography_options">Videography Options Available</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" class="form-control" name="base_price" placeholder="Base Price" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" class="form-control" name="hourly_rate" placeholder="Hourly Rate">
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'Catering':
+                    dynamicFieldsContainer.innerHTML = `
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="menu_planning">Menu Planning</label>
+                                <textarea class="form-control" name="menu_planning" placeholder="Menu Planning" required></textarea>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="meal_service_type">Meal Service Type</label>
+                                <select class="form-control" name="meal_service_type" required>
+                                    <option value="Buffet">Buffet</option>
+                                    <option value="Plated">Plated</option>
+                                    <option value="Food Stations">Food Stations</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="dietary_options">Dietary Options</label>
+                                <textarea class="form-control" name="dietary_options" placeholder="Dietary Options" required></textarea>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="price_per_person">Price Per Person</label>
+                                <input type="number" class="form-control" name="price_per_person" placeholder="Price Per Person" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="minimum_guest_count">Minimum Guest Count</label>
+                                <input type="number" class="form-control" name="minimum_guest_count" value="1" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="setup_fee">Setup Fee</label>
+                                <input type="number" class="form-control" name="setup_fee" placeholder="Setup Fee">
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'Venue':
+                    dynamicFieldsContainer.innerHTML = `
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="type_of_venue">Type of Venue</label>
+                                <select class="form-control" name="type_of_venue" required>
+                                    <option value="Indoor">Indoor</option>
+                                    <option value="Outdoor">Outdoor</option>
+                                    <option value="Destination">Destination</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="location">Location</label>
+                                <input type="text" class="form-control" name="location" placeholder="Venue Location" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="capacity">Capacity</label>
+                                <input type="number" class="form-control" name="capacity" placeholder="Guest Capacity" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" class="form-control" name="base_price" placeholder="Base Price" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" class="form-control" name="hourly_rate" placeholder="Hourly Rate">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="day_rate">Day Rate</label>
+                                <input type="number" class="form-control" name="day_rate" placeholder="Day Rate" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="setup_fee">Setup Fee</label>
+                                <input type="number" class="form-control" name="setup_fee" placeholder="Setup Fee">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="pre_post_wedding_availability" id="pre_post_wedding_availability">
+                                <label class="form-check-label" for="pre_post_wedding_availability">Pre/Post Wedding Availability</label>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'Decoration':
+                    dynamicFieldsContainer.innerHTML = `
+                        <div class="form-group">
+                            <label for="decor_themes">Decor Themes</label>
+                            <textarea class="form-control" name="decor_themes" placeholder="Describe decor themes" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="floral_arrangements" id="floral_arrangements">
+                                    <label class="form-check-label" for="floral_arrangements">Floral Arrangements Available</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="lighting_options" id="lighting_options">
+                                    <label class="form-check-label" for="lighting_options">Lighting Options Available</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="stage_decor" id="stage_decor">
+                                    <label class="form-check-label" for="stage_decor">Stage Decor Available</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" class="form-control" name="base_price" placeholder="Base Price" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" class="form-control" name="hourly_rate" placeholder="Hourly Rate">
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'MusicEntertainment':
+                    dynamicFieldsContainer.innerHTML = `
+                        <div class="form-group">
+                            <label for="entertainment_options">Entertainment Options</label>
+                            <textarea class="form-control" name="entertainment_options" placeholder="Entertainment Options" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="sound_system_setup" id="sound_system_setup">
+                                    <label class="form-check-label" for="sound_system_setup">Sound System Setup</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="multiple_entertainment_acts" id="multiple_entertainment_acts">
+                                    <label class="form-check-label" for="multiple_entertainment_acts">Multiple Entertainment Acts</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="emcee_services" id="emcee_services">
+                                    <label class="form-check-label" for="emcee_services">Emcee Services</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="playlist_customization" id="playlist_customization">
+                                    <label class="form-check-label" for="playlist_customization">Playlist Customization</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" class="form-control" name="base_price" placeholder="Base Price" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" class="form-control" name="hourly_rate" placeholder="Hourly Rate">
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'MakeupHair':
+                    dynamicFieldsContainer.innerHTML = `
+                        <div class="form-group">
+                            <label for="grooming_services">Grooming Services</label>
+                            <textarea class="form-control" name="grooming_services" placeholder="Grooming Services" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="trial_sessions" id="trial_sessions">
+                                    <label class="form-check-label" for="trial_sessions">Trial Sessions Available</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="high_end_products" id="high_end_products">
+                                    <label class="form-check-label" for="high_end_products">High-End Products Available</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" class="form-control" name="base_price" placeholder="Base Price" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" class="form-control" name="hourly_rate" placeholder="Hourly Rate">
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'Rentals':
+                    dynamicFieldsContainer.innerHTML = `
+                        <div class="form-group">
+                            <label for="rental_items">Rental Items</label>
+                            <textarea class="form-control" name="rental_items" placeholder="List rental items" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="setup_services" id="setup_services">
+                                    <label class="form-check-label" for="setup_services">Setup Services Available</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="rental_price_per_item">Rental Price Per Item</label>
+                                <input type="number" class="form-control" name="rental_price_per_item" placeholder="Rental Price Per Item" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="deposit_required">Deposit Required</label>
+                                <input type="number" class="form-control" name="deposit_required" placeholder="Deposit Required">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="duration_of_rental">Duration of Rental</label>
+                                <select class="form-control" name="duration_of_rental" required>
+                                    <option value="Hourly">Hourly</option>
+                                    <option value="Daily">Daily</option>
+                                    <option value="Weekly">Weekly</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'MehendiArtist':
+                    dynamicFieldsContainer.innerHTML = `
+                        <div class="form-group">
+                            <label for="design_styles">Design Styles</label>
+                            <textarea class="form-control" name="design_styles" placeholder="Design Styles" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="duration_per_hand">Duration Per Hand</label>
+                                <input type="number" step="0.01" class="form-control" name="duration_per_hand" placeholder="Duration Per Hand (in hours)" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="use_of_organic_henna" id="use_of_organic_henna">
+                                    <label class="form-check-label" for="use_of_organic_henna">Use of Organic Henna Available</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" class="form-control" name="base_price" placeholder="Base Price" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" class="form-control" name="hourly_rate" placeholder="Hourly Rate">
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                default:
+                    dynamicFieldsContainer.innerHTML = '<p>Please select a valid category.</p>';
             }
         }
+
+       
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        document.getElementById('addServiceForm').reset();
+                        // Clear any previewed images
+                        document.getElementById('imagePreview').style.display = 'none';
+                        document.getElementById('imagePreviews').innerHTML = '';
+                        // Clear dynamic fields
+                        document.getElementById('dynamic-fields').innerHTML = '';
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        });
     </script>
 </body>
 </html>

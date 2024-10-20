@@ -55,7 +55,8 @@ urlpatterns = [
     path('service_detail/<int:service_id>/', views.service_detail, name='service_detail'), 
     path('approve-booking/', views.vendor_approve_booking, name='vendor_approve_booking'),
     path('vendor/calendar/<int:service_id>/', views.booking_calendar_view, name='booking_calendar'),
-
+    path('delete-service-image/<int:image_id>/', views.delete_service_image, name='delete_service_image'),
+    
 
 
     path('service/<int:service_id>/calendar/', views.booking_calendar_view, name='booking_calendar'),
@@ -68,6 +69,7 @@ urlpatterns = [
     path('user/rate/<int:service_id>/', views.rate_service, name='rate_service'),
     path('user/favorites/', views.favorite_list, name='favorite_list'),
     path('user/bookings/', views.user_booking_details, name='user_booking_details'),
+    path('remove-from-favorite/<int:service_id>/', views.remove_from_favorite, name='remove_from_favorite'),
 
 ]
 if settings.DEBUG:

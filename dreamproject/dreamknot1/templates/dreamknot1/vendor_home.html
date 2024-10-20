@@ -45,7 +45,11 @@
         
         <!--responsive.css-->
         <link rel="stylesheet" href="{% static 'assets/css/responsive.css'%}">
-        
+        <!-- SweetAlert2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>  
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
 		
@@ -165,7 +169,7 @@
 									</a>
 									<ul class="dropdown-menu">
 										<li><a href="{% url 'update_vendor_profile' %}">Update Profile</a></li>
-										<li><a href="{% url 'logout' %}">Logout</a></li>
+										<li><a href="{% url 'logout' %}" class="logout-button">Logout</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -1146,7 +1150,34 @@
 			
         </footer><!--/.footer-->
 		<!--footer end-->
-		
+		<!-- JavaScript Files -->
+	<!-- JavaScript Files -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Logout Confirmation
+        const logoutLinks = document.querySelectorAll('.logout-button, .nav-links a[href="{% url 'logout' %}"]');
+
+        logoutLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, log me out!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = this.href;
+                    }
+                });
+            });
+        });
+    });
+</script>
 		<!-- Include all js compiled plugins (below), or include individual files as needed -->
 
 		<script src="{% static 'assets/js/jquery.js'%}"></script>

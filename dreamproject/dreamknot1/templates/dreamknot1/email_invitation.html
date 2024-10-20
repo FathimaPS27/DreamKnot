@@ -45,7 +45,7 @@
             text-align: center;
         }
         .footer {
-            margin-top: 20px;
+            margin-top: 10px;
             font-size: 0.9em;
             color: #777;
             text-align: center;
@@ -55,18 +55,18 @@
             border-top: 2px solid #400721;
             padding-top: 20px;
         }
-        .link {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #400721;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
+        .map-icon {
+            text-align: center;
+            margin-top: 10px;
         }
-        .link:hover {
-            background-color: #400721; /* Darker shade on hover */
+        .map-icon img {
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .map-icon img:hover {
+            transform: scale(1.1);
         }
     </style>
 </head>
@@ -86,7 +86,14 @@
         </div>
 
         <p>If you have any questions, feel free to reach out at <strong>{{ phone_number }}</strong>.</p>
-        <p>Find the location <a class="link" href="{{ location_link }}">here</a>.</p>
+
+        <p>Find the location here:</p>
+        <div class="map-icon">
+            <a href="{{ location_link }}" target="_blank">
+                <img src="https://img.icons8.com/ios-filled/50/000000/map-pin.png" alt="Map Icon">
+            </a>
+        </div>
+        
         <p>We hope to see you there!</p>
 
         <div class="footer">

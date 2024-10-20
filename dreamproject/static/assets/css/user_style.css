@@ -255,11 +255,11 @@ nav.navbar.bootsnav .navbar-toggle i{color: #600508;}
 --------------------------------------*/
 .welcome-hero {
     position: relative;
-    background:url(../images/welcome-hero/8.jpg)no-repeat;
+    background:url(../images/welcome-hero/k3.jpg)no-repeat;
     background-position:center;
     background-size:cover;
     text-align: center;
-    height:800px;
+    /*height:500px;*/
     z-index: 1;
 }
 .welcome-hero:before{
@@ -272,7 +272,7 @@ nav.navbar.bootsnav .navbar-toggle i{color: #600508;}
     background:rgba(29, 29, 30, 0.073);
     z-index: -1;
 }
-.welcome-hero-txt { padding-top: 155px;}
+.welcome-hero-txt { padding-top: 55px;}
 
 .welcome-hero-txt h2 {
     font-size: 48px;

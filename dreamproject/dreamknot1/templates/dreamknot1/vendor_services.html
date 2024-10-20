@@ -114,7 +114,7 @@
             {% for service in services %}
             <div class="col-md-4 mb-4">
                 <div class="card">
-                    <img src="{{ service.images.first.image.url }}" alt="{{ service.name }}" class="card-img-top">
+                    <img src="{{ service.main_image.url }}" alt="{{ service.name }}" class="card-img-top">
                     <div class="card-body">
                         <h5 class="card-title">{{ service.name }}</h5>
                        <!-- <p class="card-text">{{ service.description|linebreaksbr }}</p>-->

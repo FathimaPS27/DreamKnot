@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
-
+from django.db.models import JSONField
 from django_countries.fields import CountryField
 from django.db import models
 
@@ -108,19 +108,36 @@ class RSVPInvitation(models.Model):
 
 
 class Service(models.Model):
+    CATEGORY_CHOICES = [
+        ('Photography', 'Photography'),
+        ('Catering', 'Catering'),
+        ('Venue', 'Venue'),
+        ('Decoration', 'Decoration'),
+        ('MusicEntertainment', 'Music & Entertainment'),
+        ('MakeupHair', 'Makeup & Hair'),
+        ('Rentals', 'Rentals'),
+        ('MehendiArtist', 'Mehendi Artist'),
+    ]
     vendor = models.ForeignKey(VendorProfile, on_delete=models.CASCADE, related_name='services')
     name = models.CharField(max_length=255)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    category = models.CharField(max_length=255)
+    category = models.CharField(max_length=255, choices=CATEGORY_CHOICES)
     availability = models.BooleanField(default=True)
     status = models.IntegerField(default=1, choices=[(0, 'Inactive'), (1, 'Active')])
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    city = models.CharField(max_length=100, null=True, blank=True) # Adjust max_length as needed
+    brochure = models.FileField(upload_to='brochures/', null=True, blank=True)
+    # Main image for the service
+    main_image = models.ImageField(upload_to='service_main_images/', null=True, blank=True)
     
 
+
+
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.category}"
+    
 
 # Service Image Model
 class ServiceImage(models.Model):
@@ -131,6 +148,123 @@ class ServiceImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.service.name}"
+
+
+    
+
+
+# Specialized service models with ForeignKey to Service
+
+class VenueService(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='venue_services')
+    type_of_venue = models.CharField(max_length=50, choices=[('Indoor', 'Indoor'), ('Outdoor', 'Outdoor'), ('Destination', 'Destination')])
+    location = models.CharField(max_length=255)
+    capacity = models.PositiveIntegerField()
+    pre_post_wedding_availability = models.BooleanField(default=True)
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    day_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    setup_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+   
+
+    def __str__(self):
+        return f"Venue Service for {self.service.name}"
+
+
+class CateringService(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='catering_services')
+    menu_planning = models.TextField()
+    meal_service_type = models.CharField(max_length=50, choices=[('Buffet', 'Buffet'), ('Plated', 'Plated'), ('Food Stations', 'Food Stations')])
+    dietary_options = models.TextField()
+    price_per_person = models.DecimalField(max_digits=10, decimal_places=2)
+    setup_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    minimum_guest_count = models.PositiveIntegerField(default=1)
+   
+
+    def __str__(self):
+        return f"Catering Service for {self.service.name}"
+
+
+class PhotographyService(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='photography_services')
+    package_duration = models.CharField(max_length=50, choices=[('Half-day', 'Half-day'), ('Full-day', 'Full-day')])
+    styles = models.TextField()
+    engagement_shoots = models.BooleanField(default=False)
+    videography_options = models.BooleanField(default=False)
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+
+    def __str__(self):
+        return f"Photography Service for {self.service.name}"
+
+
+class MusicEntertainmentService(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='music_entertainment_services')
+    entertainment_options = models.TextField()
+    sound_system_setup = models.BooleanField(default=False)
+    multiple_entertainment_acts = models.BooleanField(default=False)
+    emcee_services = models.BooleanField(default=False)
+    playlist_customization = models.BooleanField(default=False)
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+   
+
+    def __str__(self):
+        return f"Music Entertainment Service for {self.service.name}"
+
+
+class MakeupHairService(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='makeup_hair_services')
+    grooming_services = models.TextField()
+    trial_sessions = models.BooleanField(default=False)
+    high_end_products = models.BooleanField(default=False)
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+   
+
+    def __str__(self):
+        return f"Makeup & Hair Service for {self.service.name}"
+
+
+class RentalsService(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='rentals_services')
+    rental_items = models.TextField()
+    setup_services = models.BooleanField(default=False)
+    rental_price_per_item = models.DecimalField(max_digits=10, decimal_places=2)
+    deposit_required = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    duration_of_rental = models.CharField(max_length=50, choices=[('Hourly', 'Hourly'), ('Daily', 'Daily'), ('Weekly', 'Weekly')])
+    
+
+    def __str__(self):
+        return f"Rentals Service for {self.service.name}"
+
+
+class MehendiArtistService(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='mehendi_artist_services')
+    design_styles = models.TextField()
+    duration_per_hand = models.DecimalField(max_digits=5, decimal_places=2)
+    use_of_organic_henna = models.BooleanField(default=False)
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+   
+
+    def __str__(self):
+        return f"Mehendi Artist Service for {self.service.name}"
+
+
+class DecorationService(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='decoration_services')
+    decor_themes = models.TextField()
+    floral_arrangements = models.BooleanField(default=False)
+    lighting_options = models.BooleanField(default=False)
+    stage_decor = models.BooleanField(default=False)
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+   
+
+    def __str__(self):
+        return f"Decoration Service for {self.service.name}"
 
 # Rating Model
 class Rating(models.Model):

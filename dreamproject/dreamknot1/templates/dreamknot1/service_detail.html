@@ -6,16 +6,151 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ service.name }} Details</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
     <style>
         body {
             background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+       
+        .container {
+            max-width: 1000px;  /* Reduced container width */
+        }
+        .service-card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin-top: 50px;
+            margin-bottom: 50px;
+        }
+        .service-image-container {
+            max-width: 900px;  /* Adjust this value as needed */
+            height: 400px;  /* Reduced from 400px */
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 0 auto 30px;  /* Center the container horizontally */
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .service-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .service-image:hover {
+            transform: scale(1.05);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #320b0b;
         }
         h2 {
-            color: #343a40;
+            font-size: 1.3rem;
+            font-weight: 600;
         }
+        .info-section {
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .info-item {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 7px;
+            height: 100%;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #4a4a4a;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .btn-action {
+            border-radius: 30px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 25px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .additional-images img {
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        .additional-images img:hover {
+            transform: scale(1.05);
+        }
+        .heart-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            color: #d41d09;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        .nav-pills .nav-link {
+            color: #333;
+            background-color: #f8f9fa;
+            border-radius: 20px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-pills .nav-link:hover,
+        .nav-pills .nav-link.active {
+            color: #fff;
+            background-color: #320b0b;
+        }
+
+        .nav-pills .nav-link i {
+            margin-right: 5px;
+        }
+
+        .section-nav {
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 1000;
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        /* Navbar */
         .navbar {
             background-color: white;
+            padding: 15px 80px; /* Increased padding for more space on the left */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Added a slight shadow for better separation */
         }
+        
         .navbar .logo {
             text-decoration: none;
             background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
@@ -25,94 +160,571 @@
             font-weight: 600;
             font-family: 'Lucida Handwriting', cursive;
             transition: background 0.3s ease;
-            padding-top: 20px;
         }
+        
         .navbar ul {
             list-style: none;
             display: flex;
             margin: 0;
         }
+        
         .navbar ul li {
-            margin: 0 15px;
+            margin: 0 20px; /* Increased space between menu items */
+            position: relative; /* Important for the dropdown */
         }
+        
         .navbar ul li a {
-            color: maroon;
+            color: #480808;
             text-decoration: none;
             font-size: 1rem;
             transition: color 0.3s;
         }
+        
         .navbar ul li a:hover {
-            color: #ffc107;
+            color: #ede8e7;
         }
-        .service-image {
-            border: 2px solid #343a40;
-            border-radius: 10px;
-            margin-bottom: 20px;
+        
+        /* Dropdown Styling */
+        .dropdown {
+            position: relative;
         }
-        .btn-secondary {
-            background-color: #6c757d;
-            border: none;
-            transition: background-color 0.3s;
+        
+        .dropbtn {
+            display: inline-block;
+            cursor: pointer;
+            padding-right: 10px; /* Space between text and caret */
         }
-        .btn-secondary:hover {
-            background-color: #5a6268;
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            min-width: 160px; /* Dropdown width */
+            border-radius: 5px;
+            overflow: hidden; /* Prevent overflow for rounded corners */
         }
-        .btn-primary {
-            background-color: #007bff;
-            border: none;
-            transition: background-color 0.3s;
-            margin-right: 10px; /* Space between buttons */
+        
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
-        .btn-primary:hover {
-            background-color: #0056b3;
+        
+        .dropdown-content a:hover {
+            background-color: #4b1005;
+            color: white;
         }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        /* Caret animation */
+        .dropdown:hover .dropbtn i {
+            transform: rotate(180deg); /* Rotate caret icon on hover */
+            transition: transform 0.3s ease;
+        }
+        @media (min-width: 992px) {
+            .sticky-top {
+                position: sticky;
+                top: 20px;
+            }
+        }
+        
+        
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="logo">Dream Knot</div>
-            <ul>
-                <li><a href="{% url 'user_home' %}">Home</a></li>
-                <li><a href="{% url 'user_dashboard' %}">Services</a></li>
-                <li><a href="{% url 'update_user_profile' %}">Contact</a></li>
-
-                <li><a href="{% url 'logout' %}">Logout</a></li>
-            </ul>
-        </div>
-    </nav>
+     <!-- Navbar -->
+     <nav class="navbar">
+        <div class="logo">Dream Knot</div>
+        <ul>
+            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
+            <li><a href="{% url 'user_booking_details' %}">My Bookings</a></li>
+            <li><a href="{% url 'favorite_list' %}">My Favorite Services</a></li>
     
-    {% if messages %}
-    <div class="alert alert-danger">
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    </div>
-{% endif %}
+             <!-- Profile and Logout Dropdown -->
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">Profile <i class="fas fa-caret-down"></i></a>
+            <div class="dropdown-content">
+                <a href="{% url 'update_user_profile' %}">Update Profile</a>
+                <a href="{% url 'logout' %}" class="logout-button">Logout</a>
+            </div>
+        </li>
+    </ul>
+</nav>
 
-    <div class="container mt-5">
-        <h2>{{ service.name }}</h2>
-        <img src="{{ service.images.first.image.url }}" alt="{{ service.name }}" class="img-fluid mb-3 service-image">
-        <p><strong>Description:</strong> {{ service.description|linebreaksbr }}</p>
-        <p><strong>  Starting Price -:</strong> ₹{{ service.price }}</p>
-      <!--  <p><strong>Category:</strong> {{ service.category }}</p>-->
-        <p><strong>Vendor:</strong> {{ service.vendor.company_name }}</p>
-        <p><strong>Availability:</strong> {% if service.availability %} Available {% else %} Not Available {% endif %}</p>
-        <p><strong>Contact Now :</strong> {{ vendor_phone }}</p>
+    <div class="container">
+        <div class="service-card">
+            <h1 class="text-center mb-4">{{ service.name }}</h1>
+            <div class="service-image-container">
+                <img src="{{ service.main_image.url }}" alt="{{ service.name }}" class="service-image">
+            </div>
+             
+            <div class="section-nav mb-4">
+                <ul class="nav nav-pills flex-column flex-md-row">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#description"><i class="fas fa-info-circle"></i> Description</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#general-info"><i class="fas fa-clipboard-list"></i> General Info</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pricing"><i class="fas fa-tag"></i> Pricing</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#specific-details"><i class="fas fa-list-ul"></i> Specific Details</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#gallery"><i class="fas fa-images"></i> Gallery</a>
+                    </li>
+                </ul>
+            </div>
+
+
+
+            <div class="row">
+                <div class="col-lg-8">
         
-        <div class="mt-3">
-            <a href="{% url 'book_service' service.id %}" class="btn btn-primary">Book Now</a>
-            <a href="{% url 'booking_calendar' service.id %}" class="btn btn-primary">Book Now calendar</a>
+                    {% if service.brochure %}
+                    <div class="info-section">
+                        <h2>Brochure</h2>
+                        <a href="{{ service.brochure.url }}" target="_blank" >
+                            <i class="fas fa-download mr-2"></i> Download Brochure
+                        </a>
+                    </div>
+                    {% endif %}
+                    <!-- General Information Section -->
+                    <div id="general-info"  class="info-section">
+                        <h2>General Information</h2>
+                        <div class="info-item">
+                            <span class="info-label">Vendor:</span>
+                            <span>{{ service.vendor.company_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Availability:</span>
+                            <span>{% if service.availability %}Available{% else %}Not Available{% endif %}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Contact Now:</span>
+                            <span>{{ vendor_phone }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Category:</span>
+                            <span>{{ service.category }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">City:</span>
+                            <span>{{ service.city }}</span>
+                        </div>
+                    </div>
 
-            <a href="{% url 'add_to_favorite' service.id %}" class="btn btn-secondary">Add to Favorites</a>
+                   <!-- Pricing Section -->
+                    <div id="pricing" class="info-section">
+                        <h2>Pricing Information</h2>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="info-item">
+                                    <span class="info-label">Starting Price:</span>
+                                    <span>₹{{ service.price }}</span>
+                                </div>
+                            </div>
+                            {% if category_details %}
+                                {% if service.category == 'Venue' %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Base Price:</span>
+                                            <span>₹{{ category_details.base_price }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Hourly Rate:</span>
+                                            <span>₹{{ category_details.hourly_rate }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Day Rate:</span>
+                                            <span>₹{{ category_details.day_rate }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Setup Fee:</span>
+                                            <span>₹{{ category_details.setup_fee }}</span>
+                                        </div>
+                                    </div>
+                                {% elif service.category == 'Catering' %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Price Per Person:</span>
+                                            <span>₹{{ category_details.price_per_person }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Setup Fee:</span>
+                                            <span>₹{{ category_details.setup_fee }}</span>
+                                        </div>
+                                    </div>
+                                {% elif service.category == 'Photography' %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Base Price:</span>
+                                            <span>₹{{ category_details.base_price }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Hourly Rate:</span>
+                                            <span>₹{{ category_details.hourly_rate }}</span>
+                                        </div>
+                                    </div>
+                                {% elif service.category == 'MusicEntertainment' %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Base Price:</span>
+                                            <span>₹{{ category_details.base_price }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Hourly Rate:</span>
+                                            <span>₹{{ category_details.hourly_rate }}</span>
+                                        </div>
+                                    </div>
+                                {% elif service.category == 'MakeupHair' %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Base Price:</span>
+                                            <span>₹{{ category_details.base_price }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Hourly Rate:</span>
+                                            <span>₹{{ category_details.hourly_rate }}</span>
+                                        </div>
+                                    </div>
+                                {% elif service.category == 'Rentals' %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Rental Price Per Item:</span>
+                                            <span>₹{{ category_details.rental_price_per_item }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Deposit Required:</span>
+                                            <span>₹{{ category_details.deposit_required }}</span>
+                                        </div>
+                                    </div>
+                                {% elif service.category == 'MehendiArtist' %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Base Price:</span>
+                                            <span>₹{{ category_details.base_price }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Hourly Rate:</span>
+                                            <span>₹{{ category_details.hourly_rate }}</span>
+                                        </div>
+                                    </div>
+                                {% elif service.category == 'Decoration' %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Base Price:</span>
+                                            <span>₹{{ category_details.base_price }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-item">
+                                            <span class="info-label">Hourly Rate:</span>
+                                            <span>₹{{ category_details.hourly_rate }}</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <!-- Category Specific Details Section -->
+                    {% if category_details %}
+                    <div id="specific-details" class="info-section">
+                        <h2>{{ service.category }} Specific Details</h2>
+                        {% if service.category == 'Venue' %}
+                            <div class="info-item">
+                                <span class="info-label">Type of Venue:</span>
+                                <span>{{ category_details.type_of_venue }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Capacity:</span>
+                                <span>{{ category_details.capacity }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Pre/Post Wedding Availability:</span>
+                                <span>{% if category_details.pre_post_wedding_availability %}Yes{% else %}No{% endif %}</span>
+                            </div>
+                        {% elif service.category == 'Catering' %}
+                            <div class="info-item">
+                                <span class="info-label">Menu Planning:</span>
+                                <span>{{ category_details.menu_planning }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Meal Service Type:</span>
+                                <span>{{ category_details.meal_service_type }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Dietary Options:</span>
+                                <span>{{ category_details.dietary_options }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Minimum Guest Count:</span>
+                                <span>{{ category_details.minimum_guest_count }}</span>
+                            </div>
+                        {% elif service.category == 'Photography' %}
+                            <div class="info-item">
+                                <span class="info-label">Photography Style:</span>
+                                <span>{{ category_details.photography_style }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Package Options:</span>
+                                <span>{{ category_details.package_options }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Delivery Time:</span>
+                                <span>{{ category_details.delivery_time }}</span>
+                            </div>
+                        {% elif service.category == 'MusicEntertainment' %}
+                            <div class="info-item">
+                                <span class="info-label">Music Genre:</span>
+                                <span>{{ category_details.music_genre }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Performance Type:</span>
+                                <span>{{ category_details.performance_type }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Group Size:</span>
+                                <span>{{ category_details.group_size }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Duration of Performance:</span>
+                                <span>{{ category_details.duration_of_performance }}</span>
+                            </div>
+                        {% elif service.category == 'MakeupHair' %}
+                            <div class="info-item">
+                                <span class="info-label">Grooming Services:</span>
+                                <span>{{ category_details.grooming_services }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Trial Sessions:</span>
+                                <span>{% if category_details.trial_sessions %}Yes{% else %}No{% endif %}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">High-End Products:</span>
+                                <span>{% if category_details.high_end_products %}Yes{% else %}No{% endif %}</span>
+                            </div>
+                        {% elif service.category == 'Rentals' %}
+                            <div class="info-item">
+                                <span class="info-label">Rental Items:</span>
+                                <span>{{ category_details.rental_items }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Setup Services:</span>
+                                <span>{% if category_details.setup_services %}Yes{% else %}No{% endif %}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Duration of Rental:</span>
+                                <span>{{ category_details.duration_of_rental }}</span>
+                            </div>
+                        {% elif service.category == 'MehendiArtist' %}
+                            <div class="info-item">
+                                <span class="info-label">Design Styles:</span>
+                                <span>{{ category_details.design_styles }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Duration Per Hand:</span>
+                                <span>{{ category_details.duration_per_hand }} hours</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Use of Organic Henna:</span>
+                                <span>{% if category_details.use_of_organic_henna %}Yes{% else %}No{% endif %}</span>
+                            </div>
+                        {% elif service.category == 'Decoration' %}
+                            <div class="info-item">
+                                <span class="info-label">Decor Themes:</span>
+                                <span>{{ category_details.decor_themes }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Floral Arrangements:</span>
+                                <span>{% if category_details.floral_arrangements %}Yes{% else %}No{% endif %}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Lighting Options:</span>
+                                <span>{% if category_details.lighting_options %}Yes{% else %}No{% endif %}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Stage Decor:</span>
+                                <span>{% if category_details.stage_decor %}Yes{% else %}No{% endif %}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                 
+
+                    <div id="description" class="info-section">
+                        <h2>Description</h2>
+                        <p>{{ service.description|linebreaksbr }}</p>
+                    </div>
+
+                    <div id="gallery" class="info-section">
+                        <h2>Gallery</h2>
+                        <div class="row additional-images">
+                            {% for image in service.images.all %}
+                                <div class="col-md-4 mb-3">
+                                    <a href="{{ image.image.url }}" 
+                                       data-fancybox="gallery" 
+                                       data-caption="{{ service.name }} - Image {{ forloop.counter }}"
+                                       data-width="1600"
+                                       data-height="1200">
+                                        <img src="{{ image.image.url }}" alt="Additional image" class="img-fluid rounded">
+                                    </a>
+                                </div>
+                            {% empty %}
+                                <p>No additional images available.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="sticky-top" style="top: 90px;">
+                        <a href="{% url 'book_service' service.id %}" class="btn btn-success btn-action btn-block">
+                            <i class="fas fa-calendar-check mr-2"></i> Book Now
+                        </a>
+                        <a href="{% url 'booking_calendar' service.id %}" class="btn btn-primary btn-action btn-block">
+                            <i class="fas fa-calendar-alt mr-2"></i> View Availability
+                        </a>
+                        <a href="{% url 'add_to_favorite' service.id %}" class="btn btn-danger btn-action btn-block" id="addToFavorite">
+                            <i class="fas fa-heart mr-2"></i> Add to Favorites
+                        </a>
+                        <a href="{% url 'vendor_services' service.vendor.id %}" class="btn btn-secondary btn-action btn-block">
+                            <i class="fas fa-arrow-left mr-2"></i> Back to Vendor
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <a href="{% url 'vendor_services' service.vendor.id %}" class="btn btn-secondary mt-3">Back to Vendor Services</a>
+    </div>
+    <div class="heart-animation" id="heartAnimation">
+        <i class="fas fa-heart"></i>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        $('#addToFavorite').click(function(e) {
+            e.preventDefault();
+            var heartAnimation = $('#heartAnimation');
+            heartAnimation.css('opacity', '1');
+            setTimeout(function() {
+                heartAnimation.css('opacity', '0');
+            }, 1000);
+
+            // Perform the actual add to favorite action
+            $.get($(this).attr('href'), function(data) {
+                // Handle the response if needed
+            });
+        });
+    });
+    
+
+    
+
+
+
+
+    </script>
+    <script>
+        $(document).ready(function() {
+
+                // Smooth scrolling for anchor links
+                $('a[href^="#"]').on('click', function(event) {
+                    var target = $(this.getAttribute('href'));
+                    if( target.length ) {
+                        event.preventDefault();
+                        $('html, body').stop().animate({
+                            scrollTop: target.offset().top - 100
+                        }, 1000);
+                    }
+                });
+        
+                 // Update active nav item on scroll
+        $(window).scroll(function() {
+            var scrollDistance = $(window).scrollTop() + 30; // Adjusted offset
+
+            // Highlight the last section when scroll reaches bottom of the page
+            if ($(window).scrollTop() + $(window).height() == $(document).height()) {
+                $('.nav-pills a.active').removeClass('active');
+                $('.nav-pills a').last().addClass('active');
+            } else {
+                $('.info-section').each(function(i) {
+                    if ($(this).position().top <= scrollDistance) {
+                        $('.nav-pills a.active').removeClass('active');
+                        $('.nav-pills a').eq(i).addClass('active');
+                    }
+                });
+            }
+        });
+
+        // Trigger scroll event on page load
+        $(window).scroll();
+    });
+    
+    </script>
+       
+        <!-- JavaScript Files -->
+<script>
+    
+
+    document.addEventListener('DOMContentLoaded', function () {
+       
+
+        // Logout Confirmation
+        const logoutLinks = document.querySelectorAll('.logout-button, .nav-links a[href="{% url 'logout' %}"]');
+
+        logoutLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, log me out!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = this.href;
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+
 </body>
 </html>
