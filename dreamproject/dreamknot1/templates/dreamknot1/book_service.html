@@ -5,71 +5,677 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book {{ service.name }}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Existing navbar styles */
+        .navbar {
+            background-color: white;
+            padding: 15px 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar .logo {
+            text-decoration: none;
+            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 30px;
+            font-weight: 600;
+            font-family: 'Lucida Handwriting', cursive;
+            transition: background 0.3s ease;
+        }
+        
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+        }
+        
+        .navbar ul li {
+            margin: 0 20px;
+            position: relative;
+        }
+        
+        .navbar ul li a {
+            color: #480808;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        
+        .navbar ul li a:hover {
+            color: #ede8e7;
+        }
+        
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropbtn {
+            display: inline-block;
+            cursor: pointer;
+            padding-right: 10px;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            min-width: 160px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #4b1005;
+            color: white;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown:hover .dropbtn i {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+
+        /* New minimalist theme styles */
+        body {
+            background-color: #ffffff;
+            color: #333333;
+            font-family: 'Roboto', sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 50px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333333;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .form-control {
+            border: 1px solid #e0e0e0;
+            border-radius: 0;
+        }
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #800000;
+        }
+        .btn {
+            border-radius: 0;
+            padding: 10px 20px;
+        }
+        .btn-primary {
+            background-color: #800000; /* Dark maroon */
+            border-color: #800000;
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background-color: #600000; /* Darker maroon on hover */
+            border-color: #600000;
+        }
+        .btn-secondary {
+            background-color: #f0f0f0;
+            border-color: #f0f0f0;
+            color: #333333;
+        }
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+            border-color: #e0e0e0;
+            color: #333333;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .card-header {
+            background-color: #f8f8f8;
+            border-bottom: 1px solid #e0e0e0;
+            color: #333333;
+        }
+        .form-check-input:checked {
+            background-color: #800000;
+            border-color: #800000;
+        }
+        .terms-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            background-color: #f8f8f8;
+        }
+
+        /* New styles for Flipkart-like layout */
+        body {
+            background-color: #f1f3f6;
+            font-family: 'Roboto', sans-serif;
+        }
+        .main-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+        .left-column {
+            width: 65%;
+        }
+        .right-column {
+            width: 32%;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #360d07;
+            color: #fff;
+            font-weight: 500;
+            padding: 13px 24px;
+            font-size: 16px;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .btn-primary {
+            background-color: #340707;
+            border-color: #340707;
+        }
+        .btn-primary:hover {
+            background-color: #4f4848;
+            border-color: #4f4848;
+        }
+        .price-details {
+            font-size: 14px;
+        }
+        .price-details .row {
+            margin-bottom: 10px;
+        }
+        .total-row {
+            border-top: 1px dashed #e0e0e0;
+            padding-top: 10px;
+            font-weight: 500;
+        }
+        .savings {
+            color: #388e3c;
+        }
+       
+        /* Updated button styles */
+        .btn-primary {
+            background-color: #800000; /* Dark maroon */
+            border-color: #800000;
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background-color: #600000; /* Darker maroon on hover */
+            border-color: #600000;
+        }
+        .btn-outline-primary {
+            color: #800000;
+            border-color: #800000;
+        }
+        .btn-outline-primary:hover {
+            background-color: #800000;
+            color: #ffffff;
+        }
+        .btn-outline-secondary {
+            color: #4a0000; /* Darker maroon for secondary button */
+            border-color: #4a0000;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #4a0000;
+            color: #ffffff;
+        }
+
+        /* Add these styles to your existing <style> tag or CSS file */
+        .modal-dialog-centered {
+            display: flex;
+            align-items: center;
+            min-height: calc(100% - 1rem);
+        }
+        
+        @media (min-width: 576px) {
+            .modal-dialog-centered {
+                min-height: calc(100% - 3.5rem);
+            }
+        }
+        
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #e9ecef;
+            padding: 1rem;
+        }
+
+        .modal-header .close {
+            padding: 1rem;
+            margin: -1rem -1rem -1rem auto;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+
+        .terms-content {
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .terms-content ol {
+            padding-left: 20px;
+        }
+
+        .terms-content li {
+            margin-bottom: 10px;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #e9ecef;
+            padding: 1rem;
+        }
+
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2 class="mb-4">Book {{ service.name }}</h2>
-
-        <form method="POST">
-            {% csrf_token %}
-
-            <!-- User Info Section -->
-            <div class="form-group">
-                <label for="name">Name:</label>
-                <input type="text" name="name" value="{{ user.name }}" class="form-control" readonly>
+   <!-- Navbar remains unchanged -->
+   <nav class="navbar">
+    <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
+    <ul>
+        <li><a href="{% url 'user_home' %}">Dashboard</a></li>
+        <li><a href="{% url 'user_dashboard' %}">Service Providers</a></li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">Todo List<i class="fas fa-caret-down"></i></a>
+            <div class="dropdown-content">
+                <a href="{% url 'current_month_todolist' %}">Current Month</a>
+                <a href="{% url 'todo_list' %}">All Tasks</a>
             </div>
-
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" name="email" value="{{ user.email }}" class="form-control" readonly>
+        </li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">My Account<i class="fas fa-caret-down"></i></a>
+            <div class="dropdown-content">
+                <a href="{% url 'user_booking_details' %}">My Bookings</a>
+                <a href="{% url 'favorite_list' %}">favourite list</a>
             </div>
-
-            <div class="form-group">
-                <label for="phone">Phone Number:</label>
-                <input type="text" name="phone" value="{{ user.phone }}" class="form-control" required>
+        </li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">Invitation<i class="fas fa-caret-down"></i></a>
+            <div class="dropdown-content">
+                <a href="{% url 'send_rsvp_invitation' %}">Send Invitation</a>
+                <a href="{% url 'invitation_list' %}">Invitation List</a>
             </div>
-
-            <div class="form-group">
-                <label for="event_address">Address:</label>
-                <input type="text" name="event_address" class="form-control" required>
+        </li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">
+                <i class="fa fa-user-circle"></i> {{ user_name }} <i class="fas fa-caret-down"></i>
+            </a>
+            <div class="dropdown-content">
+                <a href="{% url 'update_user_profile' %}">Update Profile</a>
+                <a href="{% url 'logout' %}" class="logout-button">Logout</a>
             </div>
+        </li>
+    </ul>
+</nav>
 
-            <!-- Event Date for Service Booking -->
-            <div class="form-group">
-                <label for="event_date">Event Date:</label>
-                <input type="date" id="event_date" name="event_date" class="form-control" required>
-                <small class="form-text text-muted">Please select a date that is not today or in the past.</small>
-            </div>
+    <div class="main-container">
+        <div class="left-column">
+            <div class="card">
+                <div class="card-header">
+                    Book {{ service.name }}
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="booking-form">
+                        {% csrf_token %}
 
-            <!-- Buttons -->
-            <div class="form-group d-flex justify-content-between">
-                <button type="submit" class="btn btn-primary">Confirm Booking</button>
-                <a href="{% url 'booking_calendar' service.id %}" class="btn btn-primary">View Booking Calendar</a>
-                <a href="{% url 'vendor_services' service.vendor.id %}" class="btn btn-secondary">Cancel</a>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="name">Name</label>
+                                    <input type="text" name="name" value="{{ user.name }}" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" name="email" value="{{ user.email }}" class="form-control" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" name="phone" id="phone" value="{{ user.phone }}" class="form-control" required 
+                                   pattern="^[6-9]\d{9}$" title="Phone number must be 10 digits and start with 6, 7, 8, or 9"
+                                   placeholder="Enter 10-digit phone number">
+                       
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event_name">Event Name</label>
+                            <input type="text" name="event_name" class="form-control" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="event_date">Event Date</label>
+                                    <input type="date" id="event_date" name="event_date" class="form-control" required>
+                                    <small class="form-text text-muted">Please select a date starting from tomorrow.</small>
+                                    <div id="date_availability_message"></div>  <!-- Add this line -->
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="num_days">Number of Days</label>
+                                    <input type="number" id="num_days" name="num_days" min="1" value="1" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if not is_venue %}
+                        <div class="form-group">
+                            <label for="event_address">Event location</label>
+                            <input type="text" name="event_address" class="form-control" required>
+                        </div>
+                    {% endif %}
+                    
+                    {% if is_venue %}
+                        <div class="form-group">
+                            <label for="venue_city">Venue location</label>
+                            <input type="text" name="venue_city" value="{{ venue_city }}" class="form-control" readonly>
+                        </div>
+                    {% endif %}
+                        <div class="form-group">
+                            <label for="user_address">Your Address</label>
+                            <input type="text" name="user_address" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="additional_requirements">Additional Requirements</label>
+                            <textarea name="additional_requirements" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reference_images">Provide model reference for {{ service.name }}</label>
+                            <input type="file" name="reference_images" multiple class="form-control-file">
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" name="agreed_to_terms" class="form-check-input" id="agreed_to_terms" required>
+                                <label class="form-check-label" for="agreed_to_terms">I agree to the <a href="#" id="terms-link">terms and conditions</a></label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
+        </div>
+        
+        <div class="right-column">
+            <div class="card">
+                <div class="card-header">
+                    ESTIMATED PRICE DETAILS
+                </div>
+                <div class="card-body price-details">
+                    <div class="row">
+                        <div class="col-8">Price ({{ service.name }})</div>
+                        <div class="col-4 text-right">₹<span id="service_price">{{ service.price|floatformat:2 }}</span></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-8">Number of Days</div>
+                        <div class="col-4 text-right"><span id="days_display">1</span></div>
+                    </div>
+                    <div class="row total-row">
+                        <div class="col-8">Total Amount</div>
+                        <div class="col-4 text-right">₹<span id="total_amount">{{ service.price|floatformat:2 }}</span></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-8">Booking Amount (50%)</div>
+                        <div class="col-4 text-right">₹<span id="booking_amount">{{ service.price|floatformat:2 }}</span></div>
+                    </div>
+                   <div class="row savings">
+                        <div class="col-12">You need to pay ₹<span id="savings">0</span> after completion of the event</div>
+                    </div> 
+                </div>
+            </div>
+            <button type="submit" form="booking-form" class="btn btn-primary btn-block">BOOKING NOW</button>
+            <a href="{% url 'booking_calendar' service.id %}" class="btn btn-outline-primary btn-block mt-2">VIEW AVAILABILITY CALENDAR</a>
+            <a href="{% url 'vendor_services' service.vendor.id %}" class="btn btn-outline-secondary btn-block mt-2">CANCEL</a>
+        </div>
     </div>
 
-    <!-- Optionally include Bootstrap JS and dependencies for interactivity -->
+    <!-- Modal for Terms and Conditions -->
+    <div class="modal fade" id="termsModal" tabindex="-1" role="dialog" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="terms-content">
+                        {{ terms_and_conditions|safe }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-    <!-- JavaScript to validate date -->
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- JavaScript to validate date, update amount, and handle logout -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get today's date
+            // Get the selected date from the URL parameter
+            var urlParams = new URLSearchParams(window.location.search);
+            var selectedDate = urlParams.get('selected_date');
+
+            // Set minimum date to tomorrow
+            var tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            var minDate = tomorrow.toISOString().split('T')[0];
+
+            var eventDateInput = document.getElementById('event_date');
+            eventDateInput.setAttribute('min', minDate);
+
+            // If a date was selected, auto-fill the event_date field
+            if (selectedDate) {
+                var selectedDateObj = new Date(selectedDate);
+                if (selectedDateObj > tomorrow) {
+                    eventDateInput.value = selectedDate;
+                }
+            }
+
+            // Date validation
             var today = new Date();
-            today.setDate(today.getDate() + 1); // Minimum date is tomorrow
-            
-            // Format the date in YYYY-MM-DD
+            today.setDate(today.getDate() + 1);
             var year = today.getFullYear();
-            var month = (today.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based
+            var month = (today.getMonth() + 1).toString().padStart(2, '0');
             var day = today.getDate().toString().padStart(2, '0');
             var minDate = year + '-' + month + '-' + day;
-            
-            // Set the min attribute of the event_date input
             document.getElementById('event_date').setAttribute('min', minDate);
+
+            // Function to format number to Indian Rupees format
+            function formatToIndianRupees(number) {
+                return new Intl.NumberFormat('en-IN', { 
+                    style: 'currency', 
+                    currency: 'INR',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2 
+                }).format(number).replace('₹', '');
+            }
+
+            // Function to update price details
+            function updatePriceDetails() {
+                var servicePrice = parseFloat(document.getElementById('service_price').textContent.replace(/,/g, ''));
+                var numDays = parseInt(document.getElementById('num_days').value);
+                var totalAmount = servicePrice * numDays;
+                var bookingAmount = totalAmount * 0.5;
+                var savings = totalAmount - bookingAmount; // Assuming 10% savings, adjust as needed
+
+                document.getElementById('days_display').textContent = numDays;
+                document.getElementById('total_amount').textContent = formatToIndianRupees(totalAmount);
+                document.getElementById('booking_amount').textContent = formatToIndianRupees(bookingAmount);
+                document.getElementById('savings').textContent = formatToIndianRupees(savings);
+            }
+
+            // Call updatePriceDetails when the page loads and when num_days changes
+            updatePriceDetails();
+            document.getElementById('num_days').addEventListener('input', updatePriceDetails);
+
+            // Logout Confirmation
+            const logoutLinks = document.querySelectorAll('.logout-button, .nav-links a[href="{% url 'logout' %}"]');
+
+            logoutLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You will be logged out!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#800000',
+                        cancelButtonColor: '#D8A0A0',
+                        confirmButtonText: 'Yes, log me out!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = this.href;
+                        }
+                    });
+                });
+            });
+
+            // Terms and Conditions Modal
+            var termsLink = document.getElementById('terms-link');
+            var termsModal = new bootstrap.Modal(document.getElementById('termsModal'));
+
+            termsLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                termsModal.show();
+            });
+
+            // Phone number validation
+            var phoneInput = document.getElementById('phone');
+            var phoneValidationMessage = document.createElement('div');
+            phoneValidationMessage.className = 'invalid-feedback';
+            phoneInput.parentNode.appendChild(phoneValidationMessage);
+
+            function validatePhoneNumber(phoneNumber) {
+                return /^[6-9]\d{9}$/.test(phoneNumber);
+            }
+
+            function updatePhoneValidation() {
+                var phoneNumber = phoneInput.value.replace(/\D/g, ''); // Remove non-digits
+                var isValid = validatePhoneNumber(phoneNumber);
+
+                if (phoneNumber.length > 0) {
+                    if (isValid) {
+                        phoneInput.classList.remove('is-invalid');
+                        phoneInput.classList.add('is-valid');
+                        phoneValidationMessage.style.display = 'none';
+                    } else {
+                        phoneInput.classList.remove('is-valid');
+                        phoneInput.classList.add('is-invalid');
+                        phoneValidationMessage.textContent = 'Please enter a valid 10-digit phone number starting with 6, 7, 8, or 9';
+                        phoneValidationMessage.style.display = 'block';
+                    }
+                } else {
+                    phoneInput.classList.remove('is-valid', 'is-invalid');
+                    phoneValidationMessage.style.display = 'none';
+                }
+            }
+
+            phoneInput.addEventListener('input', function(e) {
+                var phoneNumber = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                if (phoneNumber.length > 10) {
+                    phoneNumber = phoneNumber.slice(0, 10); // Limit to 10 digits
+                }
+                e.target.value = phoneNumber; // Update input value
+                updatePhoneValidation();
+            });
+
+            document.getElementById('booking-form').addEventListener('submit', function(e) {
+                var phoneNumber = phoneInput.value;
+                if (!validatePhoneNumber(phoneNumber)) {
+                    e.preventDefault();
+                    updatePhoneValidation();
+                    phoneInput.focus();
+                }
+            });
+        });
+    </script>
+
+    <!-- Add this script at the end of the file, just before the closing </body> tag -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var csrftoken = $('[name=csrfmiddlewaretoken]').val();
+
+            $('#event_date').change(function() {
+                var selectedDate = $(this).val();
+                var serviceId = {{ service.id }};
+
+                $.ajax({
+                    url: '/check_date_availability/' + serviceId + '/',
+                    method: 'POST',
+                    data: {
+                        'event_date': selectedDate,
+                        'csrfmiddlewaretoken': csrftoken
+                    },
+                    success: function(response) {
+                        if (response.available) {
+                            $('#date_availability_message').text('Date is available').removeClass('text-danger').addClass('text-success');
+                            $('button[type="submit"]').prop('disabled', false);
+                        } else {
+                            $('#date_availability_message').text('Date is not available. Please choose another date.').removeClass('text-success').addClass('text-danger');
+                            $('button[type="submit"]').prop('disabled', true);
+                        }
+                    },
+                    error: function() {
+                        $('#date_availability_message').text('Error checking date availability').removeClass('text-success').addClass('text-danger');
+                    }
+                });
+            });
         });
     </script>
 </body>

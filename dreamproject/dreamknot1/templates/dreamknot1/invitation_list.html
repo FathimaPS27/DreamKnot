@@ -5,58 +5,343 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSVP Invitations</title>
+    <!-- External CSS and Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #f0f8ff;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
         }
-        h2 {
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .page-title {
             text-align: center;
-            color: #4CAF50;
+            color: #4c0202;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .invitation-list {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .event-card {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .event-header {
+            background: linear-gradient(135deg, #ff9a9e, #7c2108);
+            color: white;
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .event-header h2 {
+            margin: 0;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+        .invitation-count {
+            font-size: 0.9em;
+            background-color: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        .event-details {
+            display: none;
+            padding: 20px;
+            background-color: #fff;
+        }
+        .event-details.show {
+            display: block;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
+            margin-top: 20px;
         }
         th, td {
             padding: 12px;
             text-align: left;
+            border-bottom: 1px solid #ddd;
         }
         th {
-            background-color: #4CAF50;
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-sent {
+            background-color: #e7f3ff;
+            color: #1a73e8;
+        }
+        .no-invitations {
+            text-align: center;
+            padding: 40px;
+            font-style: italic;
+            color: #666;
+            font-size: 1.2em;
+        }
+        /* Navbar */
+        .navbar {
+            background-color: white;
+            padding: 15px 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .navbar .logo {
+            text-decoration: none;
+            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 30px;
+            font-weight: 600;
+            font-family: 'Lucida Handwriting', cursive;
+            transition: background 0.3s ease;
+        }
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+        }
+        .navbar ul li {
+            margin: 0 20px;
+            position: relative;
+        }
+        .navbar ul li a {
+            color: #480808;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        .navbar ul li a:hover {
+            color: #ede8e7;
+        }
+
+        /* Dropdown Styling */
+        .dropdown {
+            position: relative;
+        }
+        .dropbtn {
+            display: inline-block;
+            cursor: pointer;
+            padding-right: 10px;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            min-width: 160px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .dropdown-content a:hover {
+            background-color: #4b1005;
             color: white;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown:hover .dropbtn i {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+
+        /* Search bar styles */
+        .search-container {
+            margin-bottom: 20px;
+        }
+        .search-bar {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-    <h2>RSVP Invitations</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Guest Name</th>
-                <th>Event Name</th>
-                <th>Event Date</th>
-                <th>Venue</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for invitation in invitations %}
-            <tr>
-                <td>{{ invitation.guest_name }}</td>
-                <td>{{ invitation.event_name }}</td>
-                <td>{{ invitation.event_date }}</td>
-                <td>{{ invitation.venue }}</td>
-                <td>Sent</td>
-            </tr>
+    <!-- Navbar -->
+      <!-- Navbar remains unchanged -->
+      <nav class="navbar">
+        <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
+        <ul>
+            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
+            <li><a href="{% url 'user_dashboard' %}">Service Providers</a></li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">Todo List<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'current_month_todolist' %}">Current Month</a>
+                    <a href="{% url 'todo_list' %}">All Tasks</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">Invitation<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'send_rsvp_invitation' %}">Send Invitation</a>
+                    <a href="{% url 'invitation_list' %}">Invitation List</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">My Account<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'user_booking_details' %}">My Bookings</a>
+                    <a href="{% url 'favorite_list' %}">favourite list</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">
+                    <i class="fa fa-user-circle"></i> {{ user_name }} <i class="fas fa-caret-down"></i>
+                </a>
+                <div class="dropdown-content">
+                    <a href="{% url 'update_user_profile' %}">Update Profile</a>
+                    <a href="{% url 'logout' %}" class="logout-button">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">Invitees List</h1>
+        
+        <!-- Search bar -->
+        <div class="search-container">
+            <input type="text" id="searchBar" class="search-bar" placeholder="Search by event name or guest name...">
+        </div>
+        
+        <div class="invitation-list">
+        {% if grouped_invitations %}
+            {% for event_name, event_data in grouped_invitations.items %}
+                <div class="event-card">
+                    <div class="event-header" onclick="toggleDetails('{{ event_name|slugify }}')">
+                        <h2>{{ event_name }}</h2>
+                        <span class="invitation-count">{{ event_data.invitations|length }} invitations</span>
+                    </div>
+                    <div id="{{ event_name|slugify }}" class="event-details">
+                        <p><strong>Date:</strong> {{ event_data.event_date|date:"F d, Y" }}</p>
+                        <p><strong>Venue:</strong> {{ event_data.venue }}</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Guest Name</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invitation in event_data.invitations %}
+                                <tr class="invitation-row" data-event="{{ event_name }}" data-guest="{{ invitation.guest_name }}" data-email="{{ invitation.guest_email }}">
+                                    <td>{{ invitation.guest_name }}</td>
+                                    <td class="email-column">{{ invitation.guest_email }}</td>
+                                    <td><span class="status status-sent">Sent</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             {% endfor %}
-        </tbody>
-    </table>
+        {% else %}
+            <p class="no-invitations">No invitations available at the moment.</p>
+        {% endif %}
+    </div>
+</div>
+
+    <script>
+        function toggleDetails(eventId) {
+            var details = document.getElementById(eventId);
+            details.classList.toggle('show');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Logout Confirmation
+            const logoutLinks = document.querySelectorAll('.logout-button, .nav-links a[href="{% url 'logout' %}"]');
+
+            logoutLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You will be logged out!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, log me out!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = this.href;
+                        }
+                    });
+                });
+            });
+
+            // Search functionality
+            const searchBar = document.getElementById('searchBar');
+            const eventCards = document.querySelectorAll('.event-card');
+            const invitationRows = document.querySelectorAll('.invitation-row');
+
+            searchBar.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+
+                eventCards.forEach(card => {
+                    const eventName = card.querySelector('h2').textContent.toLowerCase();
+                    const rows = card.querySelectorAll('.invitation-row');
+                    let showCard = false;
+
+                    rows.forEach(row => {
+                        const guestName = row.getAttribute('data-guest').toLowerCase();
+                        if (eventName.includes(searchTerm) || guestName.includes(searchTerm)) {
+                            row.style.display = '';
+                            showCard = true;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+
+                    card.style.display = showCard ? '' : 'none';
+                });
+            });
+        });
+    </script>
 </body>
 </html>

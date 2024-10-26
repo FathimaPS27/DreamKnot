@@ -41,55 +41,19 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_countries',
     'dreamknot1',
-    'django.contrib.sites',  # Required for django-allauth
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',  # Google provider for allauth
+    'social_django',
+    #'django.contrib.sites',  # Required for django-allauth
+    #'allauth',
+    #'allauth.account',
+    #'allauth.socialaccount',
+    #'allauth.socialaccount.providers.google',  # Google provider for allauth
 ]
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    'social_core.backends.google.GoogleOAuth2',  # Google OAuth2
+    #'allauth.account.auth_backends.AuthenticationBackend',
 )
-
-
-SITE_ID = 1
-
-
-LOGIN_REDIRECT_URL = '/'  # Redirect after successful login
-LOGOUT_REDIRECT_URL = '/'  # Redirect after logout
-
-# Email Verification Settings (Optional)
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-ACCOUNT_EMAIL_REQUIRED = True
-
-
-# Optional for Google OAuth:
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-SOCIALACCOUNT_QUERY_EMAIL = True
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_UNIQUE_EMAIL = True
-
-# settings.py
-
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
-        'APP': {
-            'client_id': '777',  # Replace with your Google Client ID
-            'secret': '777',  # Replace with your Google Client Secret
-            'key': ''
-        }
-    }
-}
 
 
 MIDDLEWARE = [
@@ -100,7 +64,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',  # Add this middleware
+
+    #'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'dreamproject.urls'
@@ -196,11 +162,34 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'dreamknot0@gmail.com'
-EMAIL_HOST_PASSWORD = '888'  # Replace with the App Password generated
-DEFAULT_FROM_EMAIL = '888'
+EMAIL_HOST_USER = 'dreamknot000@gmail.com'
+EMAIL_HOST_PASSWORD = '00000'  # Replace with the App Password generated
+DEFAULT_FROM_EMAIL = 'dreamknot000@gmail.com'
 
 UNFOLD = {
     "SITE_HEADER":"Dream Knot Admin",
 }
+# Social Auth configuration
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '00000'  # Your Google OAuth2 client ID
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '00000'  # Your Google OAuth2 client secret
 
+# Additional settings for social auth
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = 'user_home'
+LOGOUT_REDIRECT_URL = '/'
+
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',  
+    'social_core.pipeline.social_auth.social_uid',      
+    'social_core.pipeline.social_auth.auth_allowed',    
+    'social_core.pipeline.social_auth.social_user',     
+    'social_core.pipeline.user.get_username',          
+    'social_core.pipeline.user.create_user',          
+    'social_core.pipeline.social_auth.associate_user',  
+    'social_core.pipeline.social_auth.load_extra_data', 
+    'social_core.pipeline.user.user_details',          
+)
+
+RAZORPAY_KEY_ID = '00000'
+RAZORPAY_KEY_SECRET = '00000'

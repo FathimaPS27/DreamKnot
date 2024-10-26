@@ -21,6 +21,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('dreamknot1.urls')),
+    path('',include('social_django.urls', namespace='social')),
 
     # Add these password reset URLs
     path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),

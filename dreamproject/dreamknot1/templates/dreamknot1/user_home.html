@@ -292,16 +292,16 @@
 					<option value="Decoration" {% if request.GET.category == 'Decoration' %}selected{% endif %}>Decoration</option>
 					<option value="Music" {% if request.GET.category == 'Music' %}selected{% endif %}>Music</option>
 					<option value="Makeup" {% if request.GET.category == 'Makeup' %}selected{% endif %}>Makeup</option>
-					<option value="Transportation" {% if request.GET.category == 'Transportation' %}selected{% endif %}>Transportation</option>
-					<option value="Wedding Planners" {% if request.GET.category == 'Wedding Planners' %}selected{% endif %}>Wedding Planners</option>
-					<option value="Florists" {% if request.GET.category == 'Florists' %}selected{% endif %}>Florists</option>
-					<option value="Bakeries" {% if request.GET.category == 'Bakeries' %}selected{% endif %}>Bakeries</option>
-					<option value="Videography" {% if request.GET.category == 'Videography' %}selected{% endif %}>Videography</option>
-					<option value="Invitations" {% if request.GET.category == 'Invitations' %}selected{% endif %}>Invitations</option>
+					{% comment %} <option value="Transportation" {% if request.GET.category == 'Transportation' %}selected{% endif %}>Transportation</option> {% endcomment %}
+					{% comment %} <option value="Wedding Planners" {% if request.GET.category == 'Wedding Planners' %}selected{% endif %}>Wedding Planners</option> {% endcomment %}
+					{% comment %} <option value="Florists" {% if request.GET.category == 'Florists' %}selected{% endif %}>Florists</option> {% endcomment %}
+					{% comment %} <option value="Bakeries" {% if request.GET.category == 'Bakeries' %}selected{% endif %}>Bakeries</option> {% endcomment %}
+					{% comment %} <option value="Videography" {% if request.GET.category == 'Videography' %}selected{% endif %}>Videography</option> {% endcomment %}
+					{% comment %} <option value="Invitations" {% if request.GET.category == 'Invitations' %}selected{% endif %}>Invitations</option> {% endcomment %}
 					<option value="Rentals" {% if request.GET.category == 'Rentals' %}selected{% endif %}>Rentals</option>
-					<option value="Bride and Groom Wear" {% if request.GET.category == 'Bride and Groom Wear' %}selected{% endif %}>Bride and Groom Wear</option>
-					<option value="Jewelry" {% if request.GET.category == 'Jewelry' %}selected{% endif %}>Jewelry</option>
-					<option value="Accessories" {% if request.GET.category == 'Accessories' %}selected{% endif %}>Accessories</option>
+					{% comment %} <option value="Bride and Groom Wear" {% if request.GET.category == 'Bride and Groom Wear' %}selected{% endif %}>Bride and Groom Wear</option> {% endcomment %}
+					{% comment %} <option value="Jewelry" {% if request.GET.category == 'Jewelry' %}selected{% endif %}>Jewelry</option> {% endcomment %}
+					{% comment %} <option value="Accessories" {% if request.GET.category == 'Accessories' %}selected{% endif %}>Accessories</option> {% endcomment %}
 					<option value="Mehndi" {% if request.GET.category == 'Mehndi' %}selected{% endif %}>Mehndi</option>
 				</select>
 			</div>
@@ -312,14 +312,16 @@
 			
 			
 			<div class="col-md-3">
-				<select name="price_range" class="form-control">
-					<option value="">Select Price Range</option>
-					<option value="0-500" {% if request.GET.price_range == '0-500' %}selected{% endif %}>₹0 - ₹500</option>
-					<option value="501-1000" {% if request.GET.price_range == '501-1000' %}selected{% endif %}>₹501 - ₹1000</option>
-					<option value="1001-2000" {% if request.GET.price_range == '1001-2000' %}selected{% endif %}>₹1001 - ₹2000</option>
-					<option value="2001" {% if request.GET.price_range == '2001' %}selected{% endif %}>₹2000+</option>
-				</select>
-			</div>
+                <select name="price_range" class="form-control">
+                    <option value="">Select Price Range</option>
+                    <option value="0-5000" {% if price_range == '0-5000' %}selected{% endif %}>₹0 - ₹5,000</option>
+                    <option value="5001-10000" {% if price_range == '5001-10000' %}selected{% endif %}>₹5,001 - ₹10,000</option>
+                    <option value="10001-20000" {% if price_range == '10001-20000' %}selected{% endif %}>₹10,001 - ₹20,000</option>
+                    <option value="20001-50000" {% if price_range == '20001-50000' %}selected{% endif %}>₹20,001 - ₹50,000</option>
+                    <option value="50001-100000" {% if price_range == '50001-100000' %}selected{% endif %}>₹50,001 - ₹1,00,000</option>
+                    <option value="100001" {% if price_range == '100001' %}selected{% endif %}>₹1,00,001+</option>
+                </select>
+            </div>
 			<div class="col-md-2">
 				<button type="submit" class="btn btn-primary btn-block">Search</button>
 			</div>

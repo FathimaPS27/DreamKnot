@@ -6,21 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wedding Task List</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         .container {
             background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+            margin-bottom: 30px;
         }
-        /* Navbar */
-        .navbar {
+           /* Navbar */
+           .navbar {
             background-color: white;
-            color: white;
-            padding: 15px 20px;
+            padding: 15px 80px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
         }
         .navbar .logo {
             text-decoration: none;
@@ -31,8 +38,6 @@
             font-weight: 600;
             font-family: 'Lucida Handwriting', cursive;
             transition: background 0.3s ease;
-            padding-top: 20px;
-
         }
         .navbar ul {
             list-style: none;
@@ -40,497 +45,337 @@
             margin: 0;
         }
         .navbar ul li {
-            margin: 0 15px;
+            margin: 0 20px;
+            position: relative;
         }
         .navbar ul li a {
-            color: maroon;
+            color: #480808;
             text-decoration: none;
             font-size: 1rem;
             transition: color 0.3s;
         }
         .navbar ul li a:hover {
-            color: #ffc107;
+            color: #ede8e7;
         }
+
+        /* Dropdown Styling */
+        .dropdown {
+            position: relative;
+        }
+        .dropbtn {
+            display: inline-block;
+            cursor: pointer;
+            padding-right: 10px;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            min-width: 160px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .dropdown-content a:hover {
+            background-color: #4b1005;
+            color: white;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown:hover .dropbtn i {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+
         .task-overview {
-            background-color: #ffffff; /* Background color */
-            border-radius: 10px; /* Rounded corners */
-            padding: 20px; /* Padding around the content */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
-            margin-bottom: 20px; /* Space below the section */
+            margin-bottom: 25px;
         }
-    
-        .task-overview h4 {
-            margin: 0; /* Remove default margin */
-            color: #343a40; /* Darker text color */
-            padding-left: 170px;
+        .task-overview-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            height: 100%;
         }
-    
-        .task-overview .col-md-6 {
-            display: flex; /* Use flexbox for alignment */
-            align-items: center; /* Center vertically */
-            justify-content: space-between; /* Space between elements */
+        .task-overview-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
-    
-        .task-overview .total-count {
-            font-weight: bold; /* Bold text for counts */
-            font-size: 1.2rem; /* Slightly larger font size */
-            color: #28a745; /* Green color for counts */
+        .task-overview-card h4 {
+            color: #343a40;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .task-overview-card .total-count {
+            font-size: 2rem;
+            color: #800000;
+            font-weight: 700;
+        }
+        .accordion-item {
+            border: none;
+            margin-bottom: 10px;
+        }
+        .accordion-button {
+            background-color: #f8f9fa;
+            color: #343a40;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: #e9ecef;
+            color: #800000;
+        }
+        .accordion-button:hover {
+            background-color: #e9ecef;
+        }
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.2rem rgba(128, 0, 0, 0.25);
+        }
+        .list-group-item {
+            border: none;
+            background-color: transparent;
+            padding: 15px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(3px);
+        }
+        .btn {
+            border-radius: 20px;
+            padding: 6px 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #800000;
+            border-color: #800000;
+        }
+        .btn-primary:hover {
+            background-color: #600000;
+            border-color: #600000;
+        }
+        .btn-success, .btn-outline-success {
+            color: #28a745;
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        .btn-success:hover, .btn-outline-success:hover {
+            color: white;
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-outline-danger {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-outline-danger:hover {
+            color: white;
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .task-description {
+            font-size: 1rem;
+            color: #343a40;
+            font-weight: 500;
+        }
+        .task-status {
+            font-size: 0.85rem;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+        .task-status.completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .task-status.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .page-title {
+            color: #800000;
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .delete-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .task-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .task-actions form {
+            margin-left: 5px;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">Dream Knot</div>
-        <ul>
-            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
-            <li><a href="#">My Bookings</a></li>
-            <li><a href="{% url 'favorite_list' %}">My Favorite Services</a></li>
-            <li><a href="{% url 'update_user_profile' %}">Profile</a></li>
-            <li><a href="{% url 'current_month_todolist' %}"> Current Tasks</a></li>
+<!-- Navbar remains unchanged -->
+<nav class="navbar">
+    <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
+    <ul>
+        <li><a href="{% url 'user_home' %}">Dashboard</a></li>
+        <li><a href="{% url 'user_dashboard' %}">Service Providers</a></li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">Todo List<i class="fas fa-caret-down"></i></a>
+            <div class="dropdown-content">
+                <a href="{% url 'current_month_todolist' %}">Current Month</a>
+                <a href="{% url 'todo_list' %}">All Tasks</a>
+            </div>
+        </li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">Invitation<i class="fas fa-caret-down"></i></a>
+            <div class="dropdown-content">
+                <a href="{% url 'send_rsvp_invitation' %}">Send Invitation</a>
+                <a href="{% url 'invitation_list' %}">Invitation List</a>
+            </div>
+        </li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">My Account<i class="fas fa-caret-down"></i></a>
+            <div class="dropdown-content">
+                <a href="{% url 'user_booking_details' %}">My Bookings</a>
+                <a href="{% url 'favorite_list' %}">favourite list</a>
+            </div>
+        </li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">
+                <i class="fa fa-user-circle"></i> {{ user_name }} <i class="fas fa-caret-down"></i>
+            </a>
+            <div class="dropdown-content">
+                <a href="{% url 'update_user_profile' %}">Update Profile</a>
+                <a href="{% url 'logout' %}" class="logout-button">Logout</a>
+            </div>
+        </li>
+    </ul>
+</nav>
+    <div class="container">
+        <h1 class="page-title">Wedding Task List</h1>
 
-            <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
-        </ul>
-    </nav>
-
-      <!-- Task Overview Section -->
-      <div class="task-overview row mb-4">
-        <div class="col-md-6">
-            <h4>Total Pending Tasks: <span class="total-count">{{ pending_count }}</span></h4>
+        <!-- Task Overview Section -->
+        <div class="task-overview">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="task-overview-card text-center">
+                        <h4>Pending Tasks</h4>
+                        <span class="total-count">{{ pending_count }}</span>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="task-overview-card text-center">
+                        <h4>Completed Tasks</h4>
+                        <span class="total-count">{{ completed_count }}</span>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="task-overview-card text-center">
+                        <h4>Total Tasks</h4>
+                        <span class="total-count">{{ pending_count|add:completed_count }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6 text-right">
-            <h4>Total Completed Tasks: <span class="total-count">{{ completed_count }}</span></h4>
-        </div>
-    </div>
-<div class="container mt-5">
-    <h1 class="text-center">Wedding Task List</h1>
 
-    <!-- Alerts -->
-    {% if messages %}
-        <div class="alert alert-info">
-            {% for message in messages %}
-                {{ message }}
+        <!-- Alerts -->
+        {% if messages %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+
+        <!-- Add Task Button -->
+        <div class="text-end mb-3">
+            <a href="{% url 'add_task' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Add New Task
+            </a>
+        </div>
+
+        <!-- Task List Grouped by Months -->
+        <div class="accordion" id="taskAccordion">
+            {% for month, month_tasks in tasks.items %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ month|slugify }}">
+                        <button class="accordion-button {% if month != current_month %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ month|slugify }}" aria-expanded="{% if month == current_month %}true{% else %}false{% endif %}" aria-controls="collapse{{ month|slugify }}">
+                            <i class="fas fa-calendar-alt me-2"></i>{{ month }}
+                        </button>
+                    </h2>
+                    <div id="collapse{{ month|slugify }}" class="accordion-collapse collapse {% if month == current_month %}show{% endif %}" aria-labelledby="heading{{ month|slugify }}" data-bs-parent="#taskAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-group list-group-flush">
+                                {% for task in month_tasks %}
+                                    <li class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="task-description">{{ task.description }}</span>
+                                                <span class="task-status ms-2 {% if task.is_completed %}completed{% else %}pending{% endif %}">
+                                                    {{ task.is_completed|yesno:"Completed,Pending" }}
+                                                </span>
+                                            </div>
+                                            <div class="task-actions">
+                                                <form action="{% url 'update_task' task.id %}" method="POST" class="d-inline-block">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn {% if task.is_completed %}btn-success{% else %}btn-outline-success{% endif %}">
+                                                        {% if task.is_completed %}
+                                                            <i class="fas fa-check-circle me-1"></i>Completed
+                                                        {% else %}
+                                                            <i class="fas fa-check me-1"></i>Mark as Completed
+                                                        {% endif %}
+                                                    </button>
+                                                </form>
+                                                <form action="{% url 'delete_task' task.id %}" method="POST" class="d-inline-block ms-2">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-outline-danger delete-btn">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% empty %}
+                                    <li class="list-group-item text-center text-muted">No tasks for this period.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
         </div>
-    {% endif %}
-
-    <!-- Add Task Button -->
-    <div class="text-end mb-4">
-        <a href="{% url 'add_task' %}" class="btn btn-primary" style="background-color: maroon; color: white;">Add New Task</a>
-
     </div>
 
-    <form method="get" class="my-4">
-        <label for="filter_month" class="form-label">Filter by Month Period:</label>
-        <select name="filter_month" id="filter_month" class="form-select" onchange="this.form.submit()">
-            <option value="">All Tasks</option>
-            <option value="6-12" {% if filter_month == '6-12' %}selected{% endif %}>6-12 Months Before</option>
-            <option value="4-6" {% if filter_month == '4-6' %}selected{% endif %}>4-6 Months Before</option>
-            <option value="2-4" {% if filter_month == '2-4' %}selected{% endif %}>2-4 Months Before</option>
-            <option value="1-2" {% if filter_month == '1-2' %}selected{% endif %}>1-2 Months Before</option>
-            <option value="1-2 Weeks" {% if filter_month == '1-2 Weeks' %}selected{% endif %}>1-2 Weeks Before</option>
-            <option value="Final Days" {% if filter_month == 'Final Days' %}selected{% endif %}>Final Days</option>
-            <option value="Wedding Day" {% if filter_month == 'Wedding Day' %}selected{% endif %}>Wedding Day</option>
-        </select>
-    </form>
-
-    <!-- Task List Grouped by Months -->
-    <div class="accordion" id="taskAccordion">
-
-        <!-- 6-12 Months Before Section -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading6-12">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6-12" aria-expanded="true" aria-controls="collapse6-12">
-                    6-12 Months Before
-                </button>
-            </h2>
-            <div id="collapse6-12" class="accordion-collapse collapse show" aria-labelledby="heading6-12" data-bs-parent="#taskAccordion">
-                <div class="accordion-body">
-                    <ul class="list-group">
-                        {% for task in tasks %}
-                            {% if task.task_month == '6-12' %}
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ task.description }}</strong>
-                                            <small class="text-muted">(Completed: {{ task.is_completed }})</small>
-                                        </div>
-                                        <div>
-                                            <!-- Update Task Status with Dynamic Color -->
-                                            <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm 
-                                                    {% if task.is_completed %}
-                                                        btn-success
-                                                    {% else %}
-                                                        btn-secondary
-                                                    {% endif %}
-                                                ">
-                                                    {% if task.is_completed %}
-                                                        Completed
-                                                    {% else %}
-                                                        Mark as Completed
-                                                    {% endif %}
-                                                </button>
-                                            </form>
-
-                                            <!-- Delete Task if it's User-Created -->
-                                            {% if task.user %}
-                                            <form action="{% url 'delete_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </li>
-                            {% endif %}
-                        {% empty %}
-                            <li class="list-group-item">No tasks for this period.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4-6 Months Before Section -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading4-6">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4-6" aria-expanded="true" aria-controls="collapse4-6">
-                    4-6 Months Before
-                </button>
-            </h2>
-            <div id="collapse4-6" class="accordion-collapse collapse" aria-labelledby="heading4-6" data-bs-parent="#taskAccordion">
-                <div class="accordion-body">
-                    <ul class="list-group">
-                        {% for task in tasks %}
-                            {% if task.task_month == '4-6' %}
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ task.description }}</strong>
-                                            <small class="text-muted">(Completed: {{ task.is_completed }})</small>
-                                        </div>
-                                        <div>
-                                            <!-- Update Task Status with Dynamic Color -->
-                                            <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm 
-                                                    {% if task.is_completed %}
-                                                        btn-success
-                                                    {% else %}
-                                                        btn-secondary
-                                                    {% endif %}
-                                                ">
-                                                    {% if task.is_completed %}
-                                                        Completed
-                                                    {% else %}
-                                                        Mark as Completed
-                                                    {% endif %}
-                                                </button>
-                                            </form>
-
-                                            <!-- Delete Task if it's User-Created -->
-                                            {% if task.user %}
-                                            <form action="{% url 'delete_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </li>
-                            {% endif %}
-                        {% empty %}
-                            <li class="list-group-item">No tasks for this period.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2-4 Months Before Section -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading2-4">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2-4" aria-expanded="true" aria-controls="collapse2-4">
-                    2-4 Months Before
-                </button>
-            </h2>
-            <div id="collapse2-4" class="accordion-collapse collapse" aria-labelledby="heading2-4" data-bs-parent="#taskAccordion">
-                <div class="accordion-body">
-                    <ul class="list-group">
-                        {% for task in tasks %}
-                            {% if task.task_month == '2-4' %}
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ task.description }}</strong>
-                                            <small class="text-muted">(Completed: {{ task.is_completed }})</small>
-                                        </div>
-                                        <div>
-                                            <!-- Update Task Status with Dynamic Color -->
-                                            <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm 
-                                                    {% if task.is_completed %}
-                                                        btn-success
-                                                    {% else %}
-                                                        btn-secondary
-                                                    {% endif %}
-                                                ">
-                                                    {% if task.is_completed %}
-                                                        Completed
-                                                    {% else %}
-                                                        Mark as Completed
-                                                    {% endif %}
-                                                </button>
-                                            </form>
-
-                                            <!-- Delete Task if it's User-Created -->
-                                            {% if task.user %}
-                                            <form action="{% url 'delete_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </li>
-                            {% endif %}
-                        {% empty %}
-                            <li class="list-group-item">No tasks for this period.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- 1-2 Months Before Section -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading1-2">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1-2" aria-expanded="true" aria-controls="collapse1-2">
-                    1-2 Months Before
-                </button>
-            </h2>
-            <div id="collapse1-2" class="accordion-collapse collapse" aria-labelledby="heading1-2" data-bs-parent="#taskAccordion">
-                <div class="accordion-body">
-                    <ul class="list-group">
-                        {% for task in tasks %}
-                            {% if task.task_month == '1-2' %}
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ task.description }}</strong>
-                                            <small class="text-muted">(Completed: {{ task.is_completed }})</small>
-                                        </div>
-                                        <div>
-                                            <!-- Update Task Status with Dynamic Color -->
-                                            <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm 
-                                                    {% if task.is_completed %}
-                                                        btn-success
-                                                    {% else %}
-                                                        btn-secondary
-                                                    {% endif %}
-                                                ">
-                                                    {% if task.is_completed %}
-                                                        Completed
-                                                    {% else %}
-                                                        Mark as Completed
-                                                    {% endif %}
-                                                </button>
-                                            </form>
-
-                                            <!-- Delete Task if it's User-Created -->
-                                            {% if task.user %}
-                                            <form action="{% url 'delete_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </li>
-                            {% endif %}
-                        {% empty %}
-                            <li class="list-group-item">No tasks for this period.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- 1-2 Weeks Before Section -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading1-2Weeks">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1-2Weeks" aria-expanded="true" aria-controls="collapse1-2Weeks">
-                    1-2 Weeks Before
-                </button>
-            </h2>
-            <div id="collapse1-2Weeks" class="accordion-collapse collapse" aria-labelledby="heading1-2Weeks" data-bs-parent="#taskAccordion">
-                <div class="accordion-body">
-                    <ul class="list-group">
-                        {% for task in tasks %}
-                            {% if task.task_month == '1-2 Weeks' %}
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ task.description }}</strong>
-                                            <small class="text-muted">(Completed: {{ task.is_completed }})</small>
-                                        </div>
-                                        <div>
-                                            <!-- Update Task Status with Dynamic Color -->
-                                            <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm 
-                                                    {% if task.is_completed %}
-                                                        btn-success
-                                                    {% else %}
-                                                        btn-secondary
-                                                    {% endif %}
-                                                ">
-                                                    {% if task.is_completed %}
-                                                        Completed
-                                                    {% else %}
-                                                        Mark as Completed
-                                                    {% endif %}
-                                                </button>
-                                            </form>
-
-                                            <!-- Delete Task if it's User-Created -->
-                                            {% if task.user %}
-                                            <form action="{% url 'delete_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </li>
-                            {% endif %}
-                        {% empty %}
-                            <li class="list-group-item">No tasks for this period.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Final Days Section -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingFinalDays">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFinalDays" aria-expanded="true" aria-controls="collapseFinalDays">
-                    Final Days Before
-                </button>
-            </h2>
-            <div id="collapseFinalDays" class="accordion-collapse collapse" aria-labelledby="headingFinalDays" data-bs-parent="#taskAccordion">
-                <div class="accordion-body">
-                    <ul class="list-group">
-                        {% for task in tasks %}
-                            {% if task.task_month == 'Final Days' %}
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ task.description }}</strong>
-                                            <small class="text-muted">(Completed: {{ task.is_completed }})</small>
-                                        </div>
-                                        <div>
-                                            <!-- Update Task Status with Dynamic Color -->
-                                            <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm 
-                                                    {% if task.is_completed %}
-                                                        btn-success
-                                                    {% else %}
-                                                        btn-secondary
-                                                    {% endif %}
-                                                ">
-                                                    {% if task.is_completed %}
-                                                        Completed
-                                                    {% else %}
-                                                        Mark as Completed
-                                                    {% endif %}
-                                                </button>
-                                            </form>
-
-                                            <!-- Delete Task if it's User-Created -->
-                                            {% if task.user %}
-                                            <form action="{% url 'delete_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </li>
-                            {% endif %}
-                        {% empty %}
-                            <li class="list-group-item">No tasks for this period.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Wedding Day Section -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingWeddingDay">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWeddingDay" aria-expanded="true" aria-controls="collapseWeddingDay">
-                    Wedding Day
-                </button>
-            </h2>
-            <div id="collapseWeddingDay" class="accordion-collapse collapse" aria-labelledby="headingWeddingDay" data-bs-parent="#taskAccordion">
-                <div class="accordion-body">
-                    <ul class="list-group">
-                        {% for task in tasks %}
-                            {% if task.task_month == 'Wedding Day' %}
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ task.description }}</strong>
-                                            <small class="text-muted">(Completed: {{ task.is_completed }})</small>
-                                        </div>
-                                        <div>
-                                            <!-- Update Task Status with Dynamic Color -->
-                                            <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm 
-                                                    {% if task.is_completed %}
-                                                        btn-success
-                                                    {% else %}
-                                                        btn-secondary
-                                                    {% endif %}
-                                                ">
-                                                    {% if task.is_completed %}
-                                                        Completed
-                                                    {% else %}
-                                                        Mark as Completed
-                                                    {% endif %}
-                                                </button>
-                                            </form>
-
-                                            <!-- Delete Task if it's User-Created -->
-                                            {% if task.user %}
-                                            <form action="{% url 'delete_task' task.id %}" method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </li>
-                            {% endif %}
-                        {% empty %}
-                            <li class="list-group-item">No tasks for this period.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

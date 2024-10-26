@@ -4,76 +4,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Calendar for {{ service.name }}</title>
+    <title>Book Your Special Day - {{ service.name }}</title>
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: url('{% static "images/floral-bg.jpg" %}') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 50px auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4, #ffecd2);
+        }
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: #d23669;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            position: relative;
+        }
+        h1::after {
+            content: "❦";
+            display: block;
+            text-align: center;
+            color: #d23669;
+            font-size: 0.5em;
+            margin-top: 10px;
+        }
+        #calendar {
+            margin-bottom: 30px;
+        }
+        .fc-theme-standard td {
+            border-color: #f0e4e4;
+        }
+        .fc-theme-standard th {
+            background-color: #ffeaea;
+            color: #d23669;
+            border-color: #f0e4e4;
+        }
+        .fc-daygrid-day.fc-day-today {
+            background-color: #fff0f5 !important;
+        }
+        .fc-button-primary {
+            background-color: #d23669 !important;
+            border-color: #d23669 !important;
+            font-family: 'Roboto', sans-serif;
+        }
+        .fc-button-primary:hover {
+            background-color: #b22e59 !important;
+            border-color: #b22e59 !important;
+        }
+        #booking-form {
+            background-color: #fff0f5;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: center;
+            border: 2px dashed #d23669;
+        }
+        #submit-booking {
+            background-color: #d23669;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: bold;
+            font-family: 'Roboto', sans-serif;
+        }
+        #submit-booking:hover {
+            background-color: #b22e59;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(210, 54, 105, 0.3);
+        }
+        .selected-date-display {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2em;
+            color: #d23669;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
-   
-<h1>Booking Calendar for {{ service.name }}</h1>
+    <div class="container">
+        <h1>Book Your Special Day with {{ service.name }}</h1>
 
-<div id="calendar"></div>
+        <div id="calendar"></div>
 
-<form id="booking-form" style="display:none;">
-    <input type="hidden" id="selected-date" name="selected-date">
-    <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
-    <button type="button" id="submit-booking">Submit Booking</button>
-</form>
+        <form id="booking-form" style="display:none;">
+            <div class="selected-date-display">Selected Date: <span id="display-date"></span></div>
+            <input type="hidden" id="selected-date" name="selected-date">
+            <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+            <button type="button" id="submit-booking">Confirm Your Booking</button>
+        </form>
+    </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
 
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            events: '/get-booking-slots/{{ service.id }}/',  // Fetch events from Django API
-            dateClick: function(info) {
-                // Check if the clicked date is available
-                var isAvailable = !info.event || info.event.extendedProps.status === 'Available';
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: '/get-booking-slots/{{ service.id }}/',
+                dateClick: function(info) {
+                    var today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    var clickedDate = new Date(info.dateStr);
 
-                if (isAvailable) {
-                    // Show booking form with the selected date
-                    $('#selected-date').val(info.dateStr);
-                    $('#booking-form').show();
-                } else {
-                    alert("The selected date is already booked.");
-                }
-            },
-            eventColor: 'lightgray',
-            eventClick: function(info) {
-                // Optionally handle event clicks
-                alert('Booking status: ' + info.event.extendedProps.status);
-            }
-        });
+                    if (clickedDate <= today) {
+                        alert("You can't select today's date or past dates. Please choose a future date.");
+                        return;
+                    }
 
-        calendar.render();
+                    var isAvailable = !info.event || info.event.extendedProps.status === 'Available';
 
-        // Handle booking submission
-        $('#submit-booking').click(function() {
-            var eventDate = $('#selected-date').val();
-
-            $.ajax({
-                url: '/submit-booking/{{ service.id }}/',
-                method: 'POST',
-                data: JSON.stringify({ 
-                    event_date: eventDate,
-                    csrfmiddlewaretoken: $('#csrf-token').val()  // Pass CSRF token
-                }),
-                contentType: 'application/json',
-                success: function(response) {
-                    alert(response.message);
-                    calendar.refetchEvents();  // Refresh the calendar after booking
-                    $('#booking-form').hide();  // Hide the form after submission
+                    if (isAvailable) {
+                        // Redirect to the booking form with the selected date
+                        window.location.href = "{% url 'book_service' service.id %}?selected_date=" + info.dateStr;
+                    } else {
+                        alert("We're sorry, but this date is already booked. Please choose another day for your special event.");
+                    }
                 },
-                error: function(error) {
-                    alert('An error occurred. Please try again.');
+                validRange: function(nowDate) {
+                    return {
+                        start: nowDate.getTime() + 24 * 60 * 60 * 1000 // start from tomorrow
+                    };
+                },
+                eventColor: '#ffd1dc',
+                eventTextColor: '#d23669',
+                eventClick: function(info) {
+                    alert('Booking status: ' + info.event.extendedProps.status);
+                },
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,dayGridWeek'
                 }
             });
-        });
-    });
-</script>
 
+            calendar.render();
+
+            // Remove the booking form and related JavaScript as it's no longer needed here
+        });
+    </script>
 </body>
 </html>

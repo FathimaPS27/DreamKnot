@@ -5,34 +5,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Current Month's Task List</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Internal CSS for styling */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8f9fa;
+            background-color: #f0f2f5;
+            color: #333;
         }
 
         .container {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 800px;
+            max-width: 1000px;
             margin: 20px auto;
+            padding: 20px;
         }
 
         /* Navbar */
         .navbar {
             background-color: white;
-            padding: 15px 20px;
+            padding: 15px 80px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
         }
-
         .navbar .logo {
             text-decoration: none;
             background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
@@ -42,283 +39,338 @@
             font-weight: 600;
             font-family: 'Lucida Handwriting', cursive;
             transition: background 0.3s ease;
-            padding-top: 20px;
         }
-
         .navbar ul {
             list-style: none;
             display: flex;
             margin: 0;
         }
-
         .navbar ul li {
-            margin: 0 15px;
+            margin: 0 20px;
+            position: relative;
         }
-
         .navbar ul li a {
-            color: maroon;
+            color: #480808;
             text-decoration: none;
             font-size: 1rem;
             transition: color 0.3s;
         }
-
         .navbar ul li a:hover {
-            color: #ffc107;
+            color: #ede8e7;
         }
 
+        /* Dropdown Styling */
+        .dropdown {
+            position: relative;
+        }
+        .dropbtn {
+            display: inline-block;
+            cursor: pointer;
+            padding-right: 10px;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            min-width: 160px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .dropdown-content a:hover {
+            background-color: #4b1005;
+            color: white;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown:hover .dropbtn i {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+
+
+        /* New styles */
         h1, h2 {
-            color: #343a40;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
         .alert {
             padding: 15px;
             margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: .375rem;
-            color: #856404;
-            background-color: #fff3cd;
-            border-color: #ffeeba;
+            border: none;
+            border-radius: 5px;
+            background-color: #d4edda;
+            color: #155724;
         }
 
-        ul {
-            list-style-type: none;
-            padding: 0;
+        .task-overview {
+           
+            padding: 20px 0;
+         
         }
 
-        .task-item {
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f9f9f9;
-            position: relative;
+        .task-overview-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            
+        }
+
+        .task-counts {
             display: flex;
-            justify-content: space-between; /* Space between task info and button */
-            align-items: center; /* Align items vertically */
+            justify-content: space-between;
+            flex-wrap: wrap;
         }
 
-        .completed {
-            background-color: #d4edda; /* Light green background for completed tasks */
-            border-color: #c3e6cb; /* Light green border */
+        .count-card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            width: 15%;
+            margin: 10px 10px;
+            transition: all 0.3s ease;
         }
 
-        .delayed-task {
-            border-color: #dc3545;
-            background-color: #f8d7da;
+        .count-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .count-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .count-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .count-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .overall-icon { color: #3498db; }
+        .pending-icon { color: #e74c3c; }
+        .completed-icon { color: #2ecc71; }
+
+        .task-list {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .task-item {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-item.completed {
+            background-color: #e8f5e9;
+            border-color: #c8e6c9;
+        }
+
+        .task-description {
+            flex: 1;
+            font-size: 1.1rem;
         }
 
         .btn {
-            background-color: #007bff;
-            color: white;
+            padding: 8px 16px;
             border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
-            text-decoration: none;
-            transition: background-color 0.3s, color 0.3s;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
         }
 
         .btn-success {
-            background-color: #28a745;
+            background-color: #27ae60;
+            color: white;
         }
 
-        .btn-warning {
-            background-color: #ffc107;
+        .btn-success:hover {
+            background-color: #2ecc71;
         }
 
-        .btn:hover {
-            opacity: 0.9;
+        .completed-icon {
+            color: #27ae60;
+            margin-right: 10px;
         }
 
-        .btn.completed {
-            background-color: #28a745; /* Green for completed tasks */
-            color: white; /* Ensure text remains readable */
-        }
-        
-            /* Task Overview Section */
-            .task-overview {
-                background-color: #F5EBEB; /* Background color */
-                border-radius: 10px; /* Rounded corners */
-                padding: 10px; /* Padding around the content */
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
-                margin-bottom: 10px; /* Space below the section */
-                margin-top: 10px;
-            }
-        
-            .task-overview h4 {
-                margin: 0 0 10px 0; /* Spacing below the heading */
-                color: #343a40; /* Darker text color */
-                font-weight: bold;
-            }
-        
-            .task-overview h5 {
-                margin: 0 0 5px 0; /* Adjust margin for clarity */
-                color: #343a40; /* Darker text color */
-                font-size: 1rem;
-            }
-        
-            .task-overview .total-count {
-                font-weight: bold; /* Bold text for counts */
-                font-size: 1.5rem; /* Larger font size for count display */
-                color: #28a745; /* Green color for completed counts */
-            }
-        
-            .task-overview .total-count.pending {
-                color: #dc3545; /* Red color for pending counts */
-            }
-        
+        @media (max-width: 768px) {
             .task-overview .row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
+                flex-direction: column;
             }
-        
-            /* Responsive adjustments */
-            @media (max-width: 768px) {
-                .task-overview .row {
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-        
-                .task-overview .col-md-6 {
-                    width: 100%;
-                    text-align: left;
-                }
+
+            .task-overview .col-md-6 {
+                margin-bottom: 15px;
             }
-      
-        
+
+            .count-card {
+                width: 45%;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Navbar remains unchanged -->
     <nav class="navbar">
-        <div class="logo">Dream Knot</div>
+        <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
         <ul>
             <li><a href="{% url 'user_home' %}">Dashboard</a></li>
-            <li><a href="#">My Bookings</a></li>
-            <li><a href="{% url 'favorite_list' %}">My Favorite Services</a></li>
-            <li><a href="{% url 'todo_list' %}">All Tasks</a></li>
-            <li><a href="{% url 'current_month_todolist' %}">Current Month</a></li>
-            <li><a href="{% url 'update_user_profile' %}">Profile</a></li>
-            <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
+            <li><a href="{% url 'user_dashboard' %}">Service Providers</a></li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">Todo List<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'current_month_todolist' %}">Current Month</a>
+                    <a href="{% url 'todo_list' %}">All Tasks</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">Invitation<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'send_rsvp_invitation' %}">Send Invitation</a>
+                    <a href="{% url 'invitation_list' %}">Invitation List</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">My Account<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'user_booking_details' %}">My Bookings</a>
+                    <a href="{% url 'favorite_list' %}">favourite list</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">
+                    <i class="fa fa-user-circle"></i> {{ user_name }} <i class="fas fa-caret-down"></i>
+                </a>
+                <div class="dropdown-content">
+                    <a href="{% url 'update_user_profile' %}">Update Profile</a>
+                    <a href="{% url 'logout' %}" class="logout-button">Logout</a>
+                </div>
+            </li>
         </ul>
     </nav>
- <!-- Overall Task Summary -->
-<div class="task-overview mb-4">
-    <h4>Overall Tasks Summary</h4>
-    <div class="row">
-        <div class="col-md-6">
-            <h5>Total Overall Completed Tasks: <span class="total-count">{{ overall_completed_count }}</span></h5>
+    <h3 class="encouragement" style="text-align: center; margin-bottom: 10px; color: maroon;">Complete your tasks for this month and stay on track with your wedding planning!</h3>
+    <!-- Task Summary Section outside the container -->
+    <div class="task-overview">
+        <div class="task-overview-content">
+            <h4>Task Summary</h4>
+            <div class="task-counts">
+                <div class="count-card">
+                    <i class="fas fa-tasks count-icon overall-icon"></i>
+                    <div class="count-number">{{ overall_completed_count|add:overall_pending_count }}</div>
+                    <div class="count-label">Total Tasks</div>
+                </div>
+                <div class="count-card">
+                    <i class="fas fa-clock count-icon pending-icon"></i>
+                    <div class="count-number">{{ overall_pending_count }}</div>
+                    <div class="count-label">Pending</div>
+                </div>
+                <div class="count-card">
+                    <i class="fas fa-check-circle count-icon completed-icon"></i>
+                    <div class="count-number">{{ overall_completed_count }}</div>
+                    <div class="count-label">Completed</div>
+                </div>
+                <div class="count-card">
+                    <i class="fas fa-calendar-day count-icon overall-icon"></i>
+                    <div class="count-number">{{ pending_count }}</div>
+                    <div class="count-label">This Month</div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6 text-right">
-            <h5>Total Overall Pending Tasks: <span class="total-count">{{ overall_pending_count }}</span></h5>
-        </div>
-        
     </div>
-    
-</div>
-    <!-- Alerts -->
-    {% if messages %}
-        <div class="alert alert-info">
-            {% for message in messages %}
-                {{ message }}
-            {% endfor %}
-        </div>
-    {% endif %}
 
-<!-- Task Overview Section -->
-<div class="task-overview mb-4">
-    <h4>Current Month's Task Overview</h4>
-    <div class="row">
-        <div class="col-md-6">
-            <h5>Total Pending Tasks for Current Month: <span class="total-count">{{ pending_count }}</span></h5>
-        </div>
-        <div class="col-md-6 text-right">
-            <h5>Total Completed Tasks for Current Month: <span class="total-count">{{ completed_count }}</span></h5>
-        </div>
-    </div>
-</div>
     <div class="container">
-        <h1>Task List for {{ wedding_month }}</h1>
+        <!-- Alerts -->
+        {% if messages %}
+            <div class="alert">
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+            </div>
+        {% endif %}
+   
 
-        {% if delayed_tasks.exists %}
-        <div class="alert alert-warning">
-            You have delayed tasks that need your attention!
+        <h2>Task List for {{ wedding_month }} Months</h2>
+        <p"><strong>Today's Date:</strong> {{ today }}</p>
+
+        <!-- Pending Tasks -->
+        <div class="task-list">
+            <h2>Pending Tasks</h2>
+            {% if pending_tasks %}
+                <ul>
+                    {% for task in pending_tasks %}
+                        <li class="task-item" id="task-{{ task.id }}">
+                            <span class="task-description">{{ task.description }}</span>
+                            <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success" onclick="markAsCompleted(event, {{ task.id }})">
+                                    <i class="fas fa-check"></i> Complete
+                                </button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No pending tasks for this month.</p>
+            {% endif %}
         </div>
-        {% endif %}
 
-        <p><strong>Today's Date:</strong> {{ today }}</p>
-
-        <h2>Pending Tasks</h2>
-        {% if pending_tasks %}
-            <ul>
-                {% for task in pending_tasks %}
-                    <li class="task-item" id="task-{{ task.id }}">
-                        <div>
-                            <strong>{{ task.title }}</strong>
-                            <p>{{ task.description }}</p>
-                        </div>
-                        <!-- Update Task Status -->
-                        <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success btn-sm" style="background-color: maroon; color: white;" onclick="markAsCompleted(event, {{ task.id }})">Mark as Completed</button>
-                        </form>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No pending tasks for this month.</p>
-        {% endif %}
-
-        <h2>Completed Tasks</h2>
-        {% if completed_tasks %}
-            <ul>
-                {% for task in completed_tasks %}
-                    <li class="task-item completed">
-                        <div>
-                            <strong>{{ task.title }}</strong>
-                            <p>{{ task.description }}</p>
-                            
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No tasks have been completed yet.</p>
-        {% endif %}
-
-        <h2>Delayed Tasks</h2>
-        {% if delayed_tasks %}
-            <ul>
-                {% for task in delayed_tasks %}
-                    <li class="task-item delayed-task">
-                        <div>
-                            <strong>{{ task.title }}</strong>
-                            <p>{{ task.description }}</p>
-                        </div>
-                        <form method="POST" action="{% url 'update_task' task.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-warning"style="background-color: maroon; color: white;">Mark as Complete</button>
-                        </form>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No delayed tasks.</p>
-        {% endif %}
+        <!-- Completed Tasks -->
+        <div class="task-list">
+            <h2>Completed Tasks</h2>
+            {% if completed_tasks %}
+                <ul>
+                    {% for task in completed_tasks %}
+                        <li class="task-item completed">
+                            <span class="task-description">
+                                <i class="fas fa-check-circle completed-icon"></i>
+                                {{ task.description }}
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No tasks have been completed yet.</p>
+            {% endif %}
+        </div>
     </div>
 
     <script>
         function markAsCompleted(event, taskId) {
-            // Prevent form submission for immediate UI update
             event.preventDefault();
-
-            // Change button color
-            const button = event.target;
-            button.classList.add('completed'); // Add completed class for color change
-
-            // Update the task status in the backend (optional - here for illustration)
-            const form = button.closest('form');
-            form.submit(); // Proceed with form submission to update task status
+            const listItem = document.getElementById(`task-${taskId}`);
+            listItem.classList.add('completed');
+            const form = event.target.closest('form');
+            form.submit();
         }
     </script>
 </body>

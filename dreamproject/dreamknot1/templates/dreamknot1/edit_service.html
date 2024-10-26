@@ -8,9 +8,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
+        body { background-color: #f8f9fa; }
         .container {
             background-color: #ffffff;
             border-radius: 8px;
@@ -19,9 +17,7 @@
             margin-top: 50px;
             margin-bottom: 50px;
         }
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none; }
         .service-image {
             max-width: 150px;
             max-height: 150px;
@@ -85,6 +81,7 @@
                     <div class="form-group">
                         <label for="name">Service Name</label>
                         <input type="text" class="form-control" name="name" value="{{ service.name }}" required>
+                        {% if errors.name %}<small class="text-danger">{{ errors.name }}</small>{% endif %}
                     </div>
                     <div class="form-group">
                         <label for="description">Description</label>
@@ -98,6 +95,7 @@
                             </div>
                             <input type="number" step="0.01" class="form-control" name="price" value="{{ service.price }}" required>
                         </div>
+                        {% if errors.price %}<small class="text-danger">{{ errors.price }}</small>{% endif %}
                     </div>
                     <div class="form-group">
                         <label for="category">Category</label>
@@ -140,306 +138,318 @@
                             {% endif %}
                         </div>
                     </div>
-                
                     <div class="form-group">
-                        <label for="brochure">Brochure (PDF)</label>
-                        <input type="file" class="form-control-file" name="brochure" id="brochure" accept="application/pdf">
+                        <label for="brochure">Brochure</label>
+                        <input type="file" class="form-control-file" name="brochure" id="brochure" accept=".pdf,.doc,.docx">
                         {% if service.brochure %}
-                            <a href="{{ service.brochure.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                                <i class="fas fa-file-pdf"></i> View current brochure
-                            </a>
+                            <p class="mt-2">Current brochure: {{ service.brochure.name }}</p>
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- Venue Fields -->
-            <div id="venue-fields" class="hidden">
-                <h4 class="mt-4">Venue Details</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="type_of_venue">Type of Venue</label>
-                            <select class="form-control" name="type_of_venue" required>
-                                <option value="Indoor" {% if venue_service.type_of_venue == 'Indoor' %}selected{% endif %}>Indoor</option>
-                                <option value="Outdoor" {% if venue_service.type_of_venue == 'Outdoor' %}selected{% endif %}>Outdoor</option>
-                                <option value="Destination" {% if venue_service.type_of_venue == 'Destination' %}selected{% endif %}>Destination</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="location">Location</label>
-                            <input type="text" class="form-control" name="location" value="{{ venue_service.location }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="capacity">Capacity</label>
-                            <input type="number" class="form-control" name="capacity" value="{{ venue_service.capacity }}">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" name="pre_post_wedding_availability" id="pre_post_wedding_availability" {% if venue_service.pre_post_wedding_availability %}checked{% endif %}>
-                                <label class="custom-control-label" for="pre_post_wedding_availability">Pre/Post Wedding Availability</label>
+            <!-- Category-specific fields -->
+            {% if service.category == 'Venue' %}
+                <div id="venue-fields">
+                    <h4 class="mt-4">Venue Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="type_of_venue">Type of Venue</label>
+                                <input type="text" class="form-control" name="type_of_venue" value="{{ venue_service.type_of_venue }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Location</label>
+                                <input type="text" class="form-control" name="location" value="{{ venue_service.location }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="capacity">Capacity</label>
+                                <input type="number" class="form-control" name="capacity" value="{{ venue_service.capacity }}">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="base_price">Base Price</label>
-                            <input type="number" step="0.01" class="form-control" name="base_price" value="{{ venue_service.base_price }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="hourly_rate">Hourly Rate</label>
-                            <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ venue_service.hourly_rate }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="day_rate">Day Rate</label>
-                            <input type="number" step="0.01" class="form-control" name="day_rate" value="{{ venue_service.day_rate }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="setup_fee">Setup Fee</label>
-                            <input type="number" step="0.01" class="form-control" name="setup_fee" value="{{ venue_service.setup_fee }}">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="pre_post_wedding_availability" id="pre_post_wedding_availability" {% if venue_service.pre_post_wedding_availability %}checked{% endif %}>
+                                    <label class="custom-control-label" for="pre_post_wedding_availability">Pre/Post Wedding Availability</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" step="0.01" class="form-control" name="base_price" value="{{ venue_service.base_price }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ venue_service.hourly_rate }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="day_rate">Day Rate</label>
+                                <input type="number" step="0.01" class="form-control" name="day_rate" value="{{ venue_service.day_rate }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="setup_fee">Setup Fee</label>
+                                <input type="number" step="0.01" class="form-control" name="setup_fee" value="{{ venue_service.setup_fee }}">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Catering Fields -->
-            <div id="catering-fields" class="hidden">
-                <h4 class="mt-4">Catering Details</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="cuisine_type">Cuisine Type</label>
-                            <input type="text" class="form-control" name="cuisine_type" value="{{ catering_service.cuisine_type }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="menu_options">Menu Options</label>
-                            <textarea class="form-control" name="menu_options" rows="3">{{ catering_service.menu_options }}</textarea>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" name="provides_staff" id="provides_staff" {% if catering_service.provides_staff %}checked{% endif %}>
-                                <label class="custom-control-label" for="provides_staff">Provides Staff</label>
+            {% elif service.category == 'Catering' %}
+                <div id="catering-fields">
+                    <h4 class="mt-4">Catering Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="menu_planning">Menu Planning</label>
+                                <textarea class="form-control" name="menu_planning" rows="3">{{ catering_service.menu_planning }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="meal_service_type">Meal Service Type</label>
+                                <input type="text" class="form-control" name="meal_service_type" value="{{ catering_service.meal_service_type }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="dietary_options">Dietary Options</label>
+                                <input type="text" class="form-control" name="dietary_options" value="{{ catering_service.dietary_options }}">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="price_per_plate">Price Per Plate</label>
-                            <input type="number" step="0.01" class="form-control" name="price_per_plate" value="{{ catering_service.price_per_plate }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="minimum_guests">Minimum Guests</label>
-                            <input type="number" class="form-control" name="minimum_guests" value="{{ catering_service.minimum_guests }}">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="price_per_person">Price Per Person</label>
+                                <input type="number" step="0.01" class="form-control" name="price_per_person" value="{{ catering_service.price_per_person }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="setup_fee">Setup Fee</label>
+                                <input type="number" step="0.01" class="form-control" name="setup_fee" value="{{ catering_service.setup_fee }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="minimum_guest_count">Minimum Guest Count</label>
+                                <input type="number" class="form-control" name="minimum_guest_count" value="{{ catering_service.minimum_guest_count }}">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Photography Fields -->
-            <div id="photography-fields" class="hidden">
-                <h4 class="mt-4">Photography Details</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="photography_style">Photography Style</label>
-                            <input type="text" class="form-control" name="photography_style" value="{{ photo_service.photography_style }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="equipment_used">Equipment Used</label>
-                            <textarea class="form-control" name="equipment_used" rows="3">{{ photo_service.equipment_used }}</textarea>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" name="offers_video" id="offers_video" {% if photo_service.offers_video %}checked{% endif %}>
-                                <label class="custom-control-label" for="offers_video">Offers Video</label>
+            {% elif service.category == 'Photography' %}
+                <div id="photography-fields">
+                    <h4 class="mt-4">Photography Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="package_duration">Package Duration</label>
+                                <input type="text" class="form-control" name="package_duration" value="{{ photo_service.package_duration }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="styles">Styles</label>
+                                <input type="text" class="form-control" name="styles" value="{{ photo_service.styles }}">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="package_options">Package Options</label>
-                            <textarea class="form-control" name="package_options" rows="3">{{ photo_service.package_options }}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="hourly_rate">Hourly Rate</label>
-                            <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ photo_service.hourly_rate }}">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="engagement_shoots" id="engagement_shoots" {% if photo_service.engagement_shoots %}checked{% endif %}>
+                                    <label class="custom-control-label" for="engagement_shoots">Engagement Shoots</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="videography_options" id="videography_options" {% if photo_service.videography_options %}checked{% endif %}>
+                                    <label class="custom-control-label" for="videography_options">Videography Options</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" step="0.01" class="form-control" name="base_price" value="{{ photo_service.base_price }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ photo_service.hourly_rate }}">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Music Entertainment Fields -->
-            <div id="music-entertainment-fields" class="hidden">
-                <h4 class="mt-4">Music Entertainment Details</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="music_genre">Music Genre</label>
-                            <input type="text" class="form-control" name="music_genre" value="{{ music_service.music_genre }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="performance_type">Performance Type</label>
-                            <input type="text" class="form-control" name="performance_type" value="{{ music_service.performance_type }}">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" name="provides_equipment" id="provides_equipment" {% if music_service.provides_equipment %}checked{% endif %}>
-                                <label class="custom-control-label" for="provides_equipment">Provides Equipment</label>
+            {% elif service.category == 'MusicEntertainment' %}
+                <div id="music-entertainment-fields">
+                    <h4 class="mt-4">Music & Entertainment Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="entertainment_options">Entertainment Options</label>
+                                <textarea class="form-control" name="entertainment_options" rows="3">{{ music_service.entertainment_options }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="sound_system_setup" id="sound_system_setup" {% if music_service.sound_system_setup %}checked{% endif %}>
+                                    <label class="custom-control-label" for="sound_system_setup">Sound System Setup</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="multiple_entertainment_acts" id="multiple_entertainment_acts" {% if music_service.multiple_entertainment_acts %}checked{% endif %}>
+                                    <label class="custom-control-label" for="multiple_entertainment_acts">Multiple Entertainment Acts</label>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="duration_of_performance">Duration of Performance</label>
-                            <input type="text" class="form-control" name="duration_of_performance" value="{{ music_service.duration_of_performance }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="hourly_rate">Hourly Rate</label>
-                            <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ music_service.hourly_rate }}">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="emcee_services" id="emcee_services" {% if music_service.emcee_services %}checked{% endif %}>
+                                    <label class="custom-control-label" for="emcee_services">Emcee Services</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="playlist_customization" id="playlist_customization" {% if music_service.playlist_customization %}checked{% endif %}>
+                                    <label class="custom-control-label" for="playlist_customization">Playlist Customization</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" step="0.01" class="form-control" name="base_price" value="{{ music_service.base_price }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ music_service.hourly_rate }}">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Makeup Hair Fields -->
-            <div id="makeup-hair-fields" class="hidden">
-                <h4 class="mt-4">Makeup & Hair Details</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="specialization">Specialization</label>
-                            <input type="text" class="form-control" name="specialization" value="{{ makeup_service.specialization }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="services_offered">Services Offered</label>
-                            <textarea class="form-control" name="services_offered" rows="3">{{ makeup_service.services_offered }}</textarea>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" name="provides_trials" id="provides_trials" {% if makeup_service.provides_trials %}checked{% endif %}>
-                                <label class="custom-control-label" for="provides_trials">Provides Trials</label>
+            {% elif service.category == 'MakeupHair' %}
+                <div id="makeup-hair-fields">
+                    <h4 class="mt-4">Makeup & Hair Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="grooming_services">Grooming Services</label>
+                                <textarea class="form-control" name="grooming_services" rows="3">{{ makeup_service.grooming_services }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="trial_sessions" id="trial_sessions" {% if makeup_service.trial_sessions %}checked{% endif %}>
+                                    <label class="custom-control-label" for="trial_sessions">Trial Sessions</label>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="group_size">Maximum Group Size</label>
-                            <input type="number" class="form-control" name="group_size" value="{{ makeup_service.group_size }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="price_per_person">Price Per Person</label>
-                            <input type="number" step="0.01" class="form-control" name="price_per_person" value="{{ makeup_service.price_per_person }}">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="high_end_products" id="high_end_products" {% if makeup_service.high_end_products %}checked{% endif %}>
+                                    <label class="custom-control-label" for="high_end_products">High-End Products</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" step="0.01" class="form-control" name="base_price" value="{{ makeup_service.base_price }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ makeup_service.hourly_rate }}">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Rentals Fields -->
-            <div id="rentals-fields" class="hidden">
-                <h4 class="mt-4">Rentals Details</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="rental_items">Rental Items</label>
-                            <textarea class="form-control" name="rental_items" rows="3">{{ rental_service.rental_items }}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" name="setup_services" id="setup_services" {% if rental_service.setup_services %}checked{% endif %}>
-                                <label class="custom-control-label" for="setup_services">Setup Services Available</label>
+            {% elif service.category == 'Rentals' %}
+                <div id="rentals-fields">
+                    <h4 class="mt-4">Rentals Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="rental_items">Rental Items</label>
+                                <textarea class="form-control" name="rental_items" rows="3">{{ rental_service.rental_items }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="setup_services" id="setup_services" {% if rental_service.setup_services %}checked{% endif %}>
+                                    <label class="custom-control-label" for="setup_services">Setup Services</label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="rental_price_per_item">Rental Price Per Item</label>
-                            <input type="number" step="0.01" class="form-control" name="rental_price_per_item" value="{{ rental_service.rental_price_per_item }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="deposit_required">Deposit Required</label>
-                            <input type="number" step="0.01" class="form-control" name="deposit_required" value="{{ rental_service.deposit_required }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="duration_of_rental">Duration of Rental</label>
-                            <input type="text" class="form-control" name="duration_of_rental" value="{{ rental_service.duration_of_rental }}">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="rental_price_per_item">Rental Price Per Item</label>
+                                <input type="number" step="0.01" class="form-control" name="rental_price_per_item" value="{{ rental_service.rental_price_per_item }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="deposit_required">Deposit Required</label>
+                                <input type="number" step="0.01" class="form-control" name="deposit_required" value="{{ rental_service.deposit_required }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="duration_of_rental">Duration of Rental</label>
+                                <input type="text" class="form-control" name="duration_of_rental" value="{{ rental_service.duration_of_rental }}">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Mehendi Artist Fields -->
-            <div id="mehendi-artist-fields" class="hidden">
-                <h4 class="mt-4">Mehendi Artist Details</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="design_styles">Design Styles</label>
-                            <textarea class="form-control" name="design_styles" rows="3">{{ mehendi_service.design_styles }}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="duration_per_hand">Duration Per Hand (hours)</label>
-                            <input type="number" step="0.5" class="form-control" name="duration_per_hand" value="{{ mehendi_service.duration_per_hand }}">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" name="use_of_organic_henna" id="use_of_organic_henna" {% if mehendi_service.use_of_organic_henna %}checked{% endif %}>
-                                <label class="custom-control-label" for="use_of_organic_henna">Use of Organic Henna</label>
+            {% elif service.category == 'MehendiArtist' %}
+                <div id="mehendi-artist-fields">
+                    <h4 class="mt-4">Mehendi Artist Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="design_styles">Design Styles</label>
+                                <textarea class="form-control" name="design_styles" rows="3">{{ mehendi_service.design_styles }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="duration_per_hand">Duration Per Hand (hours)</label>
+                                <input type="number" step="0.01" class="form-control" name="duration_per_hand" value="{{ mehendi_service.duration_per_hand }}">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="base_price">Base Price</label>
-                            <input type="number" step="0.01" class="form-control" name="base_price" value="{{ mehendi_service.base_price }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="hourly_rate">Hourly Rate</label>
-                            <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ mehendi_service.hourly_rate }}">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="use_of_organic_henna" id="use_of_organic_henna" {% if mehendi_service.use_of_organic_henna %}checked{% endif %}>
+                                    <label class="custom-control-label" for="use_of_organic_henna">Use of Organic Henna</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" step="0.01" class="form-control" name="base_price" value="{{ mehendi_service.base_price }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ mehendi_service.hourly_rate }}">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Decoration Fields -->
-            <div id="decoration-fields" class="hidden">
-                <h4 class="mt-4">Decoration Details</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="decor_themes">Decor Themes</label>
-                            <textarea class="form-control" name="decor_themes" rows="3">{{ decor_service.decor_themes }}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" name="floral_arrangements" id="floral_arrangements" {% if decor_service.floral_arrangements %}checked{% endif %}>
-                                <label class="custom-control-label" for="floral_arrangements">Floral Arrangements</label>
+            {% elif service.category == 'Decoration' %}
+                <div id="decoration-fields">
+                    <h4 class="mt-4">Decoration Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="decor_themes">Decor Themes</label>
+                                <textarea class="form-control" name="decor_themes" rows="3">{{ decor_service.decor_themes }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="floral_arrangements" id="floral_arrangements" {% if decor_service.floral_arrangements %}checked{% endif %}>
+                                    <label class="custom-control-label" for="floral_arrangements">Floral Arrangements</label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" name="lighting_options" id="lighting_options" {% if decor_service.lighting_options %}checked{% endif %}>
-                                <label class="custom-control-label" for="lighting_options">Lighting Options</label>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="lighting_options" id="lighting_options" {% if decor_service.lighting_options %}checked{% endif %}>
+                                    <label class="custom-control-label" for="lighting_options">Lighting Options</label>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" name="stage_decor" id="stage_decor" {% if decor_service.stage_decor %}checked{% endif %}>
-                                <label class="custom-control-label" for="stage_decor">Stage Decor</label>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="stage_decor" id="stage_decor" {% if decor_service.stage_decor %}checked{% endif %}>
+                                    <label class="custom-control-label" for="stage_decor">Stage Decor</label>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="base_price">Base Price</label>
-                            <input type="number" step="0.01" class="form-control" name="base_price" value="{{ decor_service.base_price }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="hourly_rate">Hourly Rate</label>
-                            <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ decor_service.hourly_rate }}">
+                            <div class="form-group">
+                                <label for="base_price">Base Price</label>
+                                <input type="number" step="0.01" class="form-control" name="base_price" value="{{ decor_service.base_price }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="hourly_rate">Hourly Rate</label>
+                                <input type="number" step="0.01" class="form-control" name="hourly_rate" value="{{ decor_service.hourly_rate }}">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            {% endif %}
 
             <div class="mt-4">
                 <button type="submit" class="btn btn-primary">
@@ -456,21 +466,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-        function showFields() {
-            var category = document.getElementById('category').value.toLowerCase();
-            var allFields = document.querySelectorAll('[id$="-fields"]');
-            allFields.forEach(function(field) {
-                field.classList.add('hidden');
-            });
-            var selectedField = document.getElementById(category + '-fields');
-            if (selectedField) {
-                selectedField.classList.remove('hidden');
-            }
-        }
-
-        // Call showFields on page load to show the correct fields
-        document.addEventListener('DOMContentLoaded', showFields);
-
         // Handle image deletion
         document.querySelectorAll('.delete-image').forEach(button => {
             button.addEventListener('click', function() {

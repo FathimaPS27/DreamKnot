@@ -22,11 +22,13 @@ from django.core.exceptions import ValidationError
 from django.db.models import Avg
 from .models import Service, ServiceImage, Rating
 
-
-
+# index page
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def index(request):
     return render(request, 'dreamknot1/index.html')
+ 
 
+# user home page
 
 from django.core.paginator import Paginator
 from django.utils import timezone
@@ -79,10 +81,18 @@ def user_home(request):
     if category:
         services = services.filter(category=category)
 
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
-    if min_price and max_price:
-        services = services.filter(price__gte=min_price, price__lte=max_price)
+   # Price range filtering
+    # Price range filtering
+    price_range = request.GET.get('price_range')
+    if price_range:
+        if '-' in price_range:
+            min_price, max_price = price_range.split('-')
+            services = services.filter(price__gte=Decimal(min_price), price__lte=Decimal(max_price))
+        else:
+            # This handles the case for '100001+' or any single value
+            min_price = Decimal(price_range)
+            services = services.filter(price__gte=min_price)
+
 
     service_type = request.GET.get('service_type')
     if service_type:
@@ -119,14 +129,16 @@ def user_home(request):
         'message': message,
         'services_with_images': services_with_images,
         'category': category,
-        'min_price': min_price,
-        'max_price': max_price,
+        'price_range': price_range,
         'service_type': service_type,
         'city': city,  # Pass city to the template
         'search_query': search_query,
         'is_paginated': is_paginated,
         'page_obj': page_services,
     })
+
+
+# vendor home page
 
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
@@ -137,6 +149,8 @@ from django.http import JsonResponse
 def vendor_home(request):
     user_name = request.session.get('user_name', 'vendor')
     return render(request, 'dreamknot1/vendor_home.html', {'name': user_name})
+
+# for signup
 
 import uuid
 from django.contrib import messages
@@ -259,6 +273,9 @@ def signup(request):
     }
     return render(request, 'dreamknot1/signup.html', context)
 
+
+
+# for verify email while signup
 from django.shortcuts import redirect
 from django.contrib import messages
 from .models import UserSignup
@@ -277,6 +294,7 @@ def verify_email(request, verification_code):
         messages.error(request, "Invalid verification link.")
 
     return redirect('login')
+
 
 # for login
 from django.contrib.auth.hashers import check_password
@@ -331,6 +349,7 @@ def login_view(request):
 
     return render(request, 'dreamknot1/login.html')
 
+
 #vendor image delete
 def delete_vendor_image(request, image_id):
     if not request.session.get('user_id'):
@@ -344,7 +363,7 @@ def delete_vendor_image(request, image_id):
 
     return render(request, 'dreamknot1/delete_image.html', {'image': image})
 
-
+# for forgot password
 
 def forgotpass(request):
     if request.method == 'POST':
@@ -389,7 +408,7 @@ def forgotpass(request):
     # Render the forgot password page
     return render(request, 'dreamknot1/forgotpass.html')
 
-
+# for reset password
 def reset_password(request, token):
     # Find the user by the reset token
     user = UserSignup.objects.filter(reset_token=token).first()
@@ -427,8 +446,11 @@ def reset_password(request, token):
         # If the token is invalid or expired
         messages.error(request, 'Invalid or expired reset token.')
         return redirect('forgotpass')
+    
+
 # for logout
 
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def logout_view(request):
     request.session.flush()  # Clears all session data
     messages.success(request, "Logged out successfully.")
@@ -444,6 +466,8 @@ from datetime import date
 from .models import UserSignup, UserProfile
 
 # Update user profile
+
+
 def update_user_profile(request):
     if not request.session.get('user_id'):
         return redirect('login')
@@ -555,6 +579,7 @@ from django.contrib.auth.hashers import make_password
 from .models import UserSignup, VendorProfile
 
 # Update vendor profile
+
 def update_vendor_profile(request):
     if not request.session.get('user_id'):
         return redirect('login')
@@ -641,140 +666,161 @@ def update_vendor_profile(request):
         'countries': countries,
     })
 
-
+# current month todo list
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from datetime import timedelta
 from .models import WeddingTask, UserSignup, UserProfile
 from django.db.models import Q
-from datetime import timedelta, date
+from django.core.mail import send_mail
+from django.conf import settings
+from django.views.decorators.cache import cache_control
 
 
+# user view for current month todo list
 def current_month_todolist(request):
-    # Check if the user is logged in
     user_id = request.session.get('user_id')
     if not user_id:
         messages.error(request, "You must be logged in to view your tasks.")
         return redirect('login')
 
-    # Get the user instance
     user_instance = get_object_or_404(UserSignup, id=user_id)
     user_profile = get_object_or_404(UserProfile, user=user_instance)
+    user_name = user_instance.name  # Assuming the username is stored in the 'name' field
 
-    # Check if the wedding date is set
     if not user_profile.wedding_date:
         messages.warning(request, "Please set your wedding date to view tasks.")
         return redirect('profile_update')
 
-    # Get the current date and wedding date
     today = timezone.now().date()
     wedding_date = user_profile.wedding_date
-
-    # Calculate remaining days until the wedding
     remaining_days = (wedding_date - today).days
 
-    # Determine which task range to filter based on remaining days
-    if remaining_days > 180:  # More than 6 months left
+    if remaining_days > 180:
         current_month = '6-12'
-    elif 120 < remaining_days <= 180:  # 4-6 months left
+        next_month = '4-6'
+        days_until_next_month = remaining_days - 180
+    elif 120 < remaining_days <= 180:
         current_month = '4-6'
-    elif 60 < remaining_days <= 120:  # 2-4 months left
+        next_month = '2-4'
+        days_until_next_month = remaining_days - 120
+    elif 60 < remaining_days <= 120:
         current_month = '2-4'
-    elif 30 < remaining_days <= 60:  # 1-2 months left
+        next_month = '1-2'
+        days_until_next_month = remaining_days - 60
+    elif 30 < remaining_days <= 60:
         current_month = '1-2'
-    elif 14 < remaining_days <= 30:  # 1-2 weeks left
+        next_month = '1-2 Weeks'
+        days_until_next_month = remaining_days - 30
+    elif 14 < remaining_days <= 30:
         current_month = '1-2 Weeks'
-    else:  # Final days
+        next_month = 'Final Days'
+        days_until_next_month = remaining_days - 14
+    else:
         current_month = 'Final Days'
+        next_month = 'Wedding Day'
+        days_until_next_month = remaining_days
 
-    # Fetch user-specific tasks
+    # Get user-specific tasks for the current month
     user_tasks = WeddingTask.objects.filter(user=user_instance, task_month=current_month)
 
-    # Fetch predefined tasks (tasks that are not tied to a specific user)
-    predefined_tasks = WeddingTask.objects.filter(user=None, task_month=current_month)
+    # Check for predefined tasks and create user-specific copies if they don't exist
+    predefined_tasks = WeddingTask.objects.filter(user=None, is_predefined=True, task_month=current_month)
+    for predefined_task in predefined_tasks:
+        if not WeddingTask.objects.filter(user=user_instance, description=predefined_task.description, task_month=current_month).exists():
+            WeddingTask.objects.create(
+                user=user_instance,
+                description=predefined_task.description,
+                task_month=current_month,
+                is_predefined=False,
+                is_completed=False
+            )
 
-    # Combine both user-specific and predefined tasks
-    all_tasks = user_tasks | predefined_tasks
+    # Refresh user tasks after potential additions
+    user_tasks = WeddingTask.objects.filter(user=user_instance, task_month=current_month)
 
-    # Separate pending and completed tasks
-    pending_tasks = all_tasks.filter(is_completed=False)
-    completed_tasks = all_tasks.filter(is_completed=True)
+    pending_tasks = user_tasks.filter(is_completed=False)
+    completed_tasks = user_tasks.filter(is_completed=True)
 
-    # Calculate completed and pending task counts for display
+    if days_until_next_month <= 7 and pending_tasks.exists():
+        send_reminder_email(user_instance, current_month, next_month, pending_tasks, days_until_next_month)
+
+    if days_until_next_month < 0 and pending_tasks.exists():
+        send_overdue_email(user_instance, current_month, pending_tasks)
+
     completed_count = completed_tasks.count()
     pending_count = pending_tasks.count()
+    overall_completed_count = WeddingTask.objects.filter(user=user_instance, is_completed=True).count()
+    overall_pending_count = WeddingTask.objects.filter(user=user_instance, is_completed=False).count()
 
-    # Overall counts for all tasks (not just the current month)
-    overall_completed_count = WeddingTask.objects.filter(user=user_instance, is_completed=True).count() + WeddingTask.objects.filter(user=None, is_completed=True).count()
-    overall_pending_count = WeddingTask.objects.filter(user=user_instance, is_completed=False).count() + WeddingTask.objects.filter(user=None, is_completed=False).count()
-
-    # Rendering the template with the current month's tasks
     return render(request, 'dreamknot1/current_month_todolist.html', {
-        'pending_tasks': pending_tasks,  # Tasks that are still pending
-        'completed_tasks': completed_tasks,  # Tasks that are completed
-        'wedding_month': current_month,  # The current task month
-        'today': today,  # Today's date
-        'completed_count': completed_count,  # Count of completed tasks for the month
-        'pending_count': pending_count,  # Count of pending tasks for the month
-        'overall_completed_count': overall_completed_count,  # Total completed tasks overall
-        'overall_pending_count': overall_pending_count,  # Total pending tasks overall
+        'pending_tasks': pending_tasks,
+        'completed_tasks': completed_tasks,
+        'wedding_month': current_month,
+        'today': today,
+        'completed_count': completed_count,
+        'pending_count': pending_count,
+        'overall_completed_count': overall_completed_count,
+        'overall_pending_count': overall_pending_count,
+        'user_name': user_name,  # Pass the username to the template
     })
 
-
-
+# user view for all tasks list
 def todo_list(request):
-    # Check if the user is logged in
     user_id = request.session.get('user_id')
     if not user_id:
         messages.error(request, "You must be logged in to view your tasks.")
         return redirect('login')
 
-    # Get the user instance
     user_instance = get_object_or_404(UserSignup, id=user_id)
-
-    # Get the user profile instance
     user_profile = get_object_or_404(UserProfile, user=user_instance)
+    user_name = user_instance.name  # Assuming the username is stored in the 'name' field
+    
 
-    # Check if the wedding date is set
     if not user_profile.wedding_date:
         messages.warning(request, "Please set your wedding date to view tasks.")
         return redirect('profile_update')
 
-    # Calculate the number of days until the wedding date
     remaining_days = (user_profile.wedding_date - timezone.now().date()).days
 
-    # Fetch all tasks for the user and predefined tasks
+    # Get user-specific tasks only
     user_tasks = WeddingTask.objects.filter(user=user_instance)
-    predefined_tasks = WeddingTask.objects.filter(user=None)
 
-    # Combine user tasks and predefined tasks
-    tasks = user_tasks | predefined_tasks
+    # Create user-specific copies of predefined tasks if they don't exist
+    predefined_tasks = WeddingTask.objects.filter(user=None, is_predefined=True)
+    for predefined_task in predefined_tasks:
+        if not WeddingTask.objects.filter(user=user_instance, description=predefined_task.description, task_month=predefined_task.task_month).exists():
+            WeddingTask.objects.create(
+                user=user_instance,
+                description=predefined_task.description,
+                task_month=predefined_task.task_month,
+                is_predefined=False,  # Set to False for user-specific tasks
+                is_completed=False
+            )
 
-    # Filter tasks based on months left (but still show past tasks)
-    current_tasks = tasks.filter(
-        Q(task_month='6-12', is_completed=False) & Q(user=user_instance) if remaining_days > 180 else
-        Q(task_month='4-6', is_completed=False) & Q(user=user_instance) if 120 < remaining_days <= 180 else
-        Q(task_month='2-4', is_completed=False) & Q(user=user_instance) if 60 < remaining_days <= 120 else
-        Q(task_month='1-2', is_completed=False) & Q(user=user_instance) if 30 < remaining_days <= 60 else
-        Q(task_month='1-2 Weeks', is_completed=False) & Q(user=user_instance) if 14 < remaining_days <= 30 else
-        Q(task_month='Final Days', is_completed=False) & Q(user=user_instance)
-    )
- 
-    # Allow access to past tasks
-    past_tasks = tasks.filter(is_completed=True)
+    # Group tasks by month
+    tasks_by_month = {}
+    for task in user_tasks:
+        if task.task_month not in tasks_by_month:
+            tasks_by_month[task.task_month] = []
+        tasks_by_month[task.task_month].append(task)
 
-    # Calculate completed and pending task counts (for user-specific tasks only)
-    completed_count = tasks.filter(is_completed=True).count()
-    pending_count = tasks.filter(is_completed=False).count()
+    completed_count = user_tasks.filter(is_completed=True).count()
+    pending_count = user_tasks.filter(is_completed=False).count()
 
-    return render(request, 'dreamknot1/todo_list.html', {
-        'tasks': tasks,  # All tasks (including past)
-        'current_tasks': current_tasks,  # Current tasks based on months left
-        'past_tasks': past_tasks,  # Past tasks that were completed
+    context = {
+        'tasks': tasks_by_month,
         'completed_count': completed_count,
         'pending_count': pending_count,
-    })
+        'user_name': user_name,  # Pass the username to the template
+    }
+
+    return render(request, 'dreamknot1/todo_list.html', context)
+
+
+# useradd task
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def add_task(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -782,8 +828,6 @@ def add_task(request):
         return redirect('login')
 
     user_instance = get_object_or_404(UserSignup, id=user_id)
-
-    # Get the user profile instance
     user_profile = get_object_or_404(UserProfile, user=user_instance)
 
     if not user_profile.wedding_date:
@@ -807,6 +851,8 @@ def add_task(request):
 
     return render(request, 'dreamknot1/add_task.html')
 
+
+# user view for update task
 def update_task(request, task_id):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -816,14 +862,20 @@ def update_task(request, task_id):
     task = get_object_or_404(WeddingTask, id=task_id, user__id=user_id)
 
     if request.method == 'POST':
-        task.is_completed = not task.is_completed  # Toggle completion status
+        task.is_completed = not task.is_completed
         task.save()
         messages.success(request, "Task updated successfully.")
-        return redirect('todo_list')
+          # Determine which page to redirect to
+        referer = request.META.get('HTTP_REFERER', '')
+        if 'current' in referer:
+            return redirect('current_month_todolist')
+        else:
+            return redirect('todo_list')
 
     return render(request, 'dreamknot1/update_task.html', {'task': task})
 
 
+# user view for delete task
 def delete_task(request, task_id):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -832,12 +884,10 @@ def delete_task(request, task_id):
 
     task = get_object_or_404(WeddingTask, id=task_id)
 
-    # Prevent deletion of predefined tasks
-    if task.user is None:  # Predefined tasks have user=None
+    if task.user is None:
         messages.error(request, "Predefined tasks cannot be deleted.")
         return redirect('todo_list')
 
-    # Only allow deletion of user-added tasks
     if task.user_id != user_id:
         messages.error(request, "You can only delete your own tasks.")
         return redirect('todo_list')
@@ -846,6 +896,44 @@ def delete_task(request, task_id):
     messages.success(request, "Task deleted successfully.")
     return redirect('todo_list')
 
+# user view for send reminder email of task
+def send_reminder_email(user, current_month, next_month, pending_tasks, days_left):
+    subject = f"Reminder: Complete your {current_month} wedding tasks"
+    message = f"Hello {user.name},\n\n"
+    message += f"You have {days_left} days left to complete your {current_month} wedding tasks before moving to the {next_month} phase.\n\n"
+    message += "Here are your pending tasks:\n\n"
+    for task in pending_tasks:
+        message += f"- {task.description}\n"
+    message += "\nPlease complete these tasks as soon as possible to stay on track with your wedding planning.\n\n"
+    message += "Best regards,\nDream Knot Team"
+
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=False,
+    )
+
+# user view for send overdue email of task
+
+def send_overdue_email(user, current_month, pending_tasks):
+    subject = f"Urgent: Overdue {current_month} wedding tasks"
+    message = f"Hello {user.name},\n\n"
+    message += f"Your {current_month} wedding tasks are now overdue. Please complete them as soon as possible.\n\n"
+    message += "Here are your overdue tasks:\n\n"
+    for task in pending_tasks:
+        message += f"- {task.description}\n"
+    message += "\nCompleting these tasks is crucial for staying on track with your wedding planning.\n\n"
+    message += "Best regards,\nDream Knot Team"
+
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=False,
+    )
 
 import csv
 from django.shortcuts import render, redirect
@@ -859,11 +947,13 @@ from django.utils.encoding import smart_str
 from io import TextIOWrapper
 from django.core.exceptions import ValidationError
 
+# user view for send e-invitation
 def send_rsvp_invitation(request):
     if not request.session.get('user_id'):
         return redirect('login')
 
     couple = UserSignup.objects.get(id=request.session['user_id'])
+    user_name = couple.name  # Assuming the username is stored in the 'name' field
 
     if request.method == "POST":
         guest_names = request.POST.getlist("guest_name[]")  # Expecting multiple names
@@ -877,6 +967,9 @@ def send_rsvp_invitation(request):
         phone_number = request.POST.get("phone_number")
         location_link = request.POST.get("location_link")
         csv_file = request.FILES.get('guest_upload')  # Uploaded CSV file
+
+        success = True  # Flag to track if all invitations were sent successfully
+
 
         if csv_file:
             try:
@@ -906,12 +999,17 @@ def send_rsvp_invitation(request):
             send_invitation(couple, event_name, event_date, event_time, event_description,
                             venue, venue_address, phone_number, location_link, guest_name, guest_email)
 
-        messages.success(request, 'Invitations sent successfully to all guests!')
-        return redirect('rsvp_success')
+        if success:
+            messages.success(request, 'Invitations sent successfully to all guests!')
+            return redirect('send_rsvp_invitation')
+        
+    context = {
+        'user_name': user_name,
+        # Add any other context variables you need
+    }
+    return render(request, 'dreamknot1/send_rsvp_invitation.html', context)
 
-    return render(request, 'dreamknot1/send_rsvp_invitation.html')
-
-
+# user view for send invitation
 def send_invitation(couple, event_name, event_date, event_time, event_description, venue, venue_address, phone_number, location_link, guest_name, guest_email):
     """
     Helper function to create the invitation entry and send an email.
@@ -956,16 +1054,36 @@ def send_invitation(couple, event_name, event_date, event_time, event_descriptio
         fail_silently=False,
     )
 
+from django.shortcuts import render, redirect
+from .models import UserSignup, RSVPInvitation
 
+# user view for invitation list
 def invitation_list(request):
     if not request.session.get('user_id'):
+        messages.error(request, "You must be logged in to view your tasks.")
         return redirect('login')
 
     couple = UserSignup.objects.get(id=request.session['user_id'])
-    invitations = RSVPInvitation.objects.filter(couple=couple)
+    user_name = couple.name  # Fetch the username (assuming it's stored in the 'name' field)
 
-    return render(request, 'dreamknot1/invitation_list.html', {'invitations': invitations})
+    invitations = RSVPInvitation.objects.filter(couple=couple).order_by('event_name', 'event_date')
 
+    # Group invitations by event name
+    grouped_invitations = {}
+    for invitation in invitations:
+        if invitation.event_name not in grouped_invitations:
+            grouped_invitations[invitation.event_name] = {
+                'invitations': [],
+                'event_date': invitation.event_date,
+                'venue': invitation.venue
+            }
+        grouped_invitations[invitation.event_name]['invitations'].append(invitation)
+ 
+    context = { 
+        'user_name': user_name,  # Pass the username to the template
+        'grouped_invitations': grouped_invitations,
+    }
+    return render(request, 'dreamknot1/invitation_list.html', context)
 
 def rsvp_success(request):
     return render(request, 'dreamknot1/rsvp_success.html')
@@ -990,6 +1108,8 @@ from .models import (
 import re
 def parse_boolean(value):
     return value == 'on' or value == 'true' or value == 'True' or value is True
+
+# vendor view for vendor dashboard
 def vendor_dashboard(request):
     vendor_name = request.session.get('user_name', 'vendor')
 
@@ -1166,7 +1286,19 @@ def vendor_dashboard(request):
         'service_data': service_data,
         'categories': Service.CATEGORY_CHOICES,
     })
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.utils import timezone
+from django.db import transaction
 from decimal import Decimal, InvalidOperation
+from .models import (
+    VendorProfile, Service, ServiceImage, VenueService, CateringService,
+    PhotographyService, MusicEntertainmentService, MakeupHairService,
+    RentalsService, MehendiArtistService, DecorationService
+)
+from django.http import HttpResponse
+import re
+
 def parse_boolean(value):
     return value in ['on', 'true', 'True', True]
 
@@ -1175,6 +1307,9 @@ def parse_decimal(value, default=0):
         return Decimal(value) if value else Decimal(default)
     except InvalidOperation:
         raise ValueError(f"Invalid decimal value: {value}")
+
+# vendor view for edit service
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def edit_service(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     vendor_name = request.session.get('user_name', 'vendor')
@@ -1182,146 +1317,182 @@ def edit_service(request, service_id):
     if service.vendor.user.name != vendor_name:
         return HttpResponse("You do not have permission to edit this service.")
 
+    errors = {}
+    service_data = {
+        'name': service.name,
+        'description': service.description,
+        'price': service.price,
+        'category': service.category,
+        'city': service.city,
+        'availability': service.availability,
+        'brochure': service.brochure,
+    }
+
     if request.method == "POST":
-        try:
-            with transaction.atomic():
-                # Update main Service fields
-                service.name = request.POST['name']
-                service.description = request.POST['description']
-                service.price = Decimal(request.POST['price'])
-                service.category = request.POST['category']
-                service.city = request.POST['city']
-                service.availability = 'availability' in request.POST
-                service.updated_at = timezone.now()
+        service_data['name'] = request.POST.get('name', '')
+        service_data['description'] = request.POST.get('description', '')
+        service_data['price'] = request.POST.get('price', '')
+        service_data['category'] = request.POST.get('category', '')
+        service_data['city'] = request.POST.get('city', '')
+        service_data['availability'] = 'availability' in request.POST
+        service_data['brochure'] = request.FILES.get('brochure', service.brochure)
 
-                # Handle brochure update
-                if 'brochure' in request.FILES:
-                    service.brochure = request.FILES['brochure']
+        # Validate general service fields
+        if not re.match(r'^[A-Za-z\s]+$', service_data['name']):
+            errors['name'] = "Service name can only contain alphabets and spaces."
+        if not service_data['price']:
+            errors['price'] = "Price is required."
+        else:
+            try:
+                price_value = float(service_data['price'])
+                if price_value <= 0:
+                    errors['price'] = "Price must be a positive number."
+            except ValueError:
+                errors['price'] = "Invalid price format."
 
-                service.save()
-
-                # Handle main image update
-                if 'main_image' in request.FILES:
-                    service.main_image = request.FILES['main_image']
+        if not errors:
+            try:
+                with transaction.atomic():
+                    # Update main Service fields
+                    service.name = service_data['name']
+                    service.description = service_data['description']
+                    service.price = Decimal(service_data['price'])
+                    service.category = service_data['category']
+                    service.city = service_data['city']
+                    service.availability = service_data['availability']
+                    service.brochure = service_data['brochure']
+                    service.updated_at = timezone.now()
                     service.save()
 
-                # Handle additional images
-                new_images = request.FILES.getlist('new_service_images')
-                for image in new_images:
-                    ServiceImage.objects.create(service=service, image=image)
-                
-                # Update category-specific fields
-                if service.category == 'Venue':
-                    venue_service = VenueService.objects.get(service=service)
-                    venue_service.type_of_venue = request.POST.get('type_of_venue', '')
-                    venue_service.location = request.POST.get('location', '')
-                    venue_service.capacity = int(request.POST.get('capacity', 0))
-                    venue_service.pre_post_wedding_availability = parse_boolean(request.POST.get('pre_post_wedding_availability'))
-                    venue_service.base_price =parse_decimal(request.POST.get('base_price', 0))
-                    venue_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate', 0))
-                    venue_service.day_rate = parse_decimal(request.POST.get('day_rate', 0))
-                    venue_service.setup_fee = parse_decimal(request.POST.get('setup_fee'))
-                    venue_service.save()
+                    # Handle main image update
+                    if 'main_image' in request.FILES:
+                        service.main_image = request.FILES['main_image']
+                        service.save()
 
-                elif service.category == 'Catering':
-                    catering_service = CateringService.objects.get(service=service)
-                    catering_service.menu_planning = request.POST.get('menu_planning', '')
-                    catering_service.meal_service_type = request.POST.get('meal_service_type', '')
-                    catering_service.dietary_options = request.POST.get('dietary_options', '')
-                    catering_service.price_per_person = parse_decimal(request.POST.get('price_per_person'))
-                    catering_service.setup_fee = parse_decimal(request.POST.get('setup_fee'))
-                    catering_service.minimum_guest_count = int(request.POST.get('minimum_guest_count', 1))
-                    catering_service.save()
+                    # Handle additional images
+                    new_images = request.FILES.getlist('new_service_images')
+                    for image in new_images:
+                        ServiceImage.objects.create(service=service, image=image)
+                    
+                    # Update category-specific fields
+                    if service.category == 'Venue':
+                        venue_service, created = VenueService.objects.get_or_create(service=service)
+                        venue_service.type_of_venue = request.POST.get('type_of_venue', '')
+                        venue_service.location = request.POST.get('location', '')
+                        venue_service.capacity = int(request.POST.get('capacity', 0))
+                        venue_service.pre_post_wedding_availability = parse_boolean(request.POST.get('pre_post_wedding_availability'))
+                        venue_service.base_price = parse_decimal(request.POST.get('base_price', 0))
+                        venue_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate', 0))
+                        venue_service.day_rate = parse_decimal(request.POST.get('day_rate', 0))
+                        venue_service.setup_fee = parse_decimal(request.POST.get('setup_fee', 0))
+                        venue_service.save()
 
-                elif service.category == 'Photography':
-                    photo_service = PhotographyService.objects.get(service=service)
-                    photo_service.package_duration = request.POST.get('package_duration', '')
-                    photo_service.styles = request.POST.get('styles', '')
-                    photo_service.engagement_shoots = parse_boolean(request.POST.get('engagement_shoots'))
-                    photo_service.videography_options = parse_boolean(request.POST.get('videography_options'))
-                    photo_service.base_price = parse_decimal(request.POST.get('base_price'))
-                    photo_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate'))
-                    photo_service.save()
+                    elif service.category == 'Catering':
+                        catering_service, created = CateringService.objects.get_or_create(service=service)
+                        catering_service.menu_planning = request.POST.get('menu_planning', '')
+                        catering_service.meal_service_type = request.POST.get('meal_service_type', '')
+                        catering_service.dietary_options = request.POST.get('dietary_options', '')
+                        catering_service.price_per_person = parse_decimal(request.POST.get('price_per_person', 0))
+                        catering_service.setup_fee = parse_decimal(request.POST.get('setup_fee', 0))
+                        catering_service.minimum_guest_count = int(request.POST.get('minimum_guest_count', 1))
+                        catering_service.save()
 
-                elif service.category == 'MusicEntertainment':
-                    music_service = MusicEntertainmentService.objects.get(service=service)
-                    music_service.entertainment_options = request.POST.get('entertainment_options', '')
-                    music_service.sound_system_setup = parse_boolean(request.POST.get('sound_system_setup'))
-                    music_service.multiple_entertainment_acts = parse_boolean(request.POST.get('multiple_entertainment_acts'))
-                    music_service.emcee_services = parse_boolean(request.POST.get('emcee_services'))
-                    music_service.playlist_customization = parse_boolean(request.POST.get('playlist_customization'))
-                    music_service.base_price = parse_decimal(request.POST.get('base_price'))
-                    music_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate'))
-                    music_service.save()
+                    elif service.category == 'Photography':
+                        photo_service, created = PhotographyService.objects.get_or_create(service=service)
+                        photo_service.package_duration = request.POST.get('package_duration', '')
+                        photo_service.styles = request.POST.get('styles', '')
+                        photo_service.engagement_shoots = parse_boolean(request.POST.get('engagement_shoots'))
+                        photo_service.videography_options = parse_boolean(request.POST.get('videography_options'))
+                        photo_service.base_price = parse_decimal(request.POST.get('base_price', 0))
+                        photo_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate', 0))
+                        photo_service.save()
 
-                elif service.category == 'MakeupHair':
-                    makeup_service = MakeupHairService.objects.get(service=service)
-                    makeup_service.grooming_services = request.POST.get('grooming_services', '')
-                    makeup_service.trial_sessions = parse_boolean(request.POST.get('trial_sessions'))
-                    makeup_service.high_end_products = parse_boolean(request.POST.get('high_end_products'))
-                    makeup_service.base_price = parse_decimal(request.POST.get('base_price'))
-                    makeup_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate'))
-                    makeup_service.save()
+                    elif service.category == 'MusicEntertainment':
+                        music_service, created = MusicEntertainmentService.objects.get_or_create(service=service)
+                        music_service.entertainment_options = request.POST.get('entertainment_options', '')
+                        music_service.sound_system_setup = parse_boolean(request.POST.get('sound_system_setup'))
+                        music_service.multiple_entertainment_acts = parse_boolean(request.POST.get('multiple_entertainment_acts'))
+                        music_service.emcee_services = parse_boolean(request.POST.get('emcee_services'))
+                        music_service.playlist_customization = parse_boolean(request.POST.get('playlist_customization'))
+                        music_service.base_price = parse_decimal(request.POST.get('base_price', 0))
+                        music_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate', 0))
+                        music_service.save()
 
-                elif service.category == 'Rentals':
-                    rental_service = RentalsService.objects.get(service=service)
-                    rental_service.rental_items = request.POST.get('rental_items', '')
-                    rental_service.setup_services = parse_boolean(request.POST.get('setup_services'))
-                    rental_service.rental_price_per_item = parse_decimal(request.POST.get('rental_price_per_item'))
-                    rental_service.deposit_required = parse_decimal(request.POST.get('deposit_required'))
-                    rental_service.duration_of_rental = request.POST.get('duration_of_rental', '')
-                    rental_service.save()
+                    elif service.category == 'MakeupHair':
+                        makeup_service, created = MakeupHairService.objects.get_or_create(service=service)
+                        makeup_service.grooming_services = request.POST.get('grooming_services', '')
+                        makeup_service.trial_sessions = parse_boolean(request.POST.get('trial_sessions'))
+                        makeup_service.high_end_products = parse_boolean(request.POST.get('high_end_products'))
+                        makeup_service.base_price = parse_decimal(request.POST.get('base_price', 0))
+                        makeup_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate', 0))
+                        makeup_service.save()
 
-                elif service.category == 'MehendiArtist':
-                    mehendi_service = MehendiArtistService.objects.get(service=service)
-                    mehendi_service.design_styles = request.POST.get('design_styles', '')
-                    mehendi_service.duration_per_hand = parse_decimal(request.POST.get('duration_per_hand'))
-                    mehendi_service.use_of_organic_henna = parse_boolean(request.POST.get('use_of_organic_henna'))
-                    mehendi_service.base_price = parse_decimal(request.POST.get('base_price'))
-                    mehendi_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate'))
-                    mehendi_service.save()
+                    elif service.category == 'Rentals':
+                        rental_service, created = RentalsService.objects.get_or_create(service=service)
+                        rental_service.rental_items = request.POST.get('rental_items', '')
+                        rental_service.setup_services = parse_boolean(request.POST.get('setup_services'))
+                        rental_service.rental_price_per_item = parse_decimal(request.POST.get('rental_price_per_item', 0))
+                        rental_service.deposit_required = parse_decimal(request.POST.get('deposit_required', 0))
+                        rental_service.duration_of_rental = request.POST.get('duration_of_rental', '')
+                        rental_service.save()
 
-                elif service.category == 'Decoration':
-                    decor_service = DecorationService.objects.get(service=service)
-                    decor_service.decor_themes = request.POST.get('decor_themes', '')
-                    decor_service.floral_arrangements = parse_boolean(request.POST.get('floral_arrangements'))
-                    decor_service.lighting_options = parse_boolean(request.POST.get('lighting_options'))
-                    decor_service.stage_decor = parse_boolean(request.POST.get('stage_decor'))
-                    decor_service.base_price = parse_decimal(request.POST.get('base_price'))
-                    decor_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate'))
-                    decor_service.save()
+                    elif service.category == 'MehendiArtist':
+                        mehendi_service, created = MehendiArtistService.objects.get_or_create(service=service)
+                        mehendi_service.design_styles = request.POST.get('design_styles', '')
+                        mehendi_service.duration_per_hand = parse_decimal(request.POST.get('duration_per_hand', 0))
+                        mehendi_service.use_of_organic_henna = parse_boolean(request.POST.get('use_of_organic_henna'))
+                        mehendi_service.base_price = parse_decimal(request.POST.get('base_price', 0))
+                        mehendi_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate', 0))
+                        mehendi_service.save()
 
-            messages.success(request, f"{service.category} service has been successfully updated!")
-            return redirect('vendor_dashboard')
+                    elif service.category == 'Decoration':
+                        decor_service, created = DecorationService.objects.get_or_create(service=service)
+                        decor_service.decor_themes = request.POST.get('decor_themes', '')
+                        decor_service.floral_arrangements = parse_boolean(request.POST.get('floral_arrangements'))
+                        decor_service.lighting_options = parse_boolean(request.POST.get('lighting_options'))
+                        decor_service.stage_decor = parse_boolean(request.POST.get('stage_decor'))
+                        decor_service.base_price = parse_decimal(request.POST.get('base_price', 0))
+                        decor_service.hourly_rate = parse_decimal(request.POST.get('hourly_rate', 0))
+                        decor_service.save()
 
-        except Exception as e:
-            messages.error(request, f"An error occurred while updating the service: {str(e)}")
+                messages.success(request, f"{service.category} service has been successfully updated!")
+                return redirect('vendor_dashboard')
+
+            except Exception as e:
+                messages.error(request, f"An error occurred while updating the service: {str(e)}")
+        else:
+            for key, value in errors.items():
+                messages.error(request, value)
 
     # Prepare context for rendering the edit form
     context = {
         'service': service,
         'categories': Service.CATEGORY_CHOICES,
+        'errors': errors,
+        'service_data': service_data,
     }
 
     # Add category-specific data to the context
     if service.category == 'Venue':
-        context['venue_service'] = VenueService.objects.get(service=service)
+        context['venue_service'] = VenueService.objects.get_or_create(service=service)[0]
     elif service.category == 'Catering':
-        context['catering_service'] = CateringService.objects.get(service=service)
+        context['catering_service'] = CateringService.objects.get_or_create(service=service)[0]
     elif service.category == 'Photography':
-        context['photo_service'] = PhotographyService.objects.get(service=service)
+        context['photo_service'] = PhotographyService.objects.get_or_create(service=service)[0]
     elif service.category == 'MusicEntertainment':
-        context['music_service'] = MusicEntertainmentService.objects.get(service=service)
+        context['music_service'] = MusicEntertainmentService.objects.get_or_create(service=service)[0]
     elif service.category == 'MakeupHair':
-        context['makeup_service'] = MakeupHairService.objects.get(service=service)
+        context['makeup_service'] = MakeupHairService.objects.get_or_create(service=service)[0]
     elif service.category == 'Rentals':
-        context['rental_service'] = RentalsService.objects.get(service=service)
+        context['rental_service'] = RentalsService.objects.get_or_create(service=service)[0]
     elif service.category == 'MehendiArtist':
-        context['mehendi_service'] = MehendiArtistService.objects.get(service=service)
+        context['mehendi_service'] = MehendiArtistService.objects.get_or_create(service=service)[0]
     elif service.category == 'Decoration':
-        context['decor_service'] = DecorationService.objects.get(service=service)
+        context['decor_service'] = DecorationService.objects.get_or_create(service=service)[0]
 
     return render(request, 'dreamknot1/edit_service.html', context)
+
+# vendor view for delete service
 def delete_service(request, service_id):
     try:
         service = Service.objects.get(id=service_id)
@@ -1329,6 +1500,9 @@ def delete_service(request, service_id):
         return redirect('vendor_dashboard')
     except Service.DoesNotExist:
         return HttpResponse("Service not found.")
+    
+
+# vendor view for delete service image
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -1343,9 +1517,19 @@ def delete_service_image(request, image_id):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)  
 
+
+# for user name display in user navigation bar
+def user_name(request):
+    user_name = request.session.get('user_name', '')
+    return {'user_name': user_name}
+
+
     # User Dashboard - View Vendor Services, Book, Rate, Favorite
 def user_dashboard(request):
     user_name = request.session.get('user_name', 'user')
+    if not user_name:
+        messages.error(request, "You must be logged in to view this page.")
+        return redirect('login')
     
     # Fetch the user from session
     try:
@@ -1385,15 +1569,32 @@ def user_dashboard(request):
         'bookings': bookings,
     })
 
+# user view for vendor services
 def vendor_services(request, vendor_id):
+    user_name = request.session.get('user_name', '')
+    if not user_name:
+        messages.error(request, "You must be logged in to view this page.")
+        return redirect('login')
+    
     vendor = get_object_or_404(VendorProfile, id=vendor_id)
     services = Service.objects.filter(vendor=vendor, status=1, availability=True)
-    return render(request, 'dreamknot1/vendor_services.html', {'vendor': vendor, 'services': services})
+    return render(request, 'dreamknot1/vendor_services.html', {
+        'vendor': vendor, 
+        'services': services,
+        'user_name': user_name
+    })
 
+
+# user view for service detail
 from django.shortcuts import render, get_object_or_404
 from .models import Service, VenueService, CateringService, PhotographyService, MusicEntertainmentService, MakeupHairService, RentalsService, MehendiArtistService, DecorationService
 
 def service_detail(request, service_id):
+    user_name = request.session.get('user_name', '')
+    if not user_name:
+        messages.error(request, "You must be logged in to view this page.")
+        return redirect('login')
+
     service = get_object_or_404(Service, id=service_id)
     vendor_phone = service.vendor.user.phone
 
@@ -1420,6 +1621,7 @@ def service_detail(request, service_id):
         'service': service,
         'vendor_phone': vendor_phone,
         'category_details': category_details,
+        'user_name': user_name
     }
 
     return render(request, 'dreamknot1/service_detail.html', context)
@@ -1430,32 +1632,154 @@ from django.contrib import messages
 from django.utils import timezone
 from .models import Booking  # Assuming Booking model is in the same app
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+from django.views.decorators.cache import cache_control
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from .models import VendorProfile, Booking, UserSignup, Service
+from django.utils import timezone
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def vendor_approve_booking(request):
-    # Check if user_id exists in session
     user_id = request.session.get('user_id')
     
-    if user_id:
-        try:
-            vendor_instance = VendorProfile.objects.get(user__id=user_id)
-            
-            # Fetch bookings related to this vendor's services
-            bookings = Booking.objects.filter(service__vendor=vendor_instance)
-            
-            return render(request, 'dreamknot1/vendor_approve_booking.html', {'bookings': bookings})
-
-        except VendorProfile.DoesNotExist:
-            messages.warning(request, "Vendor profile not found. Please complete your profile.")
-            return redirect('update_vendor_profile')
-
-    else:
+    if not user_id:
         messages.warning(request, "You need to log in to access this page.")
-        return redirect('login')  # Redirect to the login page
+        return redirect('login')
+
+    try:
+        vendor_instance = VendorProfile.objects.get(user__id=user_id)
+        bookings = Booking.objects.filter(service__vendor=vendor_instance)
+        
+        context = {
+            'bookings': bookings,
+            'vendor_name': vendor_instance.user.name,
+        }
+        return render(request, 'dreamknot1/vendor_approve_booking.html', context)
+
+    except VendorProfile.DoesNotExist:
+        messages.warning(request, "Vendor profile not found. Please complete your profile.")
+        return redirect('update_vendor_profile')
+
+
+@require_POST
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def process_booking(request):
+    user_id = request.session.get('user_id')
+    
+    if not user_id:
+        return JsonResponse({'status': 'error', 'message': 'You need to log in to perform this action.'})
+
+    try:
+        vendor_instance = VendorProfile.objects.get(user__id=user_id)
+        booking_id = request.POST.get('booking_id')
+        action = request.POST.get('action')
+        
+        booking = get_object_or_404(Booking, id=booking_id, service__vendor=vendor_instance)
+        user = get_object_or_404(UserSignup, id=booking.user.id)
+        
+        if action == 'approve':
+            booking.book_status = 1  # Approved
+            booking.vendor_confirmed_at = timezone.now()
+            message = "Your booking has been approved."
+        elif action == 'reject':
+            booking.book_status = 3  # Rejected/Cancelled
+            booking.vendor_confirmed_at = None
+            message = "Your booking has been rejected."
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Invalid action.'})
+        
+        booking.save()
+        
+        # Prepare detailed email message
+        email_message = f"""
+Dear {user.name},
+
+{message}
+
+Booking Details:
+- Service: {booking.service.name}
+- Event Date: {booking.event_date}
+- Event Name: {booking.event_name}
+- Event Address: {booking.event_address}
+- Number of Days: {booking.num_days}
+- Total Amount: ₹{booking.total_amount}
+- Booking Amount: ₹{booking.booking_amount}
+
+Additional Requirements:
+{booking.additional_requirements or 'None'}
+
+If you have any questions or concerns, please don't hesitate to contact us.
+
+Thank you for using our service.
+
+Best regards,
+Dream Knot Team
+        """
+        
+        # Send email to user
+        send_mail(
+            subject=f"Booking {action.capitalize()}d for {booking.service.name}",
+            message=email_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+        
+        return JsonResponse({'status': 'success', 'message': f"Booking {action}d and email sent to user."})
+
+    except VendorProfile.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Vendor profile not found.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+    
+def get_booking_details(request, booking_id):
+    user_id = request.session.get('user_id')
+    
+    if not user_id:
+        return JsonResponse({'status': 'error', 'message': 'You need to log in to perform this action.'})
+
+    try:
+        vendor_instance = VendorProfile.objects.get(user__id=user_id)
+        booking = get_object_or_404(Booking, id=booking_id, service__vendor=vendor_instance)
+        
+        booking_details = {
+            'id': booking.id,
+            'service_name': booking.service.name,
+            'user_name': booking.user.name,
+            'user_email': booking.user.email,
+            'user_phone': booking.user.phone,
+            'event_date': booking.event_date.strftime('%Y-%m-%d'),
+            'event_name': booking.event_name,
+            'event_address': booking.event_address,
+            'user_address': booking.user_address,
+            'num_days': booking.num_days,
+            'total_amount': str(booking.total_amount),
+            'booking_amount': str(booking.booking_amount),
+            'additional_requirements': booking.additional_requirements,
+            'book_status': booking.get_book_status_display(),
+            'reference_images': [image.image.url for image in booking.reference_images.all()],
+            'booking_date': booking.booking_date.strftime('%Y-%m-%d %H:%M:%S'),
+            'terms_agreed': booking.user_agreed_to_terms,
+            'agreement_date': booking.user_agreement_date.strftime('%Y-%m-%d %H:%M:%S') if booking.user_agreement_date else None,
+        }
+        
+        return JsonResponse({'status': 'success', 'booking': booking_details})
+
+    except VendorProfile.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Vendor profile not found.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
 
 
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def get_booking_slots(request, service_id):
     """API view to fetch booked and available slots for FullCalendar."""
     bookings = Booking.objects.filter(service_id=service_id)
@@ -1503,8 +1827,9 @@ from .models import Booking, Service, UserSignup
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 import json
-
+# user view for booking calendar
 # View to render the calendar and form page
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def booking_calendar_view(request, service_id):
     service = Service.objects.get(id=service_id)
     return render(request, 'dreamknot1/booking_calendar.html', {'service': service})
@@ -1539,7 +1864,7 @@ def get_booking_slots(request, service_id):
     # Optionally: Add available slots logic (e.g., next 30 days)
     # Assuming "available" means dates with no bookings in the next 30 days
     today = now().date()
-    future_dates = [today + timedelta(days=i) for i in range(30)]  # Next 30 days
+    future_dates = [today + timedelta(days=i) for i in range(365)]  # Next 30 days
     booked_dates = bookings.values_list('event_date', flat=True)  # List of already booked dates
 
     for date in future_dates:
@@ -1581,50 +1906,109 @@ def submit_booking(request, service_id):
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from .models import Booking
-from django.utils import timezone
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
 from .models import Booking, UserSignup
 from django.utils import timezone
+from datetime import timedelta
+from django.core.mail import send_mail
+from django.conf import settings
 
+# user view for booking details
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def user_booking_details(request):
-    # Get the current logged-in user based on 'user_name' from session
     user_name = request.session.get('user_name')
     
-    # If no user is found in session, redirect to login
     if not user_name:
-        return redirect('login')  # Redirect to login if the user is not authenticated
+        return redirect('login')
     
-    # Get the logged-in user object
     user_signup = get_object_or_404(UserSignup, name=user_name)
+    bookings = Booking.objects.filter(user=user_signup).select_related('service')
     
-    # Fetch all bookings for the logged-in user
-    bookings = Booking.objects.filter(user=user_signup)
+    today = timezone.now().date()
     
-    # If the request is POST, handle booking cancellation
+    for booking in bookings:
+        booking.days_until_event = (booking.event_date - today).days
+        booking.is_refundable = booking.days_until_event > 30
+
     if request.method == 'POST':
         booking_id = request.POST.get('booking_id')
         cancellation_reason = request.POST.get('cancellation_reason')
         
-        # Get the booking object for the current user
         booking = get_object_or_404(Booking, id=booking_id, user=user_signup)
         
-        # Update booking status and save the cancellation details
-        booking.book_status = 3
-        booking.canceled_by_user = True
-        booking.cancellation_reason = cancellation_reason
-        booking.vendor_confirmed_at = None  # Reset vendor confirmation if needed
-        booking.save()
+        # Check if cancellation is within 30 days of the event
+        days_until_event = (booking.event_date - today).days
+        
+        if days_until_event > 30:
+            # Cancellation is more than 30 days before the event
+            booking.book_status = 3
+            booking.canceled_by_user = True
+            booking.cancellation_reason = cancellation_reason
+            booking.vendor_confirmed_at = None
+            booking.save()
+            
+            # Send email to service provider
+            send_mail(
+                subject=f"Booking Cancellation: {booking.service.name}",
+                message=f"""
+                Dear Service Provider,
 
-        # Display success message after cancellation
-        messages.success(request, "Your booking has been canceled successfully.")
+                A booking for your service has been canceled.
+
+                Details:
+                - Service: {booking.service.name}
+                - Event Date: {booking.event_date}
+                - Cancellation Reason: {cancellation_reason}
+
+                The booking was canceled more than 30 days before the event, so a full refund will be processed.
+
+                Best regards,
+                Dream Knot Team
+                """,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[booking.service.vendor.user.email],
+                fail_silently=False,
+            )
+            
+            messages.success(request, "Your booking has been canceled successfully. A full refund will be processed.")
+        else:
+            # Cancellation is within 30 days of the event
+            booking.book_status = 3
+            booking.canceled_by_user = True
+            booking.cancellation_reason = cancellation_reason
+            booking.vendor_confirmed_at = None
+            booking.save()
+            
+            # Send email to service provider
+            send_mail(
+                subject=f"Booking Cancellation: {booking.service.name}",
+                message=f"""
+                Dear Service Provider,
+
+                A booking for your service has been canceled.
+
+                Details:
+                - Service: {booking.service.name}
+                - Event Date: {booking.event_date}
+                - Cancellation Reason: {cancellation_reason}
+
+                The booking was canceled within 30 days of the event, so the booking amount is non-refundable.
+
+                Best regards,
+                Dream Knot Team
+                """,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[booking.service.vendor.user.email],
+                fail_silently=False,
+            )
+            
+            messages.warning(request, "Your booking has been canceled. However, as it's within 30 days of the event, the booking amount is non-refundable.")
+        
         return redirect('user_booking_details')
 
-    # Render the booking details page
     return render(request, 'dreamknot1/user_booking_details.html', {
         'bookings': bookings,
+        'user_name': user_name,
+        'today': today,
     })
 
 
@@ -1632,80 +2016,123 @@ def user_booking_details(request):
 
 
 
-
-
-
-
-
-
-
-
-
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
-from .models import Service, UserSignup, UserProfile, Booking
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
-from .models import Service, UserSignup, UserProfile, Booking
+from django.contrib import messages
 from django.utils import timezone
+from django.db.models import Q  # Add this import
+from .models import Service, UserSignup, UserProfile, Booking, ReferenceImage
+from decimal import Decimal
+from django.views.decorators.cache import cache_control  # Add this import
 
+# user view for book service
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def book_service(request, service_id):
-    # Get the user's name from the session
-    user_name = request.session.get('user_name', 'user')
+    user_id = request.session.get('user_id')
+
+    if not user_id:
+        messages.error(request, "You must be logged in to book a service.")
+        return redirect('login')
 
     try:
-        # Fetch the service being booked
-        service = Service.objects.get(id=service_id)
-        
-        # Fetch the user making the booking
-        user = UserSignup.objects.get(name=user_name)
-        
-        # Fetch the user's profile, if it exists
-        user_profile = UserProfile.objects.get(user=user)
-
-    # Handle cases where the service or user is not found
-    except Service.DoesNotExist:
-        return HttpResponse("Service not found.")
+        service = get_object_or_404(Service, id=service_id)
+        user = UserSignup.objects.get(id=user_id)
+        user_name = user.name  # Fetch the username (assuming it's stored in the 'name' field)
     except UserSignup.DoesNotExist:
-        return HttpResponse("User not found.")
+        messages.error(request, "User profile not found. Please log in again.")
+        return redirect('login')
+    except Service.DoesNotExist:
+        messages.error(request, "The requested service does not exist.")
+        return redirect('user_dashboard')
+
+    try:
+        user_profile = UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist:
-        user_profile = None  # If no user profile, leave it as None
+        user_profile = None
 
-    # If the request is a POST request, process the form data
     if request.method == "POST":
-        # Get event details from the form
+        # Retrieve form data
+        event_name = request.POST.get('event_name')
         event_date = request.POST.get('event_date')
-        event_address = request.POST.get('event_address')  # Retrieve event address from form
-        phone_number = request.POST.get('phone', user.phone)  # Default to user's saved phone
-        email = request.POST.get('email', user.email)  # Default to user's saved email
+        event_address = request.POST.get('event_address') if service.category != 'Venue' else service.city
+        user_address = request.POST.get('user_address')
+        num_days = int(request.POST.get('num_days', 1))
+        additional_requirements = request.POST.get('additional_requirements')
+        agreed_to_terms = request.POST.get('agreed_to_terms') == 'on'
+   
 
-        # If the user provides a wedding date and they have a profile, update it
-        wedding_date = request.POST.get('wedding_date')
-        if wedding_date and user_profile:
-            user_profile.wedding_date = wedding_date
-            user_profile.save()
+        # Check if there's an existing booking for the same service on the same day
+        existing_booking = Booking.objects.filter(
+            Q(service=service) &
+            Q(event_date=event_date) &
+            ~Q(book_status=3)  # Exclude cancelled bookings
+        ).exists()
 
-        # Create a new booking entry (status defaults to 'Pending')
+        if existing_booking:
+            messages.error(request, "This date is already booked for this service. Please choose another date.")
+            return redirect('book_service', service_id=service_id)
+
+        # Create new booking
         booking = Booking(
             user=user,
             service=service,
+            event_name=event_name,
             event_date=event_date,
-            event_address=event_address,  # Use the event address from the form
-            book_status=0  # Pending status
+            event_address=event_address,
+            user_address=user_address,
+            num_days=num_days,
+            additional_requirements=additional_requirements,
+            user_agreed_to_terms=agreed_to_terms,
+            user_agreement_date=timezone.now() if agreed_to_terms else None
+            
         )
-        booking.save()
+        booking.save()  # This will trigger the save method in the Booking model
 
-        # Redirect to the user's dashboard after booking
-        return redirect('user_dashboard')
+        # Handle reference images
+        reference_images = request.FILES.getlist('reference_images')
+        for image in reference_images:
+            ref_image = ReferenceImage.objects.create(image=image)
+            booking.reference_images.add(ref_image)
 
-    # Render the booking form, pre-filling user and service details
-    return render(request, 'dreamknot1/book_service.html', {
+        if booking.user_agreed_to_terms:
+            messages.success(request, f"Booking submitted successfully! Total amount: ₹{booking.total_amount}")
+        else:
+            messages.warning(request, f"Booking submitted, but terms were not agreed to. Total amount: ₹{booking.total_amount}")
+        
+        return redirect('user_booking_details')
+   # For GET requests
+    selected_date = request.GET.get('selected_date')
+
+    # For GET requests, render the booking form
+    context = {
         'service': service,
         'user': user,
-        'user_profile': user_profile,  # Could be None if the profile doesn't exist
-    })
+        'user_profile': user_profile,
+        'terms_and_conditions': Booking().get_default_terms_and_conditions(),
+        'user_name': user_name,
+        'selected_date': selected_date,  # Add this line
+        'is_venue': service.category == 'Venue',
+        'venue_city': service.city if service.category == 'Venue' else None,
+    }
+    return render(request, 'dreamknot1/book_service.html', context)
 
-# Add to Favorite
+# user view for check date availability
+@require_POST
+def check_date_availability(request, service_id):
+    event_date = request.POST.get('event_date')
+    service = get_object_or_404(Service, id=service_id)
+    
+    existing_booking = Booking.objects.filter(
+        Q(service=service) &
+        Q(event_date=event_date) &
+        ~Q(book_status=3)  # Exclude cancelled bookings
+    ).exists()
+    
+    return JsonResponse({'available': not existing_booking})
+
+# user view for add to favorite
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def add_to_favorite(request, service_id):
     user_name = request.session.get('user_name', 'user')
     try:
@@ -1720,6 +2147,8 @@ def add_to_favorite(request, service_id):
     favorite, created = Favorite.objects.get_or_create(user=user, service=service)
     return redirect('user_dashboard')
 
+# user view for favorite list
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def favorite_list(request):
     # Get the current logged-in user from the session (based on 'user_name')
     user_name = request.session.get('user_name')
@@ -1734,11 +2163,12 @@ def favorite_list(request):
     favorites = Favorite.objects.filter(user=user).select_related('service')
 
     # Pass the favorites to the template for display
-    return render(request, 'dreamknot1/favorite_list.html', {'favorites': favorites})
+    return render(request, 'dreamknot1/favorite_list.html', {'favorites': favorites, 'user_name': user_name})
 
-# Remove from Favorite
+# user view for remove from favorite
 from django.http import JsonResponse
 
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def remove_from_favorite(request, service_id):
     if request.method == "POST":
         user_name = request.session.get('user_name', 'user')
@@ -1761,7 +2191,8 @@ def remove_from_favorite(request, service_id):
     return JsonResponse({'error': "Invalid request method."}, status=400)
 
 
-# Rate a Service
+# user view for rate a service
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def rate_service(request, service_id):
     user_name = request.session.get('user_name', 'user')
     try:
@@ -1803,28 +2234,91 @@ from django.core.paginator import Paginator
 # from django.contrib.auth.decorators import login_required
 from .models import Service, UserSignup
 
-# Admin Dashboard View (restricted to superusers)
-def admin_dashboard(request):
-        return render(request, 'dreamknot1/admin_dashboard.html')
-
-
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib import messages
 from .models import UserSignup
+from django.views.decorators.cache import cache_control
 
-def view_users(request):
-    role_filter = request.GET.get('role', 'user')  # Default to 'user' if no filter is applied
 
-    if role_filter == 'vendor':
-        users = UserSignup.objects.filter(role='vendor')
+    
+
+# admin view for dashboard
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def admin_dashboard(request):
+    # Check if the user is logged in as an admin
+    user_id = request.session.get('user_id')
+    user_role = request.session.get('user_role')
+    
+    if user_id and user_role == 'admin':
+        try:
+            admin = UserSignup.objects.get(id=user_id, role='admin', is_super=True)
+            context = {
+                'admin_name': admin.name,
+                # Add any other context data you want to pass to the template
+            }
+            return render(request, 'dreamknot1/admin_dashboard.html', context)
+        except UserSignup.DoesNotExist:
+            messages.error(request, "Admin user not found.")
+            return redirect('login')
     else:
-        users = UserSignup.objects.filter(role='user')
+        messages.error(request, "You must be logged in as an admin to access this page.")
+        return redirect('login')
 
-    context = {
-        'users': users,
-        'role_filter': role_filter,
-    }
-    return render(request, 'dreamknot1/view_users.html', context)
 
+# admin view for base
+def base(request):
+    user_id = request.session.get('user_id')
+    user_role = request.session.get('user_role')
+    
+    if user_id and user_role == 'admin':
+        try:
+            admin = UserSignup.objects.get(id=user_id, role='admin', is_super=True)
+            context = {
+                'admin_name': admin.name,
+                # Add any other context data you want to pass to the template
+            }
+            return render(request, 'dreamknot1/admin_dashboard.html', context)
+        except UserSignup.DoesNotExist:
+            messages.error(request, "Admin user not found.")
+            return redirect('login')
+    else:
+        messages.error(request, "You must be logged in as an admin to access this page.")
+        return redirect('login')
+
+# admin view for view users
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def view_users(request):
+    user_id = request.session.get('user_id')
+    user_role = request.session.get('user_role')
+    
+    if user_id and user_role == 'admin':
+        try:
+            admin = UserSignup.objects.get(id=user_id, role='admin', is_super=True)
+            role_filter = request.GET.get('role', 'user')
+
+            if role_filter == 'vendor':
+                users = UserSignup.objects.filter(role='vendor')
+            else:
+                users = UserSignup.objects.filter(role='user')
+            
+            user_count = UserSignup.objects.filter(role='user').count()
+            vendor_count = UserSignup.objects.filter(role='vendor').count()
+
+
+            context = {
+                'users': users,
+                'role_filter': role_filter,
+                'admin_name': admin.name,
+                'user_count': user_count,
+        'vendor_count': vendor_count,
+            }
+            return render(request, 'dreamknot1/view_users.html', context)
+        except UserSignup.DoesNotExist:
+            messages.error(request, "Admin user not found.")
+            return redirect('login')
+    else:
+        messages.error(request, "You must be logged in as an admin to access this page.")
+        return redirect('login')
 
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
@@ -1832,6 +2326,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from .models import UserSignup
 
+# admin view for toggle user status
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def toggle_user_status(request, user_id):
     # Fetch the user by ID
     user = get_object_or_404(UserSignup, id=user_id)
@@ -1868,7 +2364,7 @@ def toggle_user_status(request, user_id):
 
 
 # View Venues (restricted to admin users)
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def view_venues(request):
     if request.user.role == 'admin':
         venues = Service.objects.all()
@@ -1886,7 +2382,7 @@ def view_venues(request):
         return redirect('login')
 
 # Edit Venue (restricted to admin users)
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def edit_venue(request, id):
     if request.user.role == 'admin':
         venue = get_object_or_404(Service, id=id)
@@ -1918,6 +2414,88 @@ def delete_venue(request, id):
 
 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import WeddingTask
+from django.contrib import messages
+from django.views.decorators.cache import cache_control
 
+# admin view for manage predefined tasks- add, edit, delete
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def manage_predefined_tasks(request):
+    # Check if the user is logged in as an admin
+    user_id = request.session.get('user_id')
+    user_role = request.session.get('user_role')
+    
+    if user_id and user_role == 'admin':
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            
+            if action == 'add':
+                description = request.POST.get('description')
+                task_month = request.POST.get('task_month')
+                
+                if description and task_month:
+                    WeddingTask.objects.create(
+                        description=description,
+                        task_month=task_month,
+                        is_predefined=True,
+                        user=None
+                    )
+                    messages.success(request, "Predefined task added successfully.")
+                else:
+                    messages.error(request, "Please provide both description and task month.")
+            
+            elif action == 'edit':
+                task_id = request.POST.get('task_id')
+                description = request.POST.get('description')
+                task_month = request.POST.get('task_month')
+                
+                if task_id and description and task_month:
+                    task = get_object_or_404(WeddingTask, id=task_id, is_predefined=True, user=None)
+                    task.description = description
+                    task.task_month = task_month
+                    task.save()
+                    messages.success(request, "Predefined task updated successfully.")
+                else:
+                    messages.error(request, "Invalid edit request.")
+            
+            elif action == 'delete':
+                task_id = request.POST.get('task_id')
+                
+                if task_id:
+                    task = get_object_or_404(WeddingTask, id=task_id, is_predefined=True, user=None)
+                    task.delete()
+                    messages.success(request, "Predefined task deleted successfully.")
+                else:
+                    messages.error(request, "Invalid delete request.")
+        
+        predefined_tasks = WeddingTask.objects.filter(is_predefined=True, user=None)
+        context = {
+            'task_month_choices': WeddingTask.TASK_MONTH_CHOICES,
+            'tasks': predefined_tasks,
+            'admin_name': UserSignup.objects.get(id=user_id).name,  # Pass admin name for context
+        }
+        return render(request, 'dreamknot1/manage_predefined_tasks.html', context)
+    else:
+        messages.error(request, "You must be logged in as an admin to manage predefined tasks.")
+        return redirect('login')
 
+# admin view for list predefined tasks
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def list_predefined_tasks(request):
+    # Check if the user is logged in as an admin
+    user_id = request.session.get('user_id')
+    user_role = request.session.get('user_role')
+    
+    if user_id and user_role == 'admin':
+        predefined_tasks = WeddingTask.objects.filter(is_predefined=True, user=None)
+        context = {
+            'tasks': predefined_tasks,
+            'admin_name': UserSignup.objects.get(id=user_id).name,  # Pass admin name for context
+        }
+        return render(request, 'dreamknot1/list_predefined_tasks.html', context)
+    else:
+        messages.error(request, "You must be logged in as an admin to view predefined tasks.")
+        return redirect('login')
 

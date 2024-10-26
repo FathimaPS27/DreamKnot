@@ -7,6 +7,7 @@
     <title>{{ service.name }} Details</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
     <!-- SweetAlert2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 
@@ -16,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #f8f8f8;
             font-family: 'Arial', sans-serif;
             color: #333;
         }
@@ -241,22 +242,42 @@
 <body>
      <!-- Navbar -->
      <nav class="navbar">
-        <div class="logo">Dream Knot</div>
+        <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
         <ul>
             <li><a href="{% url 'user_home' %}">Dashboard</a></li>
-            <li><a href="{% url 'user_booking_details' %}">My Bookings</a></li>
-            <li><a href="{% url 'favorite_list' %}">My Favorite Services</a></li>
-    
-             <!-- Profile and Logout Dropdown -->
-        <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Profile <i class="fas fa-caret-down"></i></a>
-            <div class="dropdown-content">
-                <a href="{% url 'update_user_profile' %}">Update Profile</a>
-                <a href="{% url 'logout' %}" class="logout-button">Logout</a>
-            </div>
-        </li>
-    </ul>
-</nav>
+            <li><a href="{% url 'user_dashboard' %}">Service Providers</a></li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">Todo List<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'current_month_todolist' %}">Current Month</a>
+                    <a href="{% url 'todo_list' %}">All Tasks</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">Invitation<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'send_rsvp_invitation' %}">Send Invitation</a>
+                    <a href="{% url 'invitation_list' %}">Invitation List</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">My Account<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'user_booking_details' %}">My Bookings</a>
+                    <a href="{% url 'favorite_list' %}">favourite list</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">
+                    <i class="fa fa-user-circle"></i> {{ user_name }} <i class="fas fa-caret-down"></i>
+                </a>
+                <div class="dropdown-content">
+                    <a href="{% url 'update_user_profile' %}">Update Profile</a>
+                    <a href="{% url 'logout' %}" class="logout-button">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
 
     <div class="container">
         <div class="service-card">
@@ -299,27 +320,47 @@
                     </div>
                     {% endif %}
                     <!-- General Information Section -->
-                    <div id="general-info"  class="info-section">
+                    <div id="general-info" class="info-section">
                         <h2>General Information</h2>
-                        <div class="info-item">
-                            <span class="info-label">Vendor:</span>
-                            <span>{{ service.vendor.company_name }}</span>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="info-item">
+                                    <span class="info-label">Vendor:</span>
+                                    <span>{{ service.vendor.company_name }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="info-item">
+                                    <span class="info-label">Availability:</span>
+                                    <span>{% if service.availability %}Available{% else %}Not Available{% endif %}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Availability:</span>
-                            <span>{% if service.availability %}Available{% else %}Not Available{% endif %}</span>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="info-item">
+                                    <span class="info-label">Contact Now:</span>
+                                    <span>{{ vendor_phone }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="info-item">
+                                    <span class="info-label">Category:</span>
+                                    <span>{{ service.category }}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Contact Now:</span>
-                            <span>{{ vendor_phone }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Category:</span>
-                            <span>{{ service.category }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">City:</span>
-                            <span>{{ service.city }}</span>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="info-item">
+                                    <span class="info-label">Location:</span>
+                                    <span>
+                                        <a href="{{ service.city }}" target="_blank" class="ml-2">
+                                            <i class="fas fa-map-marker-alt"></i> View on Map
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

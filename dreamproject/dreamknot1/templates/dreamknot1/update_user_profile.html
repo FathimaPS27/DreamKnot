@@ -1,212 +1,131 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update User Profile</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
-            margin: 0;
-            padding: 0;
-        }
+{% extends "userbase.html" %}
 
-        .container {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 800px;
-            margin: 20px auto;
-        }
+{% block title %}Update User Profile{% endblock %}
 
-        /* Navbar */
-        .navbar {
-            background-color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+{% block extra_css %}
+<style>
+    .container {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: 20px auto;
+    }
 
-        .navbar .logo {
-            text-decoration: none;
-            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 30px;
-            font-weight: 600;
-            font-family: 'Lucida Handwriting', cursive;
-            transition: background 0.3s ease;
-            padding-top: 20px;
-        }
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
 
-        .navbar ul {
-            list-style: none;
-            display: flex;
-            margin: 0;
-        }
+    form {
+        display: flex;
+        flex-direction: column;
+    }
 
-        .navbar ul li {
-            margin: 0 15px;
-        }
+    label {
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
 
-        .navbar ul li a {
-            color: maroon;
-            text-decoration: none;
-            font-size: 1rem;
-            transition: color 0.3s;
-        }
+    input, select {
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
 
-        .navbar ul li a:hover {
-            color: #ffc107;
-        }
+    input[readonly] {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
 
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+    input[type="submit"] {
+        background-color: #6e1c0f;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
 
-        form {
-            display: flex;
-            flex-direction: column;
-        }
+    input[type="submit"]:hover {
+        background-color: #410f08;
+    }
 
-        label {
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
+    .error {
+        color: red;
+        margin-bottom: 10px;
+    }
 
-        input, select {
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+    .success {
+        color: green;
+        margin-bottom: 10px;
+    }
 
-        input[readonly] {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-        }
+    .section-title {
+        font-size: 1.2em;
+        margin-top: 30px;
+        margin-bottom: 10px;
+        color: #6e1c0f;
+    }
+</style>
+{% endblock %}
 
-        input[type="submit"] {
-            background-color: #6e1c0f;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
+{% block header_title %}Update Your Profile{% endblock %}
 
-        input[type="submit"]:hover {
-            background-color: #410f08;
-        }
+{% block content %}
+<div class="container">
+    <h2>Profile Update</h2>
 
-        .error {
-            color: red;
-            margin-bottom: 10px;
-        }
-
-        .success {
-            color: green;
-            margin-bottom: 10px;
-        }
-
-        .section-title {
-            font-size: 1.2em;
-            margin-top: 30px;
-            margin-bottom: 10px;
-            color: #6e1c0f;
-        }
-     
-        
-    </style>
-</head>
-<body>
-
-
-    <nav class="navbar">
-        <div class="logo">Dream Knot</div>
-        <ul>
-            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
-            <li><a href="#">My Bookings</a></li>
-            <li><a href="{% url 'favorite_list' %}">My Favorite Services</a></li>
-            <li><a href="{% url 'current_month_todolist' %}"> Current Tasks</a></li>
-            <li><a href="{% url 'todo_list' %}">All Tasks</a></li>
-            <li><a href="{% url 'current_month_todolist' %}">Current Month</a></li>
-            <li><a href="{% url 'update_user_profile' %}">Profile</a></li>
-            <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
-        </ul>
-    </nav>
-
-    <div class="container">
-        <h2>Profile Update</h2>
-
-        {% if messages %}
+    {% if messages %}
     <ul class="messages">
         {% for message in messages %}
             <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
         {% endfor %}
     </ul>
-{% endif %}
+    {% endif %}
 
-        <form method="POST" action="{% url 'update_user_profile' %}">
-            {% csrf_token %}
-            
-            <!-- User Profile Section -->
-            <div class="section-title">Update User Profile</div>
+    <form method="POST" action="{% url 'update_user_profile' %}">
+        {% csrf_token %}
+        
+        <!-- User Profile Section -->
+        <div class="section-title">Update User Profile</div>
 
-            <div class="error">{{ errors.name }}</div>
-            <label for="name">Name</label>
-            <input type="text" id="name" name="name" value="{{ name }}" readonly required>
+        <div class="error">{{ errors.name }}</div>
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" value="{{ name }}" readonly required>
 
-            <div class="error">{{ errors.email }}</div>
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="{{ email }}" required>
+        <div class="error">{{ errors.email }}</div>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="{{ email }}" required>
 
-            <div class="error">{{ errors.phone }}</div>
-            <label for="phone">Phone</label>
-            <input type="tel" id="phone" name="phone" value="{{ phone }}" readonly required>
+        <div class="error">{{ errors.phone }}</div>
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" name="phone" value="{{ phone }}" readonly required>
 
-            <label for="country">Country</label>
-            <select id="country" name="country" required>
-                {% for country_code, country_name in countries %}
-                    <option value="{{ country_code }}" {% if country == country_code %} selected {% endif %}>{{ country_name }}</option>
-                {% endfor %}
-            </select>
+        <label for="country">Country</label>
+        <select id="country" name="country" required>
+            {% for country_code, country_name in countries %}
+                <option value="{{ country_code }}" {% if country == country_code %} selected {% endif %}>{{ country_name }}</option>
+            {% endfor %}
+        </select>
 
-            <label for="state">State</label>
-            <input type="text" id="state" name="state" value="{{ state }}" required>
+        <label for="state">State</label>
+        <input type="text" id="state" name="state" value="{{ state }}" required>
 
-            <label for="place">Place</label>
-            <input type="text" id="place" name="place" value="{{ place }}" required>
+        <label for="place">Place</label>
+        <input type="text" id="place" name="place" value="{{ place }}" required>
 
+        <!-- Additional Details Section -->
+        <div class="section-title">Additional Details</div>
 
-            
+        <label for="wedding_date">Wedding Date</label>
+        <input type="date" id="wedding_date" name="wedding_date" value="{{ wedding_date|date:'Y-m-d' }}" required>
+        <div class="error">{{ errors.wedding_date }}</div>
 
-            <!-- Additional Details Section -->
-            <div class="section-title">Additional Details</div>
+        <label for="event_held">Event Held (Location)</label>
+        <input type="text" id="event_held" name="event_held" value="{{ event_held }}">
 
-            
-            <label for="wedding_date">Wedding Date</label>
-            <input type="date" id="wedding_date" name="wedding_date" value="{{ wedding_date|date:'Y-m-d' }}" required>
-            <div class="error">{{ errors.wedding_date }}</div>
-
-            <label for="event_held">Event Held (Location)</label>
-            <input type="text" id="event_held" name="event_held" value="{{ event_held }}">
-
-            
-          <!-- Password Section -->
-             <!-- <div class="section-title">Change Password</div>
-            
-            <label for="new_password">New Password</label>
-            <input type="password" id="new_password" name="new_password">
-
-            <label for="confirm_password">Confirm Password</label>
-            <input type="password" id="confirm_password" name="confirm_password">-->
-
-            <input type="submit" value="Update Profile">
-        </form>
-    </div>
-
-</body>
-</html>
+        <input type="submit" value="Update Profile">
+    </form>
+</div>
+{% endblock %}

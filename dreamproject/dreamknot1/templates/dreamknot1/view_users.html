@@ -1,172 +1,152 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Users and Vendors</title>
-    <!-- Bootstrap CSS for styling (optional) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+{% extends "base.html" %}
 
-    <style>
-        /* Navbar */
-        .navbar {
-            background-color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+{% block title %}Manage Users and Vendors{% endblock %}
 
-        .navbar .logo {
-            text-decoration: none;
-            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 30px;
-            font-weight: 600;
-            font-family: 'Lucida Handwriting', cursive;
-            transition: background 0.3s ease;
-        }
+{% block extra_css %}
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+    h2 {
+        color: #2c3e50;
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 2.5rem;
+    }
+    .filter-buttons {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+    }
+    .filter-buttons .btn {
+        margin: 0 10px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .btn-primary {
+        background-color: #3f0b09;
+        border-color: #3f0b09;
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: #6e6d6c;
+        border-color: #6e6d6c;
+    }
+    .btn-secondary {
+        background-color: #95a5a6;
+        border-color: #95a5a6;
+        color: white;
+    }
+    .btn-secondary:hover {
+        background-color: #3f0b09;
+        border-color: #3f0b09;
+    }
+    .count-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background-color: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        padding: 5px 8px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    .table-responsive {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .table {
+        margin-bottom: 0;
+    }
+    .table th {
+        background-color: #39120d;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        padding: 15px;
+    }
+    .table td {
+        vertical-align: middle;
+        padding: 15px;
+    }
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f9f9f9;
+    }
+    .table-hover tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+    .badge {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        border-radius: 20px;
+    }
+    .badge-success {
+        background-color: #2ecc71;
+    }
+    .badge-danger {
+        background-color: #e74c3c;
+    }
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        border-radius: 15px;
+    }
+    .messages {
+        margin-bottom: 20px;
+    }
+    .messages .alert {
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
 
-        .navbar ul {
-            list-style: none;
-            display: flex;
-            margin: 0;
-            padding: 0;
-        }
+{% block content %}
+<div class="container">
+    <h2>Manage Users and Vendors</h2>
 
-        .navbar ul li {
-            margin: 0 15px;
-            position: relative;
-        }
-
-        .navbar ul li a {
-            color: maroon;
-            text-decoration: none;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        
-
-        /* Dropdown styles */
-        .dropdown {
-            position: relative;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: white;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-            z-index: 1;
-            right: 0;
-        }
-
-        .dropdown-content a {
-            color: maroon;
-            padding: 10px 20px;
-            text-decoration: none;
-            display: block;
-            white-space: nowrap;
-        }
-
-        .dropdown-content a:hover {
-            background-color: #450e04cf;
-            color: white;
-        }
-
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-
-        /* Table styling */
-        table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        table th, table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-
-        table tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        /* Buttons styling */
-        .btn-primary {
-            background-color: maroon;
-            border: none;
-        }
-
-        .btn-primary:hover {
-            background-color: #ffc107;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background-color: #ffc107;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="logo">Dream Knot</div>
-        <ul>
-            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
-            <li><a href="#">My Bookings</a></li>
-            <li><a href="{% url 'favorite_list' %}">My Favorite Services</a></li>
-
-            <!-- Profile and Logout Dropdown -->
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">Profile</a>
-                <div class="dropdown-content">
-                    <a href="{% url 'update_user_profile' %}">Update Profile</a>
-                    <a href="{% url 'logout' %}">Logout</a>
-                </div>
-            </li>
-        </ul>
-    </nav>
-
-    <div class="container mt-5">
-        <h2>Manage Users and Vendors</h2>
-        <div>
-            <a href="{% url 'admin_dashboard' %}" class="btn btn-primary">Go To Dashboard</a>
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
         </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
-        <!-- Buttons to filter between Users and Vendors -->
-        <div class="my-3">
-            <a href="{% url 'view_users' %}?role=user" class="btn btn-primary">View Users</a>
-            <a href="{% url 'view_users' %}?role=vendor" class="btn btn-secondary">View Vendors</a>
-        </div>
+    <div class="filter-buttons">
+        <a href="{% url 'view_users' %}?role=user" class="btn btn-primary">
+            View Users
+            <span class="count-badge">{{ user_count }}</span>
+        </a>
+        <a href="{% url 'view_users' %}?role=vendor" class="btn btn-secondary">
+            View Vendors
+            <span class="count-badge">{{ vendor_count }}</span>
+        </a>
+    </div>
 
-        <!-- Display data based on selected filter -->
-        {% if role_filter == 'user' %}
-            <h3>List of Users</h3>
-        {% elif role_filter == 'vendor' %}
-            <h3>List of Vendors</h3>
-        {% endif %}
-
-        <!-- Table to display filtered users or vendors -->
-        <table class="table table-striped">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -188,33 +168,31 @@
                     <td>{{ user.state }}</td>
                     <td>{{ user.place }}</td>
                     <td>{{ user.phone }}</td>
-                    <td>{{ user.status|yesno:"Active,Inactive" }}</td>
                     <td>
                         {% if user.status %}
-                        <!-- Deactivate Button -->
-                        <form method="post" action="{% url 'toggle_user_status' user.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Deactivate</button>
-                        </form>
+                        <span class="badge badge-success">Active</span>
                         {% else %}
-                        <!-- Activate Button -->
+                        <span class="badge badge-danger">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
                         <form method="post" action="{% url 'toggle_user_status' user.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-success">Activate</button>
+                            {% if user.status %}
+                            <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                            {% else %}
+                            <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                            {% endif %}
                         </form>
-                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8">No {{ role_filter }} found.</td>
+                    <td colspan="8" class="text-center">No {{ role_filter }} found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-
-    <!-- Optional Bootstrap JS for interactive elements -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>
+{% endblock %}

@@ -60,18 +60,18 @@ class VendorProfile(models.Model):
         return self.company_name if self.company_name else self.user.name
     
     
-
-TASK_MONTH_CHOICES = [
-    ('6-12', '6-12 Months Before'),
-    ('4-6', '4-6 Months Before'),
-    ('2-4', '2-4 Months Before'),
-    ('1-2', '1-2 Months Before'),
-    ('1-2 Weeks', '1-2 Weeks Before'),
-    ('Final Days', 'Final Days'),
-    ('Wedding Day', 'Wedding Day'),
-]
-
 class WeddingTask(models.Model):
+    TASK_MONTH_CHOICES = [
+        ('6-12', '6-12 Months Before'),
+        ('4-6', '4-6 Months Before'),
+        ('2-4', '2-4 Months Before'),
+        ('1-2', '1-2 Months Before'),
+        ('1-2 Weeks', '1-2 Weeks Before'),
+        ('Final Days', 'Final Days'),
+        ('Wedding Day', 'Wedding Day'),
+    ]
+
+
     user = models.ForeignKey('UserSignup', on_delete=models.CASCADE, null=True, blank=True)  # Link to UserSignup
     description = models.CharField(max_length=255)
     task_month = models.CharField(max_length=20, choices=TASK_MONTH_CHOICES, default='6-12')
@@ -278,22 +278,94 @@ class Rating(models.Model):
         unique_together = ('service', 'user')
 
     def __str__(self):
-        return f"{self.user.username} rated {self.service.name} {self.rating}/5"
+        return f"{self.user.name} rated {self.service.name} {self.rating}/5"
 
-# Booking Model
+from django.db import models
+from django.utils import timezone
+from django.core.validators import MinValueValidator
+from decimal import Decimal
+
 class Booking(models.Model):
     user = models.ForeignKey(UserSignup, on_delete=models.CASCADE)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     booking_date = models.DateTimeField(default=timezone.now)
+    event_name = models.CharField(max_length=255, null=True, blank=True)
     event_date = models.DateField()
-    event_address = models.CharField(max_length=255, blank=True, null=True)  # Optional event address
-    vendor_confirmed_at = models.DateTimeField(null=True, blank=True)  # Tracks confirmation time
-    canceled_by_user = models.BooleanField(default=False)  # Distinguishes cancellation
-    cancellation_reason = models.TextField(blank=True, null=True)  # Reason for cancellation
-    book_status = models.IntegerField(default=0, choices=[(0, 'Pending'), (1, 'Confirmed'), (2, 'Completed'), (3, 'Canceled')])
+    event_address = models.CharField(max_length=255, null=True, blank=True)
+    user_address = models.CharField(max_length=255, null=True, blank=True)
+    num_days = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+    additional_requirements = models.TextField(blank=True, null=True)
+    reference_images = models.ManyToManyField('ReferenceImage', blank=True)
+    vendor_confirmed_at = models.DateTimeField(null=True, blank=True)
+    canceled_by_user = models.BooleanField(default=False)
+    cancellation_reason = models.TextField(blank=True, null=True)
+    book_status = models.IntegerField(default=0, choices=[
+        (0, 'Pending'),
+        (1, 'Confirmed'),
+        (2, 'Completed'),
+        (3, 'Canceled')
+    ])
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    booking_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # New fields for terms and conditions
+    terms_and_conditions = models.TextField(blank=True, null=True)
+    user_agreed_to_terms = models.BooleanField(default=False)
+    user_agreement_date = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        # Existing calculation logic
+        base_price = self.service.price
+        day_rate = Decimal('0.00')
+
+        if self.service.category == 'Venue':
+            venue_service = self.service.venue_services.first()
+            if venue_service:
+                day_rate = venue_service.day_rate
+        elif self.service.category == 'Photography':
+            photo_service = self.service.photography_services.first()
+            if photo_service:
+                day_rate = photo_service.base_price
+
+        if day_rate > Decimal('0.00'):
+            self.total_amount = day_rate * self.num_days
+        else:
+            self.total_amount = base_price * self.num_days
+
+        self.booking_amount = self.total_amount * Decimal('0.5')
+
+        # Set default terms and conditions if not provided
+        if not self.terms_and_conditions:
+            self.terms_and_conditions = self.get_default_terms_and_conditions()
+
+        super().save(*args, **kwargs)
+
+    def get_default_terms_and_conditions(self):
+        return """
+        <ol>
+            <li>Booking Confirmation: The booking is confirmed upon receipt of the 50% booking amount.</li>
+            <li>Cancellation Policy: Cancellations made 30 days or more before the event date are eligible for a full refund of the booking amount. Cancellations made less than 30 days before the event date are not eligible for a refund.</li>
+            <li>Changes to Booking: Any changes to the booking must be made in writing and are subject to availability and additional charges if applicable.</li>
+            <li>Payment: The remaining balance is due 7 days before the event date.</li>
+            <li>Service Delivery: The service provider will deliver the services as described in the booking details. Any additional services requested may incur extra charges.</li>
+            <li>Force Majeure: The service provider is not liable for failure to perform due to circumstances beyond their control (e.g., natural disasters, pandemics).</li>
+            <li>Liability: The service provider's liability is limited to the total amount paid for the services.</li>
+            <li>Intellectual Property: All intellectual property rights in relation to the services provided remain with the service provider.</li>
+            <li>Dispute Resolution: Any disputes shall be resolved through mediation or arbitration before resorting to legal action.</li>
+            <li>Governing Law: This agreement is governed by the laws of India.</li>
+        </ol>
+        """
 
     def __str__(self):
-        return f"{self.user.username} booked {self.service.name} on {self.event_date}"
+        return f"{self.user.name} booked {self.service.name} for {self.event_name} on {self.event_date}"
+
+class ReferenceImage(models.Model):
+    image = models.ImageField(upload_to='reference_images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Reference Image {self.id}"
+
 
 # Favorite Model
 class Favorite(models.Model):
@@ -317,22 +389,22 @@ class VendorImage(models.Model):
     
 
 
-# Signal to assign predefined tasks to new users
+
+
 @receiver(post_save, sender=UserSignup)
 def assign_predefined_tasks(sender, instance, created, **kwargs):
-    if created and instance.role == 'user':  # Only for new users
+    if created and instance.role == 'user':
         predefined_tasks = WeddingTask.objects.filter(is_predefined=True, user=None)
         for task in predefined_tasks:
-            # Create a copy of each predefined task for the new user
             WeddingTask.objects.create(
                 user=instance,
                 description=task.description,
                 task_month=task.task_month,
-                is_predefined=False,  # Mark as user-specific now
+                is_predefined=False,
             )
 
-
 # Signal to notify users about task updates
+'''
 @receiver(post_save, sender=WeddingTask)
 def notify_user_task_status(sender, instance, created, **kwargs):
     if instance.user:
@@ -344,7 +416,6 @@ def notify_user_task_status(sender, instance, created, **kwargs):
             else:
                 message = f"You have an upcoming task: '{instance.description}'. Don't forget to complete it."
 
-        # Sending an email notification
         send_mail(
             'Task Notification',
             message,
@@ -352,3 +423,4 @@ def notify_user_task_status(sender, instance, created, **kwargs):
             [instance.user.email],
             fail_silently=False,
         )
+        '''

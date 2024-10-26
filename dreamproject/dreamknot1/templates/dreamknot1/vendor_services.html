@@ -42,27 +42,40 @@
             justify-content: space-between; /* Distributes space between elements */
         }
         
-        .btn-primary {
-            background-color: maroon;
-            border: none;
-            transition: background-color 0.3s;
+        .btn-primary,
+        .btn-primary:focus,
+        .btn-primary:active {
+            background-color: maroon !important;
+            border-color: maroon !important;
+            box-shadow: none !important;
+            color: white !important;
+            transition: background-color 0.3s, transform 0.1s;
         }
         .btn-primary:hover {
-            background-color: #3d0606;
+            background-color: #3d0606 !important;
         }
+        .btn-primary:active {
+            background-color: #808080 !important; /* Ash color when clicked */
+            transform: scale(0.98); /* Slight scale down effect when clicked */
+        }
+        
+        
         .no-services {
             text-align: center;
             font-size: 1.2em;
             margin-top: 20px;
             color: #6c757d;
         }
-        /* Navbar Styles */
+        /* Navbar */
         .navbar {
             background-color: white;
-            color: white;
+            padding: 15px 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
         }
         .navbar .logo {
-            
             text-decoration: none;
             background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
             -webkit-background-clip: text;
@@ -71,8 +84,6 @@
             font-weight: 600;
             font-family: 'Lucida Handwriting', cursive;
             transition: background 0.3s ease;
-            padding-top: 20px;
-
         }
         .navbar ul {
             list-style: none;
@@ -80,34 +91,91 @@
             margin: 0;
         }
         .navbar ul li {
-            margin: 0 15px;
+            margin: 0 20px;
+            position: relative;
         }
         .navbar ul li a {
-            color: maroon;
+            color: #480808;
             text-decoration: none;
             font-size: 1rem;
             transition: color 0.3s;
         }
         .navbar ul li a:hover {
-            color:#3d0606;
+            color: #ede8e7;
         }
+
+        /* Dropdown Styling */
+        .dropdown {
+            position: relative;
+        }
+        .dropbtn {
+            display: inline-block;
+            cursor: pointer;
+            padding-right: 10px;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            min-width: 160px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .dropdown-content a:hover {
+            background-color: #4b1005;
+            color: white;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown:hover .dropbtn i {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+
     </style>
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="logo">Dream Knot</div>
-            <!--<div class="logo">{{ vendor.company_name }}</div>-->
-            <ul>
-                <li><a href="{% url 'user_home' %}">Home</a></li>
-                <li><a href="{% url 'user_dashboard' %}">Services</a></li>
-                <li><a href="{% url 'update_user_profile' %}">Contact</a></li>
-                <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
-            </ul>
-        </div>
+     <nav class="navbar">
+        <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
+        <ul>
+            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
+            <li><a href="{% url 'user_dashboard' %}">Service Providers</a></li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">Todo List<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'current_month_todolist' %}">Current Month</a>
+                    <a href="{% url 'todo_list' %}">All Tasks</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">Invitation<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'send_rsvp_invitation' %}">Send Invitation</a>
+                    <a href="{% url 'invitation_list' %}">Invitation List</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">
+                    <i class="fa fa-user-circle"></i> {{ user_name }} <i class="fas fa-caret-down"></i>
+                </a>
+                <div class="dropdown-content">
+                    <a href="{% url 'update_user_profile' %}">Update Profile</a>
+                    <a href="{% url 'logout' %}" class="logout-button">Logout</a>
+                </div>
+            </li>
+        </ul>
     </nav>
-
     <div class="container mt-5">
         <h2>{{ vendor.company_name }}'s Services</h2>
         <div class="row">
