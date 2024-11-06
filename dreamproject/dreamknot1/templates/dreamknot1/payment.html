@@ -1,0 +1,184 @@
+<!-- dreamproject/dreamknot1/templates/dreamknot1/payment.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Summary - Payment</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa; /* Light gray background */
+            color: #333;
+            font-family: 'Arial', sans-serif;
+        }
+        .container-fluid { /* Use container-fluid for full width */
+            padding: 20px 15%; /* Top and bottom padding: 20px, left and right padding: 15% */
+            background: #ffffff; /* White background for the container */
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            margin-bottom: 15px;
+            color: #800000;
+            text-align: center;
+        }
+        .section {
+            margin-bottom: 20px; /* Reduced margin */
+            padding: 25px; /* Reduced padding */
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            background-color: #fdfdfd; /* Slightly off-white for a minimal look */
+        }
+        .section h4 {
+            margin-bottom: 10px; /* Reduced margin */
+            color: #800000;
+        }
+        .service-image {
+            max-width: 200px; /* Increased image size */
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 10px; /* Reduced margin */
+        }
+        .btn-primary {
+            background-color: #800000;
+            border-color: #800000;
+        }
+        .btn-primary:hover {
+            background-color: #6c0000;
+            border-color: #6c0000;
+        }
+        .text-muted {
+            text-align: center;
+        }
+        .amount-details {
+            font-weight: bold;
+        }
+        .order-summary {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 10px; /* Reduced padding */
+            background-color: #f9f9f9;
+        }
+        .order-summary p {
+            margin: 5px 0;
+        }
+    </style>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <div class="container-fluid"> <!-- Use container-fluid for full width -->
+        <h2>Order Summary</h2>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="section service-details">
+                    <h4>Service Details</h4>
+                    <div class="row align-items-center">
+                        <div class="col-4">
+                            {% if service_image %}
+                            <img src="{{ service_image }}" alt="{{ service.name }}" class="service-image">
+                            {% endif %}
+                        </div>
+                        <div class="col-8">
+                            <p><strong>Service Name:</strong> {{ service.name }}</p>
+                            <p><strong>Service Category:</strong> {{ service.category }}</p>
+                            {% if venue_city %}
+                            <p><strong>Venue Location:</strong> {{ venue_city }}</p>
+                            {% else %}
+                            <p><strong>Event Address:</strong> {{ event_address }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section category-details">
+                    <h4>Category Specific Details</h4>
+                    {% if category_details %}
+                        {% if service.category == 'Venue' %}
+                            <p><strong>Type of Venue:</strong> {{ category_details.type_of_venue }}</p>
+                            <p><strong>Capacity:</strong> {{ category_details.capacity }}</p>
+                            <p><strong>Pre/Post Wedding Availability:</strong> {% if category_details.pre_post_wedding_availability %}Yes{% else %}No{% endif %}</p>
+                        {% elif service.category == 'Catering' %}
+                            <p><strong>Menu Planning:</strong> {{ category_details.menu_planning }}</p>
+                            <p><strong>Meal Service Type:</strong> {{ category_details.meal_service_type }}</p>
+                            <p><strong>Dietary Options:</strong> {{ category_details.dietary_options }}</p>
+                        {% elif service.category == 'Photography' %}
+                            <p><strong>Photography Style:</strong> {{ category_details.photography_style }}</p>
+                            <p><strong>Package Options:</strong> {{ category_details.package_options }}</p>
+                        {% elif service.category == 'MusicEntertainment' %}
+                            <p><strong>Music Genre:</strong> {{ category_details.music_genre }}</p>
+                            <p><strong>Performance Type:</strong> {{ category_details.performance_type }}</p>
+                        {% elif service.category == 'MakeupHair' %}
+                            <p><strong>Grooming Services:</strong> {{ category_details.grooming_services }}</p>
+                            <p><strong>Trial Sessions:</strong> {% if category_details.trial_sessions %}Yes{% else %}No{% endif %}</p>
+                        {% elif service.category == 'Rentals' %}
+                            <p><strong>Rental Items:</strong> {{ category_details.rental_items }}</p>
+                        {% elif service.category == 'MehendiArtist' %}
+                            <p><strong>Design Styles:</strong> {{ category_details.design_styles }}</p>
+                        {% elif service.category == 'Decoration' %}
+                            <p><strong>Decor Themes:</strong> {{ category_details.decor_themes }}</p>
+                        {% endif %}
+                    {% else %}
+                        <p>No specific details available for this service category.</p>
+                    {% endif %}
+                </div>
+
+                <div class="section user-details">
+                    <h4>User Booking Details</h4>
+                    <p><strong>Name:</strong> {{ user_name }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Phone:</strong> {{ user.phone }}</p>
+                    <p><strong>User Address:</strong> {{ user_address }}</p>
+                    <p><strong>Event Date:</strong> {{ event_date }}</p>
+                    <p><strong>Number of Days:</strong> {{ num_days }}</p>
+                    <p><strong>Additional Requirements:</strong> {{ additional_requirements }}</p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="section amount-details order-summary">
+                    <h4>Payment Details</h4>
+                    <p><strong>Total Amount:</strong> ₹{{ total_amount|floatformat:2 }}</p>
+                    <p><strong>Booking Amount (50%):</strong> ₹{{ booking_amount|floatformat:2 }}</p>
+                    <p><strong>Remaining Balance:</strong> ₹{{ remaining_balance|floatformat:2 }}</p>
+                </div>
+
+                <button id="pay-button" class="btn btn-primary btn-block">Pay Now</button>
+                <p class="text-muted mt-3">By clicking "Pay Now", you agree to our <a href="#">Terms and Conditions</a>.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var options = {
+            "key": "{{ settings.RAZORPAY_API_KEY }}", // Your Razorpay API Key
+            "amount": {{ amount }}, // Amount in paise
+            "currency": "INR",
+            "name": "Dream Knot",
+            "description": "Payment for {{ service.name }}",
+            "order_id": "{{ razorpay_order_id }}", // Generated order ID
+            "handler": function (response){
+                // Handle successful payment here
+                alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
+                // You can redirect to a success page or update the booking status
+                window.location.href = "{% url 'payment_success' %}?razorpay_payment_id=" + response.razorpay_payment_id + "&razorpay_order_id=" + response.razorpay_order_id + "&razorpay_signature=" + response.razorpay_signature;
+            },
+            "prefill": {
+                "name": "{{ user_name }}",
+                "email": "{{ user.email }}",
+                "contact": "{{ user.phone }}"
+            },
+            "theme": {
+                "color": "#800000"
+            }
+        };
+
+        document.getElementById('pay-button').onclick = function(e){
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+            e.preventDefault();
+        }
+    </script>
+</body>
+</html>

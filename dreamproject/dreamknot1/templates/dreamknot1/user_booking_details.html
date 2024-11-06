@@ -115,145 +115,23 @@
             text-decoration: none;
             cursor: pointer;
         }
-        /* Navbar */
-        /* Navbar */
-        .navbar {
-            background-color: white;
-            padding: 15px 80px; /* Increased padding for more space on the left */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Added a slight shadow for better separation */
-        }
-        
-        .navbar .logo {
-            text-decoration: none;
-            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 30px;
-            font-weight: 600;
-            font-family: 'Lucida Handwriting', cursive;
-            transition: background 0.3s ease;
-        }
-        
-        .navbar ul {
-            list-style: none;
-            display: flex;
-            margin: 0;
-        }
-        
-        .navbar ul li {
-            margin: 0 20px;
-            position: relative;
-        }
-        
-        .navbar ul li a {
-            color: #480808;
-            text-decoration: none;
-            font-size: 1rem;
-            transition: color 0.3s;
-        }
-        
-        .navbar ul li a:hover {
-            color: #ede8e7;
-        }
-        
-        /* Dropdown styles */
-        .dropdown {
-            position: relative;
-        }
-        
-        .dropbtn {
-            display: inline-block;
-            cursor: pointer;
-            padding-right: 10px;
-        }
-        
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: white;
-            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
-            z-index: 1;
-            min-width: 160px;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        
-        .dropdown-content a {
-            color: #480808;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        
-        .dropdown-content a:hover {
-            background-color: #4b1005;
-            color: white;
-        }
-        
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        
-        /* Caret animation */
-        .dropdown:hover .dropbtn i {
-            transform: rotate(180deg);
-            transition: transform 0.3s ease;
-        }
-        
-        
-
-
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
-<!-- Navbar -->
-<nav class="navbar">
-    <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
-    <ul>
-        <li><a href="{% url 'user_home' %}">Dashboard</a></li>
-        <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Todo List<i class="fas fa-caret-down"></i></a>
-            <div class="dropdown-content">
-                <a href="{% url 'current_month_todolist' %}">Todo List</a>
-                <a href="{% url 'todo_list' %}">All Tasks</a>
-            </div>
-        </li>
-        
-        <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Invitation<i class="fas fa-caret-down"></i></a>
-            <div class="dropdown-content">
-                <a href="{% url 'send_rsvp_invitation' %}">Invitation</a>
-                <a href="{% url 'invitation_list' %}">Invitation List</a>
-            </div>
-        </li>
-        <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">My Account<i class="fas fa-caret-down"></i></a>
-            <div class="dropdown-content">
-                <a href="{% url 'user_booking_details' %}">My Bookings</a>
-                <a href="{% url 'favorite_list' %}">favourite list</a>
-            </div>
-        </li>
-        
-        <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">
-                <i class="fa fa-user-circle"></i> {{ user_name }} <i class="fas fa-caret-down"></i>
-            </a>
-            <div class="dropdown-content">
-                <a href="{% url 'update_user_profile' %}">Update Profile</a>
-                <a href="{% url 'logout' %}" class="logout-button">Logout</a>
-            </div>
-        </li>
-    </ul>
-</nav>
-
-
-
-    <!-- Rest of your page content -->
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
+        <ul>
+            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn">My Account<i class="fas fa-caret-down"></i></a>
+                <div class="dropdown-content">
+                    <a href="{% url 'user_booking_details' %}">My Bookings</a>
+                    <a href="{% url 'logout' %}" class="logout-button">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
 
     <div class="container">
         <h2>Your Bookings</h2>
@@ -273,7 +151,7 @@
                     <tr>
                         <th>Service</th>
                         <th>Event Date</th>
-                        <th>{% if booking.service.category == 'Venue' %}Venue City{% else %}Event Location{% endif %}</th>
+                        <th>Event Location</th>
                         <th>Event Name</th>
                         <th>Number of Days</th>
                         <th>Total Amount</th>
@@ -288,13 +166,7 @@
                         <tr>
                             <td>{{ booking.service.name }}</td>
                             <td>{{ booking.event_date }}</td>
-                            <td>
-                                {% if booking.service.category == 'Venue' %}
-                                    {{ booking.service.city }}
-                                {% else %}
-                                    {{ booking.event_address }}
-                                {% endif %}
-                            </td>
+                            <td>{{ booking.event_address }}</td>
                             <td>{{ booking.event_name }}</td>
                             <td>{{ booking.num_days }}</td>
                             <td>₹{{ booking.total_amount }}</td>
@@ -317,9 +189,8 @@
                             </td>
                             <td>
                                 {% if booking.book_status != 3 and booking.event_date >= today %}
-                                    <button class="btn" onclick="openModal('{{ booking.id }}', {{ booking.is_refundable|yesno:'true,false' }})">
-                                        Cancel Booking
-                                    </button>
+                                    <button class="btn" onclick="openModal('{{ booking.id }}', {{ booking.is_refundable|yesno:'true,false' }})">Cancel Booking</button>
+                                    <button class="btn" onclick="openInvoiceModal('{{ booking.id }}', '{{ booking.service.name }}', '{{ booking.total_amount }}', '{{ booking.booking_amount }}', '{{ booking.get_book_status_display }}', '{{ booking.event_date }}', '{{ booking.cancellation_reason }}')">View Invoice</button>
                                 {% elif booking.book_status == 3 %}
                                     <span class="text-muted">Booking canceled</span>
                                 {% else %}
@@ -335,7 +206,7 @@
         {% endif %}
     </div>
 
-    <!-- Modal Structure -->
+    <!-- Modal Structure for Cancel Booking -->
     <div id="cancelModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
@@ -353,61 +224,108 @@
         </div>
     </div>
 
-<script>
-    function openModal(bookingId, isRefundable) {
-        document.getElementById("modal_booking_id").value = bookingId;
-        document.getElementById("cancelModal").style.display = "block";
-        
-        var refundMessage = document.getElementById("refund_message");
-        if (isRefundable) {
-            refundMessage.textContent = "You are eligible for a full refund.";
-            refundMessage.style.color = "green";
-        } else {
-            refundMessage.textContent = "The booking amount is non-refundable as it's within 30 days of the event.";
-            refundMessage.style.color = "red";
+    <!-- Modal Structure for Invoice -->
+    <div id="invoiceModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeInvoiceModal()">&times;</span>
+            <div class="modal-header">Invoice</div>
+            <div id="invoiceDetails"></div>
+            <button id="downloadInvoice" class="btn">Download Invoice</button>
+        </div>
+    </div>
+
+    <script>
+        function openModal(bookingId, isRefundable) {
+            document.getElementById("modal_booking_id").value = bookingId;
+            document.getElementById("cancelModal").style.display = "block";
+            
+            var refundMessage = document.getElementById("refund_message");
+            if (isRefundable) {
+                refundMessage.textContent = "You are eligible for a full refund.";
+                refundMessage.style.color = "green";
+            } else {
+                refundMessage.textContent = "The booking amount is non-refundable as it's within 30 days of the event.";
+                refundMessage.style.color = "red";
+            }
         }
-    }
 
-    // Close the modal
-    function closeModal() {
-        document.getElementById("cancelModal").style.display = "none";
-    }
-
-    // Close modal if user clicks outside of it
-    window.onclick = function(event) {
-        var modal = document.getElementById("cancelModal");
-        if (event.target == modal) {
-            modal.style.display = "none";
+        // Close the modal
+        function closeModal() {
+            document.getElementById("cancelModal").style.display = "none";
         }
-    }
-</script>
-<!-- JavaScript Files -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Logout Confirmation
-        const logoutLinks = document.querySelectorAll('.logout-button, .nav-links a[href="{% url 'logout' %}"]');
 
-        logoutLinks.forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault();
-                
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You will be logged out!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, log me out!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = this.href;
-                    }
+        // Open Invoice Modal
+        function openInvoiceModal(bookingId, serviceName, totalAmount, bookingAmount, status, eventDate, cancellationReason) {
+            const invoiceDetails = `
+                <h4>Invoice for Booking ID: ${bookingId}</h4>
+                <p><strong>Service Name:</strong> ${serviceName}</p>
+                <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
+                <p><strong>Booking Amount:</strong> ₹${bookingAmount}</p>
+                <p><strong>Status:</strong> ${status}</p>
+                <p><strong>Event Date:</strong> ${eventDate}</p>
+                <p><strong>Cancellation Reason:</strong> ${cancellationReason}</p>
+            `;
+            document.getElementById("invoiceDetails").innerHTML = invoiceDetails;
+            document.getElementById("invoiceModal").style.display = "block";
+        }
+
+        function closeInvoiceModal() {
+            document.getElementById("invoiceModal").style.display = "none";
+        }
+
+        // Download Invoice Functionality
+        document.getElementById("downloadInvoice").onclick = function() {
+            const invoiceContent = document.getElementById("invoiceDetails").innerHTML;
+            const blob = new Blob([invoiceContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'invoice.html'; // Change the file name as needed
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Close modal if user clicks outside of it
+        window.onclick = function(event) {
+            var cancelModal = document.getElementById("cancelModal");
+            var invoiceModal = document.getElementById("invoiceModal");
+            if (event.target == cancelModal) {
+                cancelModal.style.display = "none";
+            }
+            if (event.target == invoiceModal) {
+                invoiceModal.style.display = "none";
+            }
+        }
+    </script>
+
+    <!-- JavaScript Files -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Logout Confirmation
+            const logoutLinks = document.querySelectorAll('.logout-button, .nav-links a[href="{% url 'logout' %}"]');
+
+            logoutLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You will be logged out!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, log me out!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = this.href;
+                        }
+                    });
                 });
             });
         });
-    });
-</script>
-
+    </script>
 </body>
 </html>

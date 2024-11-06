@@ -15,6 +15,7 @@ urlpatterns = [
     path('user/profile/', views.update_user_profile, name='update_user_profile'),
     path('vendor/profile/', views.update_vendor_profile, name='update_vendor_profile'),
     path('vendor/image/delete/<int:image_id>/',views.delete_vendor_image, name='delete_vendor_image'),
+    path('get-vendor-bookings/', views.get_vendor_bookings, name='get_vendor_bookings'),
 
     #admin
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
@@ -74,6 +75,9 @@ urlpatterns = [
     path('user/favorites/', views.favorite_list, name='favorite_list'),
     path('user/bookings/', views.user_booking_details, name='user_booking_details'),
     path('remove-from-favorite/<int:service_id>/', views.remove_from_favorite, name='remove_from_favorite'),
+
+    path('payment_success/', views.payment_success, name='payment_success'),
+
 
 ]
 if settings.DEBUG:

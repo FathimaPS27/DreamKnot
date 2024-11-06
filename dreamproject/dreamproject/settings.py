@@ -162,16 +162,16 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'dreamknot000@gmail.com'
-EMAIL_HOST_PASSWORD = '00000'  # Replace with the App Password generated
-DEFAULT_FROM_EMAIL = 'dreamknot000@gmail.com'
+EMAIL_HOST_USER = 'dreamknot0@gmail.com'
+EMAIL_HOST_PASSWORD = 'rukr niio gzfy rrna'  # Replace with the App Password generated
+DEFAULT_FROM_EMAIL = 'dreamknot0@gmail.com'
 
 UNFOLD = {
     "SITE_HEADER":"Dream Knot Admin",
 }
 # Social Auth configuration
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '00000'  # Your Google OAuth2 client ID
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '00000'  # Your Google OAuth2 client secret
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '1065788298730-p71tgg6i5lnah29fjmajkiumqccpuo6v.apps.googleusercontent.com'  # Your Google OAuth2 client ID
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'  # Your Google OAuth2 client secret
 
 # Additional settings for social auth
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
@@ -191,5 +191,5 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.user.user_details',          
 )
 
-RAZORPAY_KEY_ID = '00000'
-RAZORPAY_KEY_SECRET = '00000'
+RAZORPAY_API_KEY = 'rzp_test_o8cawEIEiGsQ6C'
+RAZORPAY_API_SECRET = 'ITd8ronAQbSCUCqvlqkMlxYl'

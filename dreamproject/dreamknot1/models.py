@@ -313,6 +313,10 @@ class Booking(models.Model):
     user_agreed_to_terms = models.BooleanField(default=False)
     user_agreement_date = models.DateTimeField(null=True, blank=True)
 
+    razorpay_order_id = models.CharField(max_length=255, blank=True, null=True)  # Razorpay Order ID
+    razorpay_payment_id = models.CharField(max_length=255, blank=True, null=True)  # Razorpay Payment ID
+    razorpay_signature = models.CharField(max_length=255, blank=True, null=True)  # Razorpay Signature
+    
     def save(self, *args, **kwargs):
         # Existing calculation logic
         base_price = self.service.price

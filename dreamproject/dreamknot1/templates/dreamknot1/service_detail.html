@@ -254,17 +254,17 @@
                 </div>
             </li>
             <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">Invitation<i class="fas fa-caret-down"></i></a>
+                <a href="javascript:void(0)" class="dropbtn" id="">Invitation<i class="fas fa-caret-down"></i></a>
                 <div class="dropdown-content">
                     <a href="{% url 'send_rsvp_invitation' %}">Send Invitation</a>
                     <a href="{% url 'invitation_list' %}">Invitation List</a>
                 </div>
             </li>
             <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">My Account<i class="fas fa-caret-down"></i></a>
+                <a href="javascript:void(0)" class="dropbtn" id="account">My Account<i class="fas fa-caret-down"></i></a>
                 <div class="dropdown-content">
                     <a href="{% url 'user_booking_details' %}">My Bookings</a>
-                    <a href="{% url 'favorite_list' %}">favourite list</a>
+                    <a href="{% url 'favorite_list' %}" id="favourite"> favourite list</a>
                 </div>
             </li>
             <li class="dropdown">

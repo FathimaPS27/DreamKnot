@@ -426,8 +426,8 @@
                     <label>Guest List:</label>
                     <div class="guest-entry-container" id="guest-list">
                         <div class="guest-entry">
-                            <input type="text" name="guest_name[]" required placeholder="Guest Name">
-                            <input type="email" name="guest_email[]" required placeholder="Guest Email">
+                            <input type="text" name="guest_name[]" required placeholder="Guest Name" id="guest_name">
+                            <input type="email" name="guest_email[]" required placeholder="Guest Email" id="guest_email">
                         </div>
                     </div>
                     <button type="button" id="add-guest-btn" onclick="addGuest()">
@@ -445,7 +445,7 @@
                 </div>
             </div>
 
-            <button type="submit">Send Invitation</button>
+            <button type="submit" id="submit">Send Invitation</button>
         </form>
     </div>
 

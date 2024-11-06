@@ -332,7 +332,7 @@
                             <span class="task-description">{{ task.description }}</span>
                             <form action="{% url 'update_task' task.id %}" method="POST" style="display: inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-success" onclick="markAsCompleted(event, {{ task.id }})">
+                                <button type="submit" class="btn btn-success" id="complete" onclick="markAsCompleted(event, {{ task.id }})">
                                     <i class="fas fa-check"></i> Complete
                                 </button>
                             </form>

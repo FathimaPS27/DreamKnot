@@ -1,26 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Approve Bookings</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+{% extends 'vendorbase.html' %}
+
+{% block title %}Manage Bookings{% endblock %}
+
+{% block extra_css %}
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .navbar {
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,.1);
-        }
-        .navbar .logo {
-            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 30px;
-            font-weight: 600;
-            font-family: 'Lucida Handwriting', cursive;
+        .booking-list {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
         }
         .booking-card {
             transition: all 0.3s ease;
@@ -75,29 +61,10 @@
             max-height: 80vh;
         }
     </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container">
-            <a class="navbar-brand logo" href="#">Dream Knot</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'vendor_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'update_vendor_profile' %}"><i class="fas fa-user-circle"></i> Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    {% endblock %}
+
+    {% block content %}
+   
 
     <div class="container-fluid mt-4">
         <h2 class="text-center mb-4">Manage Your Bookings</h2>
@@ -120,28 +87,35 @@
                         <h5 class="mb-0">Booking List</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            {% for booking in bookings %}
-                            <div class="col-12 mb-3">
-                                <div class="card booking-card" data-booking-id="{{ booking.id }}">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ booking.service.name }}</h5>
-                                        <p class="card-text">
-                                            <strong>User:</strong> {{ booking.user.name }}<br>
-                                            <strong>Event Date:</strong> {{ booking.event_date }}<br>
-                                            <strong>Status:</strong> 
-                                            {% if booking.book_status == 1 %}
-                                                <span class="badge badge-success status-badge">Approved</span>
-                                            {% elif booking.book_status == 3 %}
-                                                <span class="badge badge-danger status-badge">Rejected</span>
-                                            {% else %}
-                                                <span class="badge badge-warning status-badge">Pending</span>
-                                            {% endif %}
-                                        </p>
-                                    </div>
-                                </div>
+                        <form id="filter-form" class="mb-3">
+                            <div class="form-group">
+                                <label for="status-filter">Filter by Status:</label>
+                                <select id="status-filter" class="form-control">
+                                    <option value="all">All</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
                             </div>
-                            {% endfor %}
+                            <div class="form-group">
+                                <label for="date-filter">Filter by Date:</label>
+                                <select id="date-filter" class="form-control">
+                                    <option value="all">All</option>
+                                    <option value="upcoming">Upcoming</option>
+                                    <option value="past">Past</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="sort-by">Sort by:</label>
+                                <select id="sort-by" class="form-control">
+                                    <option value="date-asc">Date (Ascending)</option>
+                                    <option value="date-desc">Date (Descending)</option>
+                                    <option value="status">Status</option>
+                                </select>
+                            </div>
+                        </form>
+                        <div id="booking-list">
+                            <!-- Booking cards will be dynamically added here -->
                         </div>
                     </div>
                 </div>
@@ -251,30 +225,30 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <img id="modalImage" src="" alt="Reference Image">
+                    <img id="modalImage" src="" alt="Reference Image" class="img-fluid">
                 </div>
             </div>
         </div>
     </div>
+    {% endblock %}
 
+    {% block extra_js %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     $(document).ready(function() {
-        $('.booking-card').click(function() {
-            var bookingId = $(this).data('booking-id');
-            loadBookingDetails(bookingId);
-        });
-
-        function loadBookingDetails(bookingId) {
+        function loadBookings() {
             $.ajax({
-                url: '/get-booking-details/' + bookingId + '/',
+                url: '{% url "get_vendor_bookings" %}',
                 type: 'GET',
+                data: {
+                    'status': $('#status-filter').val(),
+                    'date': $('#date-filter').val(),
+                    'sort': $('#sort-by').val()
+                },
                 success: function(response) {
                     if (response.status === 'success') {
-                        var booking = response.booking;
-                        populateBookingDetails(booking);
-                        $('#booking-details').show();
+                        displayBookings(response.bookings);
                     } else {
                         alert('Error: ' + response.message);
                     }
@@ -285,51 +259,112 @@
             });
         }
 
-        function populateBookingDetails(booking) {
-            $('#service-name').text(booking.service_name);
-            $('#user-name').text(booking.user_name);
-            $('#user-email').text(booking.user_email);
-            $('#user-phone').text(booking.user_phone);
-            $('#event-date').text(booking.event_date);
-            $('#event-name').text(booking.event_name);
-            $('#event-address').text(booking.event_address || 'Not provided');
-            $('#user-address').text(booking.user_address || 'Not provided');
-            $('#num-days').text(booking.num_days);
-            $('#total-amount').text(booking.total_amount);
-            $('#booking-amount').text(booking.booking_amount);
-            $('#additional-requirements').text(booking.additional_requirements || 'None');
-            $('#booking-date').text(booking.booking_date);
-            $('#agreement-date').text(booking.agreement_date || 'N/A');
-            
-            // Clear previous images
-            $('#image-container').empty();
-            
-            // Add reference images
-            if (booking.reference_images && booking.reference_images.length > 0) {
-                booking.reference_images.forEach(function(image_url) {
-                    $('#image-container').append('<img src="' + image_url + '" class="img-thumbnail m-1 reference-image" alt="Reference Image">');
-                });
-            } else {
-                $('#image-container').append('<p>No reference images provided.</p>');
-            }
-            
-            $('#approve-btn').data('booking-id', booking.id);
-            $('#reject-btn').data('booking-id', booking.id);
+        function displayBookings(bookings) {
+            var bookingList = $('#booking-list');
+            bookingList.empty();
 
-            // Show/hide action buttons based on booking status
-            if (booking.book_status === 'Pending') {
-                $('#action-buttons').show();
-            } else {
-                $('#action-buttons').hide();
+            if (bookings.length === 0) {
+                bookingList.append('<p>No bookings found.</p>');
+                return;
             }
+
+            bookings.forEach(function(booking) {
+                var card = $('<div class="card booking-card mb-3" data-booking-id="' + booking.id + '">');
+                var cardBody = $('<div class="card-body">');
+                
+                cardBody.append('<h5 class="card-title">' + booking.service_name + '</h5>');
+                cardBody.append('<p class="card-text"><strong>User:</strong> ' + booking.user_name + '</p>');
+                cardBody.append('<p class="card-text"><strong>Event Date:</strong> ' + booking.event_date + '</p>');
+                
+                var statusBadge = $('<span class="badge status-badge">').text(booking.book_status);
+                if (booking.book_status === 'Approved') {
+                    statusBadge.addClass('badge-success');
+                } else if (booking.book_status === 'Rejected') {
+                    statusBadge.addClass('badge-danger');
+                } else {
+                    statusBadge.addClass('badge-warning');
+                }
+                cardBody.append('<p class="card-text"><strong>Status:</strong> ').append(statusBadge);
+
+                card.append(cardBody);
+                bookingList.append(card);
+            });
         }
 
-        // Image modal functionality
-        $(document).on('click', '.reference-image', function() {
-            var imgSrc = $(this).attr('src');
-            $('#modalImage').attr('src', imgSrc);
-            $('#imageModal').modal('show');
-        });
+        function loadBookingDetails(bookingId) {
+            $.ajax({
+                url: '/get-booking-details/' + bookingId + '/',
+                type: 'GET',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        displayBookingDetails(response.booking);
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        }
+
+        function displayBookingDetails(booking) {
+            var detailsCard = $('#booking-details');
+            detailsCard.empty();
+
+            var cardBody = $('<div class="card-body">');
+
+            // Service Information
+            cardBody.append('<h5 class="card-title">' + booking.service_name + '</h5>');
+            cardBody.append('<p><strong>Event Date:</strong> ' + booking.event_date + '</p>');
+            cardBody.append('<p><strong>Event Name:</strong> ' + booking.event_name + '</p>');
+            cardBody.append('<p><strong>Number of Days:</strong> ' + booking.num_days + '</p>');
+
+            // User Information
+            cardBody.append('<h6 class="mt-4">User Information</h6>');
+            cardBody.append('<p><strong>Name:</strong> ' + booking.user_name + '</p>');
+            cardBody.append('<p><strong>Email:</strong> ' + booking.user_email + '</p>');
+            cardBody.append('<p><strong>Phone:</strong> ' + booking.user_phone + '</p>');
+
+            // Event Details
+            cardBody.append('<h6 class="mt-4">Event Details</h6>');
+            cardBody.append('<p><strong>Event Address:</strong> ' + (booking.event_address || 'Not provided') + '</p>');
+            cardBody.append('<p><strong>User Address:</strong> ' + (booking.user_address || 'Not provided') + '</p>');
+
+            // Booking Information
+            cardBody.append('<h6 class="mt-4">Booking Information</h6>');
+            cardBody.append('<p><strong>Total Amount:</strong> ₹' + booking.total_amount + '</p>');
+            cardBody.append('<p><strong>Booking Amount:</strong> ₹' + booking.booking_amount + '</p>');
+            cardBody.append('<p><strong>Booking Date:</strong> ' + booking.booking_date + '</p>');
+            cardBody.append('<p><strong>Agreement Date:</strong> ' + (booking.agreement_date || 'N/A') + '</p>');
+
+            // Additional Requirements
+            cardBody.append('<h6 class="mt-4">Additional Requirements</h6>');
+            cardBody.append('<p>' + (booking.additional_requirements || 'None') + '</p>');
+
+            // Reference Images
+            cardBody.append('<h6 class="mt-4">Reference Images</h6>');
+            var imageContainer = $('<div class="d-flex flex-wrap">');
+            if (booking.reference_images && booking.reference_images.length > 0) {
+                booking.reference_images.forEach(function(image_url) {
+                    imageContainer.append('<img src="' + image_url + '" class="img-thumbnail m-1 reference-image" alt="Reference Image">');
+                });
+            } else {
+                imageContainer.append('<p>No reference images provided.</p>');
+            }
+            cardBody.append(imageContainer);
+
+            // Action Buttons
+            if (booking.book_status === 'Pending') {
+                var actionButtons = $('<div class="mt-4">');
+                actionButtons.append('<button class="btn btn-success approve-btn" data-booking-id="' + booking.id + '">Approve</button> ');
+                actionButtons.append('<button class="btn btn-danger reject-btn" data-booking-id="' + booking.id + '">Reject</button>');
+                cardBody.append(actionButtons);
+            }
+
+            detailsCard.append(cardBody);
+            detailsCard.show();
+        }
 
         function processBooking(bookingId, action) {
             $.ajax({
@@ -343,8 +378,8 @@
                 success: function(response) {
                     if (response.status === 'success') {
                         alert(response.message);
-                        loadBookingDetails(bookingId);  // Reload booking details
-                        location.reload();  // Reload the page to reflect changes in the list
+                        loadBookings();
+                        loadBookingDetails(bookingId);
                     } else {
                         alert('Error: ' + response.message);
                     }
@@ -355,16 +390,32 @@
             });
         }
 
-        $('#approve-btn').click(function() {
+        // Event Listeners
+        $('#filter-form select').change(loadBookings);
+        
+        $(document).on('click', '.booking-card', function() {
+            var bookingId = $(this).data('booking-id');
+            loadBookingDetails(bookingId);
+        });
+
+        $(document).on('click', '.reference-image', function() {
+            var imgSrc = $(this).attr('src');
+            $('#modalImage').attr('src', imgSrc);
+            $('#imageModal').modal('show');
+        });
+
+        $(document).on('click', '.approve-btn', function() {
             var bookingId = $(this).data('booking-id');
             processBooking(bookingId, 'approve');
         });
 
-        $('#reject-btn').click(function() {
+        $(document).on('click', '.reject-btn', function() {
             var bookingId = $(this).data('booking-id');
             processBooking(bookingId, 'reject');
         });
+
+        // Initial load
+        loadBookings();
     });
     </script>
-</body>
-</html>
+    {% endblock %}

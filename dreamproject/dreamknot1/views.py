@@ -2009,23 +2009,22 @@ def user_booking_details(request):
         'bookings': bookings,
         'user_name': user_name,
         'today': today,
+        'invoice_data': bookings  # Pass the bookings data for invoice generation
+
     })
 
 
-
-
-
-
+# dreamproject/dreamknot1/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Q  # Add this import
+from django.db.models import Q
 from .models import Service, UserSignup, UserProfile, Booking, ReferenceImage
 from decimal import Decimal
-from django.views.decorators.cache import cache_control  # Add this import
-
-# user view for book service
+from django.views.decorators.cache import cache_control
+import razorpay
+from django.conf import settings
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def book_service(request, service_id):
     user_id = request.session.get('user_id')
@@ -2037,40 +2036,57 @@ def book_service(request, service_id):
     try:
         service = get_object_or_404(Service, id=service_id)
         user = UserSignup.objects.get(id=user_id)
-        user_name = user.name  # Fetch the username (assuming it's stored in the 'name' field)
+        user_name = user.name
     except UserSignup.DoesNotExist:
         messages.error(request, "User profile not found. Please log in again.")
         return redirect('login')
     except Service.DoesNotExist:
         messages.error(request, "The requested service does not exist.")
         return redirect('user_dashboard')
+    
+       # Retrieve the main image of the service
+    service_image = service.main_image.url if service.main_image else None
 
-    try:
-        user_profile = UserProfile.objects.get(user=user)
-    except UserProfile.DoesNotExist:
-        user_profile = None
+    # Get category-specific details
+    category_details = None
+    if service.category == 'Venue':
+        category_details = VenueService.objects.filter(service=service).first()
+    elif service.category == 'Catering':
+        category_details = CateringService.objects.filter(service=service).first()
+    elif service.category == 'Photography':
+        category_details = PhotographyService.objects.filter(service=service).first()
+    elif service.category == 'MusicEntertainment':
+        category_details = MusicEntertainmentService.objects.filter(service=service).first()
+    elif service.category == 'MakeupHair':
+        category_details = MakeupHairService.objects.filter(service=service).first()
+    elif service.category == 'Rentals':
+        category_details = RentalsService.objects.filter(service=service).first()
+    elif service.category == 'MehendiArtist':
+        category_details = MehendiArtistService.objects.filter(service=service).first()
+    elif service.category == 'Decoration':
+        category_details = DecorationService.objects.filter(service=service).first()
+
 
     if request.method == "POST":
         # Retrieve form data
         event_name = request.POST.get('event_name')
         event_date = request.POST.get('event_date')
-        event_address = request.POST.get('event_address') if service.category != 'Venue' else service.city
         user_address = request.POST.get('user_address')
         num_days = int(request.POST.get('num_days', 1))
         additional_requirements = request.POST.get('additional_requirements')
         agreed_to_terms = request.POST.get('agreed_to_terms') == 'on'
-   
 
-        # Check if there's an existing booking for the same service on the same day
-        existing_booking = Booking.objects.filter(
-            Q(service=service) &
-            Q(event_date=event_date) &
-            ~Q(book_status=3)  # Exclude cancelled bookings
-        ).exists()
+        # Determine event address based on service category
+        if service.category == 'Venue':
+            event_address = service.city  # Assuming the venue city is the address
+            venue_city = service.city  # Pass the venue city
+        else:
+            event_address = request.POST.get('event_address')  # Get from form input
+            venue_city = None  # No venue city for non-venue services
 
-        if existing_booking:
-            messages.error(request, "This date is already booked for this service. Please choose another date.")
-            return redirect('book_service', service_id=service_id)
+        # Calculate total amount and booking amount
+        total_amount = Decimal(service.price) * Decimal(num_days)  # Convert to Decimal
+        booking_amount = total_amount * Decimal(0.5)  # 50% of total amount
 
         # Create new booking
         booking = Booking(
@@ -2081,40 +2097,174 @@ def book_service(request, service_id):
             event_address=event_address,
             user_address=user_address,
             num_days=num_days,
+            total_amount=total_amount,
+            booking_amount=booking_amount,
             additional_requirements=additional_requirements,
             user_agreed_to_terms=agreed_to_terms,
             user_agreement_date=timezone.now() if agreed_to_terms else None
-            
         )
-        booking.save()  # This will trigger the save method in the Booking model
+        booking.save()
 
-        # Handle reference images
-        reference_images = request.FILES.getlist('reference_images')
-        for image in reference_images:
-            ref_image = ReferenceImage.objects.create(image=image)
-            booking.reference_images.add(ref_image)
+        # Create Razorpay order
+        client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
+        amount = int(booking_amount * 100)  # Amount in paise
+        currency = 'INR'
+        order_data = {
+            'amount': amount,
+            'currency': currency,
+            'payment_capture': '1'  # Auto capture
+        }
+        order = client.order.create(data=order_data)
+        razorpay_order_id = order['id']
 
-        if booking.user_agreed_to_terms:
-            messages.success(request, f"Booking submitted successfully! Total amount: ₹{booking.total_amount}")
-        else:
-            messages.warning(request, f"Booking submitted, but terms were not agreed to. Total amount: ₹{booking.total_amount}")
-        
-        return redirect('user_booking_details')
-   # For GET requests
+        # Store the Razorpay order ID in the booking for later verification
+        booking.razorpay_order_id = razorpay_order_id
+        booking.save()
+
+        remaining_balance = total_amount - booking_amount
+
+        # Format amount for the template
+        formatted_amount = amount  # Convert to paise
+
+        # Redirect to the payment page with the order ID
+        return render(request, 'dreamknot1/payment.html', {
+            'razorpay_order_id': razorpay_order_id,
+            'user':user,
+            'amount': formatted_amount,
+            'service': service,
+            'user_name': user_name,
+            'total_amount': total_amount,
+            'booking_amount': booking_amount,
+            'remaining_balance': remaining_balance,  # Pass remaining balance to the template
+            'event_date': event_date,
+            'event_address': event_address,
+            'user_address': user_address,
+            'num_days': num_days,
+            'additional_requirements': additional_requirements,
+            'venue_city': venue_city,  # Pass the venue city
+            'service_image': service_image,  # Pass the service image
+            'category_details': category_details,  # Pass category-specific details
+
+        })
+
+    # For GET requests
     selected_date = request.GET.get('selected_date')
 
     # For GET requests, render the booking form
     context = {
         'service': service,
         'user': user,
-        'user_profile': user_profile,
         'terms_and_conditions': Booking().get_default_terms_and_conditions(),
         'user_name': user_name,
-        'selected_date': selected_date,  # Add this line
+        'selected_date': selected_date,
         'is_venue': service.category == 'Venue',
         'venue_city': service.city if service.category == 'Venue' else None,
     }
     return render(request, 'dreamknot1/book_service.html', context)
+
+
+# dreamproject/dreamknot1/views.py
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
+@csrf_exempt
+def payment_success(request):
+    if request.method == 'GET':
+        payment_id = request.GET.get('razorpay_payment_id')
+        order_id = request.GET.get('razorpay_order_id')
+        signature = request.GET.get('razorpay_signature')
+
+        # Verify the payment signature
+        client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
+        try:
+            client.utility.verify_payment_signature({
+                'razorpay_order_id': order_id,
+                'razorpay_payment_id': payment_id,
+                'razorpay_signature': signature
+            })
+
+            # Update the booking with payment details
+            booking = Booking.objects.get(razorpay_order_id=order_id)
+            booking.razorpay_payment_id = payment_id
+            booking.razorpay_signature = signature
+            booking.book_status = 1  # Mark as confirmed
+            booking.save()
+
+               # Redirect to bookings page with a success message
+            messages.success(request, 'Payment verified successfully. Your booking is confirmed.')
+            return redirect('user_booking_details')  # Replace 'bookings' with your actual bookings URL name
+
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request.'})
+
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Booking, VendorProfile
+from django.utils import timezone
+from django.db.models import Q
+
+def get_vendor_bookings(request):
+    user_id = request.session.get('user_id')
+    
+    if not user_id:
+        return JsonResponse({'status': 'error', 'message': 'You need to log in to perform this action.'})
+
+    try:
+        vendor_instance = VendorProfile.objects.get(user__id=user_id)
+        
+        # Get filter and sort parameters
+        status_filter = request.GET.get('status', 'all')
+        date_filter = request.GET.get('date', 'all')
+        sort_by = request.GET.get('sort', 'date-asc')
+
+        # Start with all bookings for this vendor
+        bookings = Booking.objects.filter(service__vendor=vendor_instance)
+
+        # Apply status filter
+        if status_filter != 'all':
+            bookings = bookings.filter(book_status=status_filter.upper())
+
+        # Apply date filter
+        today = timezone.now().date()
+        if date_filter == 'upcoming':
+            bookings = bookings.filter(event_date__gte=today)
+        elif date_filter == 'past':
+            bookings = bookings.filter(event_date__lt=today)
+
+        # Apply sorting
+        if sort_by == 'date-asc':
+            bookings = bookings.order_by('event_date')
+        elif sort_by == 'date-desc':
+            bookings = bookings.order_by('-event_date')
+        elif sort_by == 'status':
+            bookings = bookings.order_by('book_status', 'event_date')
+
+        # Prepare the data for JSON response
+        booking_data = []
+        for booking in bookings:
+            booking_data.append({
+                'id': booking.id,
+                'service_name': booking.service.name,
+                'user_name': booking.user.name,
+                'event_date': booking.event_date.strftime('%Y-%m-%d'),
+                'book_status': booking.get_book_status_display(),
+                'total_amount': str(booking.total_amount),
+            })
+
+        return JsonResponse({
+            'status': 'success',
+            'bookings': booking_data
+        })
+
+    except VendorProfile.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Vendor profile not found.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
 
 # user view for check date availability
 @require_POST

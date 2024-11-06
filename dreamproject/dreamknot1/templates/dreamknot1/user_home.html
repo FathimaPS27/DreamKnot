@@ -215,10 +215,10 @@
                         <li><a href="{% url 'user_dashboard' %}">Service Page</a></li>
                         <li><a href="#contact">Contact</a></li>
                         <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Planning Tools <span class="caret"></span></a>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="Planning">Planning Tools <span class="caret"></span></a>
                             <ul class="dropdown-menu">
-                                <li><a href="{% url 'send_rsvp_invitation' %}">Invitation</a></li>
-                                <li><a href="{% url 'current_month_todolist' %}">Todo List</a></li>
+                                <li><a href="{% url 'send_rsvp_invitation' %}" id="Invitation">Invitation</a></li>
+                                <li><a href="{% url 'current_month_todolist' %}" id="addtask">Todo List</a></li>
                             </ul>
                         </li>
                         <!-- Profile Dropdown -->
@@ -354,7 +354,7 @@
 				</div>
 	
 				<div style="margin-top: auto;">
-					<a href="{% url 'service_detail' entry.service.id %}" class="btn-primary" style="margin-top: 8px; padding: 5px 15px;">View Details</a>
+					<a href="{% url 'service_detail' entry.service.id %}" class="btn-primary" style="margin-top: 8px; padding: 5px 15px;" id="viewdetails">View Details</a>
 					
 					<!-- Add margin-left to create space and increase font size -->
 				<!--	<i class="fa fa-heart favorite-icon" style="margin-left: 15px; font-size: 1.8rem; " data-service-id="{{ entry.service.id }}"></i>-->
