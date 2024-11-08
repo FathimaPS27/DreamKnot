@@ -177,15 +177,15 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'dreamknot0@gmail.com'
-EMAIL_HOST_PASSWORD = '#################3'  # Replace with the App Password generated
-DEFAULT_FROM_EMAIL = '###################'
+EMAIL_HOST_PASSWORD = 'rukr niio gzfy rrna'  # Replace with the App Password generated
+DEFAULT_FROM_EMAIL = 'dreamknot0@gmail.com'
 
 UNFOLD = {
     "SITE_HEADER":"Dream Knot Admin",
 }
 # Social Auth configuration
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '######################33'  # Your Google OAuth2 client ID
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '#############'  # Your Google OAuth2 client secret
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '1065788298730-p71tgg6i5lnah29fjmajkiumqccpuo6v.apps.googleusercontent.com'  # Your Google OAuth2 client ID
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'  # Your Google OAuth2 client secret
 
 # Additional settings for social auth
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
