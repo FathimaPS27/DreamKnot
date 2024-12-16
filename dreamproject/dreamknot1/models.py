@@ -303,7 +303,8 @@ class Booking(models.Model):
         (0, 'Pending'),
         (1, 'Confirmed'),
         (2, 'Completed'),
-        (3, 'Canceled')
+        (3, 'Canceled'),
+        (4, 'Refunded'),
     ])
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     booking_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -316,6 +317,12 @@ class Booking(models.Model):
     razorpay_order_id = models.CharField(max_length=255, blank=True, null=True)  # Razorpay Order ID
     razorpay_payment_id = models.CharField(max_length=255, blank=True, null=True)  # Razorpay Payment ID
     razorpay_signature = models.CharField(max_length=255, blank=True, null=True)  # Razorpay Signature
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+      # Method to check if a refund is applicable
+    def is_refundable(self):
+        return (self.event_date - timezone.now().date()).days >= 30
+
     
     def save(self, *args, **kwargs):
         # Existing calculation logic

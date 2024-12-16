@@ -16,12 +16,14 @@ urlpatterns = [
     path('vendor/profile/', views.update_vendor_profile, name='update_vendor_profile'),
     path('vendor/image/delete/<int:image_id>/',views.delete_vendor_image, name='delete_vendor_image'),
     path('get-vendor-bookings/', views.get_vendor_bookings, name='get_vendor_bookings'),
+    path('readmore/', views.readmore, name='readmore'),  # Service details page
 
     #admin
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('view-users/', views.view_users, name='view_users'),
     path('toggle_status/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'),
     path('manage_predefined_tasks/', views.manage_predefined_tasks, name='manage_predefined_tasks'),
+    path('service/<int:service_id>/', views.admin_service_details, name='admin_service_details'),
 
 
     
@@ -77,7 +79,7 @@ urlpatterns = [
     path('remove-from-favorite/<int:service_id>/', views.remove_from_favorite, name='remove_from_favorite'),
 
     path('payment_success/', views.payment_success, name='payment_success'),
-
+    path('cancel_booking/<int:booking_id>/', views.cancel_booking, name='cancel_booking'),
 
 ]
 if settings.DEBUG:

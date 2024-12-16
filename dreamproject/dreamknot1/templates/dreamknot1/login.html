@@ -50,6 +50,11 @@
                                 <p>{{ message }}</p>
                             {% endfor %}
                         </div>
+                        <script>
+                            setTimeout(function() {
+                                $('.messages-container').fadeOut(500);
+                            }, 5000);
+                        </script>
                     {% endif %}
 
                         <form method="post">
@@ -62,12 +67,12 @@
                                     Sign in with Facebook
                                 </button> -->
                                <!-- Google login -->
-                            <a href="{% url 'social:begin' 'google-oauth2' %}" class="social-btn google-btn">
+                            {% comment %} <a href="{% url 'social:begin' 'google-oauth2' %}" class="social-btn google-btn">
                                 <button type="button" id="googleSignInButton">
                                     <img src="{% static 'images/google.png' %}" alt="Google" style="height: 18px; margin-right: 10px;">
                                     Sign in with Google
                                 </button>
-                            </a>
+                            </a> {% endcomment %}
                             
                             
                             </div>

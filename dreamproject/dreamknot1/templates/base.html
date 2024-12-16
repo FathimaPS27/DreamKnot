@@ -8,12 +8,15 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
-
-<!-- SweetAlert2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
-            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column; /* Stack children vertically */
+            min-height: 100vh; /* Full height of the viewport */
+            background-color: #f8f9fa; /* Retain your existing background color */
         }
         .messages {
             margin-bottom: 20px;
@@ -40,7 +43,7 @@
             top: 56px;
             left: 0;
             padding-top: 20px;
-            background-color: #300e07;
+            background-color: #333;
             width: 250px;
         }
         .sidebar a {
@@ -53,9 +56,10 @@
             text-decoration: none;
         }
         .content {
-            margin-left: 250px;
-            padding: 20px;
-            padding-top: 76px;
+            flex: 1; /* Allow content to grow and take available space */
+            margin-left: 250px; /* Keep your existing margin for the sidebar */
+            padding: 20px; /* Keep your existing padding */
+            padding-top: 76px; /* Keep your existing padding */
         }
         .navbar {
             background-color: white;
@@ -96,6 +100,23 @@
         .dropdown-item:hover {
             background-color: #f8f9fa;
         }
+        /* Footer */
+        .footer {
+            background-color: #ffffff; /* Retain your existing footer background color */
+            color: #a49b9b; /* Retain your existing footer text color */
+            text-align: center; /* Center the footer text */
+            padding: 10px 20px; /* Adjust padding as needed */
+            margin-left: 250px; /* Align footer with the content area */
+            width: calc(100% - 250px); /* Full width minus sidebar width */
+            position: relative; /* Ensure it is positioned relative to the content */
+        }
+        .footer a {
+            color: #ffc107;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -128,12 +149,11 @@
     </header>
 
     <!-- Sidebar -->
-    <div class="sidebar bg-dark">
+    <div class="sidebar">
         <nav class="nav flex-column">
             <a href="{% url 'admin_dashboard' %}"><i class="fas fa-home"></i> Home</a>
-            <a href="{% url 'manage_predefined_tasks' %}"><i class="fas fa-list"></i> Manage Predefined Tasks</a>
-            <a href="{% url 'view_users' %}"><i class="fas fa-list"></i> View Users</a>
-           
+            <a href="{% url 'view_users' %}"><i class="fas fa-users"></i> View Users</a>
+            <a href="{% url 'manage_predefined_tasks' %}"><i class="fas fa-tasks"></i> Manage Predefined Tasks</a>
         </nav>
     </div>
 
@@ -143,12 +163,16 @@
         {% endblock %}
     </div>
 
+    <footer class="footer">
+        <p>&copy; 2024 Dream Knot. All rights reserved.</p>
+        <p>Designed by <a href="#">Dream Knot</a></p>
+    </footer>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     
-
     {% block extra_js %}{% endblock %}
     <script>
         document.addEventListener('DOMContentLoaded', function () {

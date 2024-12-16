@@ -57,6 +57,7 @@
 			<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 			<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
 
 	
@@ -195,7 +196,7 @@
 </style>
     </head>
 	
-	<body onload="noBack();" onpageshow="if (event.persisted) noBack();">
+	<body>
 
 	 <!-- Navigation Section -->
 	 <header class="header-area">
@@ -213,12 +214,32 @@
                     <ul class="nav navbar-nav navbar-right" data-in="fadeInDown" data-out="fadeOutUp">
                         <li><a href="{% url 'user_home' %}">Home</a></li>
                         <li><a href="{% url 'user_dashboard' %}">Service Page</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                        <li class="dropdown">
+                        {% comment %} <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="Planning">Planning Tools <span class="caret"></span></a>
                             <ul class="dropdown-menu">
                                 <li><a href="{% url 'send_rsvp_invitation' %}" id="Invitation">Invitation</a></li>
                                 <li><a href="{% url 'current_month_todolist' %}" id="addtask">Todo List</a></li>
+                            </ul>
+                        </li> {% endcomment %}
+						<li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="Planning">Todo List <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'current_month_todolist' %}" id="Invitation">Current Month list</a></li>
+                                <li><a href="{% url 'todo_list' %}" id="addtask">All Tasks</a></li>
+                            </ul>
+                        </li>
+						<li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="Planning">Invitation <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'send_rsvp_invitation' %}" id="Invitation">Invitation</a></li>
+                                <li><a href="{% url 'invitation_list' %}" id="Invitation List">Todo List</a></li>
+                            </ul>
+                        </li>
+						<li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="Planning">My Account<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'user_booking_details' %}" id="Invitation">My Bookings</a></li>
+                                <li><a href="{% url 'favorite_list' %}" id="Invitation List">Favourite List</a></li>
                             </ul>
                         </li>
                         <!-- Profile Dropdown -->
@@ -240,13 +261,24 @@
     <!-- Hero Section -->
     <section class="welcome-hero" id="home">
         <div class="container">
-            {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
+			{% if messages %}
+			<div class="messages-container">
+				<ul class="messages">
+					{% for message in messages %}
+					<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+					{% endfor %}
+				</ul>
+			</div>
+			<script>
+				// Hide messages after 5 seconds
+				setTimeout(function() {
+					const messagesContainer = document.querySelector('.messages-container');
+					if (messagesContainer) {
+						messagesContainer.style.display = 'none';
+					}
+				}, 5000);
+			</script>
+			{% endif %}
             <div class="welcome-hero-txt">
                 <h3 style="font-size: 25px; font-family: 'Comic Sans MS', cursive; color: white; padding-bottom: 30px;">
                     <i>Welcome, {{ name }}!</i>
@@ -290,24 +322,15 @@
 					<option value="Catering" {% if request.GET.category == 'Catering' %}selected{% endif %}>Catering</option>
 					<option value="Venue" {% if request.GET.category == 'Venue' %}selected{% endif %}>Venue</option>
 					<option value="Decoration" {% if request.GET.category == 'Decoration' %}selected{% endif %}>Decoration</option>
-					<option value="Music" {% if request.GET.category == 'Music' %}selected{% endif %}>Music</option>
-					<option value="Makeup" {% if request.GET.category == 'Makeup' %}selected{% endif %}>Makeup</option>
-					{% comment %} <option value="Transportation" {% if request.GET.category == 'Transportation' %}selected{% endif %}>Transportation</option> {% endcomment %}
-					{% comment %} <option value="Wedding Planners" {% if request.GET.category == 'Wedding Planners' %}selected{% endif %}>Wedding Planners</option> {% endcomment %}
-					{% comment %} <option value="Florists" {% if request.GET.category == 'Florists' %}selected{% endif %}>Florists</option> {% endcomment %}
-					{% comment %} <option value="Bakeries" {% if request.GET.category == 'Bakeries' %}selected{% endif %}>Bakeries</option> {% endcomment %}
-					{% comment %} <option value="Videography" {% if request.GET.category == 'Videography' %}selected{% endif %}>Videography</option> {% endcomment %}
-					{% comment %} <option value="Invitations" {% if request.GET.category == 'Invitations' %}selected{% endif %}>Invitations</option> {% endcomment %}
+					<option value="MusicEntertainment" {% if request.GET.category == 'MusicEntertainment' %}selected{% endif %}>Music & Entertainment</option>
+					<option value="MakeupHair" {% if request.GET.category == 'MakeupHair' %}selected{% endif %}>Makeup & Hair</option>
 					<option value="Rentals" {% if request.GET.category == 'Rentals' %}selected{% endif %}>Rentals</option>
-					{% comment %} <option value="Bride and Groom Wear" {% if request.GET.category == 'Bride and Groom Wear' %}selected{% endif %}>Bride and Groom Wear</option> {% endcomment %}
-					{% comment %} <option value="Jewelry" {% if request.GET.category == 'Jewelry' %}selected{% endif %}>Jewelry</option> {% endcomment %}
-					{% comment %} <option value="Accessories" {% if request.GET.category == 'Accessories' %}selected{% endif %}>Accessories</option> {% endcomment %}
-					<option value="Mehndi" {% if request.GET.category == 'Mehndi' %}selected{% endif %}>Mehndi</option>
+					<option value="MehendiArtist" {% if request.GET.category == 'MehendiArtist' %}selected{% endif %}>Mehendi Artist</option>
 				</select>
 			</div>
 			
 			<div class="col-md-3">
-				<input type="text" name="city" class="form-control" placeholder="Enter city..." value="{{ request.GET.city }}">
+				<input type="text" name="city" class="form-control" placeholder="Enter city..." value="{{ request.GET.place }}">
 			</div>
 			
 			
@@ -328,6 +351,7 @@
 		</div>
 	</form>
 </div>
+<p style="font-size: 16px; margin-bottom: 8px; color: #C75B7A;"> <i class="fas fa-info-circle"></i> Secure your desired date by booking at least 3 months in advance for popular venues and vendors.</p>
 
        <!-- Service Cards -->
 	   <div class="row">
@@ -418,61 +442,6 @@
 		<!--welcome-hero end -->
 
 		<!--list-topics start -->
-		<!--<section id="list-topics" class="list-topics">
-			<div class="container">
-				<div class="list-topics-content">
-					<ul>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="fas fa-utensils"></i>
-								</div>
-								<h2><a href="#">resturent</a></h2>
-								<p>150 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-travel"></i>
-								</div>
-								<h2><a href="#">destination</a></h2>
-								<p>214 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-building"></i>
-								</div>
-								<h2><a href="#">hotels</a></h2>
-								<p>185 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-pills"></i>
-								</div>
-								<h2><a href="#">healthcaree</a></h2>
-								<p>200 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-transport"></i>
-								</div>
-								<h2><a href="#">automotion</a></h2>
-								<p>120 listings</p>
-							</div>
-						</li>
-					</ul>
-				</div>
-			</div><!--/.container-->
-
-		</section><!--/.list-topics-->
-		<!--list-topics end-->
 
 		<!--works start -->
 		<!--<section id="works" class="works">
@@ -529,9 +498,67 @@
 				</div>
 			</div><!--/.container-->
 		
+
+			
 		</section><!--/.works-->
 		<!--works end -->
+		<!-- Subscription Start -->
+		<section id="contact" class="subscription" style="background-color: #f9f9f9; padding: 40px 0;">
+			<div class="container" style="width: 80%; margin: auto; overflow: hidden;">
+				<div class="subscribe-title text-center" style="margin-bottom: 30px;">
+					<h2 style="color: #35424a; font-size: 28px; font-weight: bold;">Dream Knot - Your Personal Wedding Planner</h2>
+					<p style="color: #666; font-size: 16px;">Dream Knot is an Indian wedding planning website and app where you can find the best wedding vendors, with prices and reviews at the click of a button. Whether you’re looking to hire wedding planners in India, find top photographers, or get ideas and inspiration for your wedding, Dream Knot has you covered. Our unique features help you plan effortlessly, from a personalized checklist and detailed vendor list to an inspiration gallery and blog. With Dream Knot, you’ll save time and avoid the stress of wedding planning, making it simpler and more enjoyable.
+					</p></p>
+				</div>
 
+				<div class="container" style="width: 80%; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #E8D8C4;">
+					<div class="subscribe-title text-center" style="margin-bottom: 30px;">
+						<h3 style="color: #35424a; font-size: 22px; font-weight: bold;">Booking and Cancellation Policies</h3>
+						<p style="color: #666; font-size: 16px; line-height: 1.6;">
+							- <strong>Booking Period:</strong> Secure your desired date by booking at least 3 months in advance for popular venues and vendors.<br>
+							- <strong>Cancellation Policy:</strong> Cancellations made up to 30 days before the event are eligible for a 50% refund. For cancellations made within 30 days of the event, a refund will not be provided.<br>
+							- <strong>Rescheduling:</strong> Rescheduling requests are subject to availability and may incur additional charges. Please contact our support team for assistance.
+						</p>
+					</div>
+				</div>
+				
+			
+				
+				<!-- Contact Information Section -->
+				<!-- Contact Information Section -->
+				<div class="contact-info" style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 20px; padding: 20px; background-color: #ffffff; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+					{% comment %} <div style="flex: 1; min-width: 250px; margin-right: 20px;">
+						<h3 style="color: #35424a; margin-top: 0;">Contact Us to Get the Best Deals</h3>
+						<h4 style="color: #35424a;">For Vendors</h4>
+						<p style="margin: 5px 0;">Email: <a href="mailto:vendordreamknot0@google.com" style="color: #35424a; text-decoration: none;">vendordreamknot0@google.com</a></p>
+						<p style="margin: 5px 0;">Phone: <span style="color: #35424a;">7736686345</span></p>
+					</div> {% endcomment %}
+					<div style="flex: 1; min-width: 250px;">
+						<h4 style="color: #35424a;">For Users</h4>
+						<p style="margin: 5px 0;">
+							<i class="fas fa-envelope" style="color: #35424a; margin-right: 5px;"></i>
+							Email: 
+							<a href="mailto:infodreamknot0@google.com" style="color: #35424a; text-decoration: none;">infodreamknot0@google.com</a>
+						</p>
+						<p style="margin: 5px 0;">
+							<i class="fas fa-phone" style="color: #35424a; margin-right: 5px;"></i>
+							Phone: 
+							<span style="color: #35424a;">7756678765</span>
+
+							<p style="margin: 5px 0;">
+								<i class="fab fa-whatsapp" style="color: #35424a; margin-right: 5px;"></i>
+								Whatsapp: 
+								<a href="https://wa.me/7756678765" style="color: #35424a; text-decoration: none;">
+									<span style="color: #35424a;">7736686345</span>
+								</a>
+					</div>
+					<div style="flex: 1; min-width: 250px; margin-left: 20px;">
+						<h4 style="color: #35424a;">Registered Address</h4>
+						<p style="margin: 5px 0;">Second Floor, Ocus Technopolis, Sector 54 Golf Course Road, Kottayam, Kerala, India, 122002</p>
+					</div>
+				</div>
+			</div>
+		</section><!--/subscription-->  
 		<!--explore start -->
 		<!--<section id="explore" class="explore">
 			<div class="container">
@@ -1363,12 +1390,7 @@
 					
 		</script>
 
-        <script type="text/javascript">
-			window.history.forward();
-			function noBack() {
-				window.history.forward();
-			}
-		</script>
+        
 		<!-- JavaScript Files -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {

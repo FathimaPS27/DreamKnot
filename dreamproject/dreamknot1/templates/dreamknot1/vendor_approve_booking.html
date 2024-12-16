@@ -7,18 +7,37 @@
         .booking-list {
             max-height: calc(100vh - 200px);
             overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
         }
         .booking-card {
             transition: all 0.3s ease;
             cursor: pointer;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: #fff;
         }
         .booking-card:hover {
-            transform: translateY(-5px);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
         .status-badge {
             font-size: 0.8rem;
             padding: 0.3rem 0.5rem;
+            color: #fff; /* Text color for badges */
+        }
+        .status-pending {
+            background-color: #ffc107; /* Yellow for Pending */
+        }
+        .status-completed {
+            background-color: #28a745; /* Green for Completed */
+        }
+        .status-canceled {
+            background-color: #dc3545; /* Red for Canceled */
+        }
+        .status-refunded {
+            background-color: #17a2b8; /* Teal for Refunded */
         }
         .detail-section {
             background-color: #f8f9fa;
@@ -26,65 +45,76 @@
             padding: 15px;
             margin-bottom: 15px;
         }
-        .detail-section h6 {
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+        .search-card {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        .detail-row {
-            display: flex;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-        .detail-label {
-            font-weight: bold;
-            width: 40%;
-        }
-        .detail-value {
-            width: 60%;
-        }
-        .reference-image {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-        .reference-image:hover {
-            transform: scale(1.05);
-        }
-        #imageModal .modal-body {
+        .loading-spinner {
+            display: none; /* Hidden by default */
             text-align: center;
-        }
-        #modalImage {
-            max-width: 100%;
-            max-height: 80vh;
+            position: fixed; /* Fixed positioning */
+            top: 50%; /* Center vertically */
+            left: 50%; /* Center horizontally */
+            transform: translate(-50%, -50%); /* Adjust for centering */
+            z-index: 1050; /* Ensure it's above the modal */
+            background-color: rgba(255, 255, 255, 0.8); /* Optional: semi-transparent background */
+            padding: 20px; /* Optional: padding around the spinner */
+            border-radius: 5px; /* Optional: rounded corners */
         }
     </style>
-    {% endblock %}
+{% endblock %}
+{% block content %}
 
-    {% block content %}
+
+
    
-
     <div class="container-fluid mt-4">
         <h2 class="text-center mb-4">Manage Your Bookings</h2>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+
+        <div id="status-counts" class="row mb-4 justify-content-center">
+            <div class="col-sm-2">
+                <div class="card text-white bg-warning mb-2" style="border-radius: 5px; padding: 5px;">
+                    <div class="card-header" style="font-size: 1rem; text-align: center; padding: 5px;">Pending</div>
+                    <div class="card-body text-center" style="padding: 5px;">
+                        <h5 class="card-title" id="pending-count" style="font-size: 1.2rem; margin: 0;">0</h5>
+                    </div>
                 </div>
-            {% endfor %}
-        {% endif %}
+            </div>
+            <div class="col-sm-2">
+                <div class="card text-white bg-success mb-2" style="border-radius: 5px; padding: 5px;">
+                    <div class="card-header" style="font-size: 1rem; text-align: center; padding: 5px;">Completed</div>
+                    <div class="card-body text-center" style="padding: 5px;">
+                        <h5 class="card-title" id="completed-count" style="font-size: 1.2rem; margin: 0;">0</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card text-white bg-danger mb-2" style="border-radius: 5px; padding: 5px;">
+                    <div class="card-header" style="font-size: 1rem; text-align: center; padding: 5px;">Refunded</div>
+                    <div class="card-body text-center" style="padding: 5px;">
+                        <h5 class="card-title" id="refunded-count" style="font-size: 1.2rem; margin: 0;">0</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card text-white bg-info mb-2" style="border-radius: 5px; padding: 5px;">
+                    <div class="card-header" style="font-size: 1rem; text-align: center; padding: 5px;">Confirmed</div>
+                    <div class="card-body text-center" style="padding: 5px;">
+                        <h5 class="card-title" id="confirmed-count" style="font-size: 1.2rem; margin: 0;">0</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="row">
             <div class="col-lg-4">
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Booking List</h5>
+                <div class="card mb-4 search-card">
+                    <div class="card-header text-white" style="background-color: #661c12;">
+                        <h5 class="mb-0">Search & Filter</h5>
                     </div>
                     <div class="card-body">
                         <form id="filter-form" class="mb-3">
@@ -93,8 +123,9 @@
                                 <select id="status-filter" class="form-control">
                                     <option value="all">All</option>
                                     <option value="pending">Pending</option>
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="refunded">Refunded</option>
+                                    <option value="completed">Completed</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -108,24 +139,69 @@
                             <div class="form-group">
                                 <label for="sort-by">Sort by:</label>
                                 <select id="sort-by" class="form-control">
+                                    <option value="date-desc">New Bookings First</option>
                                     <option value="date-asc">Date (Ascending)</option>
-                                    <option value="date-desc">Date (Descending)</option>
                                     <option value="status">Status</option>
                                 </select>
                             </div>
                         </form>
-                        <div id="booking-list">
-                            <!-- Booking cards will be dynamically added here -->
-                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-lg-8">
-                <div id="booking-details" class="card" style="display: none;">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">Booking Details</h5>
+                <div id="booking-list" class="booking-list row">
+                    <!-- Example of dynamically added booking cards -->
+                    <div class="col-md-4 mb-3"> <!-- Use col-md-4 for 3 cards in a row -->
+                        <div class="card booking-card" data-booking-id="1">
+                            <div class="card-body">
+                                <h5 class="card-title">Booking 1</h5>
+                                <p class="card-text"><strong>User:</strong> User Name 1</p>
+                                <p class="card-text"><strong>Event Date:</strong> 2023-10-01</p>
+                                <a href="#" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="col-md-4 mb-3"> <!-- Use col-md-4 for 3 cards in a row -->
+                        <div class="card booking-card" data-booking-id="2">
+                            <div class="card-body">
+                                <h5 class="card-title">Booking 2</h5>
+                                <p class="card-text"><strong>User:</strong> User Name 2</p>
+                                <p class="card-text"><strong>Event Date:</strong> 2023-10-02</p>
+                                <a href="#" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3"> <!-- Use col-md-4 for 3 cards in a row -->
+                        <div class="card booking-card" data-booking-id="3">
+                            <div class="card-body">
+                                <h5 class="card-title">Booking 3</h5>
+                                <p class="card-text"><strong>User:</strong> User Name 3</p>
+                                <p class="card-text"><strong>Event Date:</strong> 2023-10-03</p>
+                                <a href="#" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- More cards can be added here dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i> Processing...
+        </div>
+
+        <!-- Booking Details Modal -->
+        <div id="booking-details" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="bookingDetailsLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="bookingDetailsLabel">Booking Details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
                         <div class="detail-section">
                             <h6>Service Information</h6>
                             <div class="detail-row">
@@ -200,6 +276,14 @@
                                 <!-- Images will be dynamically added here -->
                             </div>
                         </div>
+                          <!-- Add the button here -->
+                          <div class="mt-3">
+                            <button id="mark-completed-btn" class="btn btn-success btn-block">
+                                <i class="fas fa-check"></i> Mark as Completed
+                            </button>
+                        </div>
+                </div>
+                <!-- Other details... -->
                         <div id="action-buttons" class="mt-4">
                             <button id="approve-btn" class="btn btn-success btn-block">
                                 <i class="fas fa-check"></i> Approve
@@ -212,210 +296,214 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Image Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imageModalLabel">Reference Image</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <img id="modalImage" src="" alt="Reference Image" class="img-fluid">
+        <!-- Image Modal -->
+        <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageModalLabel">Reference Image</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <img id="modalImage" src="" alt="Reference Image" class="img-fluid">
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endblock %}
+{% endblock %}
 
-    {% block extra_js %}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    $(document).ready(function() {
-        function loadBookings() {
-            $.ajax({
-                url: '{% url "get_vendor_bookings" %}',
-                type: 'GET',
-                data: {
-                    'status': $('#status-filter').val(),
-                    'date': $('#date-filter').val(),
-                    'sort': $('#sort-by').val()
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        displayBookings(response.bookings);
-                    } else {
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('An error occurred. Please try again.');
-                }
-            });
-        }
-
-        function displayBookings(bookings) {
-            var bookingList = $('#booking-list');
-            bookingList.empty();
-
-            if (bookings.length === 0) {
-                bookingList.append('<p>No bookings found.</p>');
-                return;
-            }
-
-            bookings.forEach(function(booking) {
-                var card = $('<div class="card booking-card mb-3" data-booking-id="' + booking.id + '">');
-                var cardBody = $('<div class="card-body">');
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function() {
+    function loadBookings() {
+        $.ajax({
+            url: '{% url "get_vendor_bookings" %}',
+            type: 'GET',
+            data: {
+                'status': $('#status-filter').val() === 'all' ? 'all' : getStatusValue($('#status-filter').val()),
+                'date': $('#date-filter').val(),
+                'sort': $('#sort-by').val()
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    displayBookings(response.bookings);
+                    
+                    // Update counts in the card views
+                    $('#pending-count').text(response.counts.pending);
+                    $('#completed-count').text(response.counts.completed);
+                    $('#refunded-count').text(response.counts.refunded);
+                    $('#confirmed-count').text(response.counts.confirmed);
+                    
                 
-                cardBody.append('<h5 class="card-title">' + booking.service_name + '</h5>');
-                cardBody.append('<p class="card-text"><strong>User:</strong> ' + booking.user_name + '</p>');
-                cardBody.append('<p class="card-text"><strong>Event Date:</strong> ' + booking.event_date + '</p>');
-                
-                var statusBadge = $('<span class="badge status-badge">').text(booking.book_status);
-                if (booking.book_status === 'Approved') {
-                    statusBadge.addClass('badge-success');
-                } else if (booking.book_status === 'Rejected') {
-                    statusBadge.addClass('badge-danger');
                 } else {
-                    statusBadge.addClass('badge-warning');
+                    alert('Error: ' + response.message);
                 }
-                cardBody.append('<p class="card-text"><strong>Status:</strong> ').append(statusBadge);
+            },
+            error: function() {
+                alert('An error occurred. Please try again.');
+            }
+        });
+    }
+    
+    
+    function getStatusValue(status) {
+        switch (status) {
+            case 'pending':
+                return 0; // Pending
+            case 'confirmed':
+                return 1; // Confirmed
+            case 'refunded':
+                return 4; // Refunded
+            case 'completed':
+                return 2; // Completed
+            default:
+                return null; // For 'all' or any other case
+        }
+    }
+    function displayBookings(bookings) {
+        var bookingList = $('#booking-list');
+        bookingList.empty();
 
-                card.append(cardBody);
-                bookingList.append(card);
-            });
+        if (bookings.length === 0) {
+            bookingList.append('<p>No bookings found.</p>');
+            return;
         }
 
-        function loadBookingDetails(bookingId) {
-            $.ajax({
-                url: '/get-booking-details/' + bookingId + '/',
-                type: 'GET',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        displayBookingDetails(response.booking);
-                    } else {
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('An error occurred. Please try again.');
-                }
-            });
-        }
-
-        function displayBookingDetails(booking) {
-            var detailsCard = $('#booking-details');
-            detailsCard.empty();
-
+        bookings.forEach(function(booking) {
+            var card = $('<div class="card booking-card mb-3" data-booking-id="' + booking.id + '">');
             var cardBody = $('<div class="card-body">');
-
-            // Service Information
+            
             cardBody.append('<h5 class="card-title">' + booking.service_name + '</h5>');
-            cardBody.append('<p><strong>Event Date:</strong> ' + booking.event_date + '</p>');
-            cardBody.append('<p><strong>Event Name:</strong> ' + booking.event_name + '</p>');
-            cardBody.append('<p><strong>Number of Days:</strong> ' + booking.num_days + '</p>');
-
-            // User Information
-            cardBody.append('<h6 class="mt-4">User Information</h6>');
-            cardBody.append('<p><strong>Name:</strong> ' + booking.user_name + '</p>');
-            cardBody.append('<p><strong>Email:</strong> ' + booking.user_email + '</p>');
-            cardBody.append('<p><strong>Phone:</strong> ' + booking.user_phone + '</p>');
-
-            // Event Details
-            cardBody.append('<h6 class="mt-4">Event Details</h6>');
-            cardBody.append('<p><strong>Event Address:</strong> ' + (booking.event_address || 'Not provided') + '</p>');
-            cardBody.append('<p><strong>User Address:</strong> ' + (booking.user_address || 'Not provided') + '</p>');
-
-            // Booking Information
-            cardBody.append('<h6 class="mt-4">Booking Information</h6>');
-            cardBody.append('<p><strong>Total Amount:</strong> ₹' + booking.total_amount + '</p>');
-            cardBody.append('<p><strong>Booking Amount:</strong> ₹' + booking.booking_amount + '</p>');
-            cardBody.append('<p><strong>Booking Date:</strong> ' + booking.booking_date + '</p>');
-            cardBody.append('<p><strong>Agreement Date:</strong> ' + (booking.agreement_date || 'N/A') + '</p>');
-
-            // Additional Requirements
-            cardBody.append('<h6 class="mt-4">Additional Requirements</h6>');
-            cardBody.append('<p>' + (booking.additional_requirements || 'None') + '</p>');
-
-            // Reference Images
-            cardBody.append('<h6 class="mt-4">Reference Images</h6>');
-            var imageContainer = $('<div class="d-flex flex-wrap">');
-            if (booking.reference_images && booking.reference_images.length > 0) {
-                booking.reference_images.forEach(function(image_url) {
-                    imageContainer.append('<img src="' + image_url + '" class="img-thumbnail m-1 reference-image" alt="Reference Image">');
-                });
+            cardBody.append('<p class="card-text"><strong>User:</strong> ' + booking.user_name + '</p>');
+            cardBody.append('<p class="card-text"><strong>Event Date:</strong> ' + booking.event_date + '</p>');
+            
+            var statusBadge = $('<span class="badge status-badge">').text(booking.book_status);
+            if (booking.book_status === 'Approved') {
+                statusBadge.addClass('badge-success');
+            } else if (booking.book_status === 'Rejected') {
+                statusBadge.addClass('badge-danger');
+            } else if (booking.book_status === 'Completed') {
+                statusBadge.addClass('badge-success');
+            } else if (booking.book_status === 'Pending') {
+                statusBadge.addClass('badge-warning');
+            } else if (booking.book_status === 'Refunded') {
+                statusBadge.addClass('badge-danger');
             } else {
-                imageContainer.append('<p>No reference images provided.</p>');
-            }
-            cardBody.append(imageContainer);
-
-            // Action Buttons
-            if (booking.book_status === 'Pending') {
-                var actionButtons = $('<div class="mt-4">');
-                actionButtons.append('<button class="btn btn-success approve-btn" data-booking-id="' + booking.id + '">Approve</button> ');
-                actionButtons.append('<button class="btn btn-danger reject-btn" data-booking-id="' + booking.id + '">Reject</button>');
-                cardBody.append(actionButtons);
+                statusBadge.addClass('badge-info');
             }
 
-            detailsCard.append(cardBody);
-            detailsCard.show();
-        }
+            cardBody.append('<p class="card-text"><strong>Status:</strong> ').append(statusBadge);
 
-        function processBooking(bookingId, action) {
-            $.ajax({
-                url: '{% url "process_booking" %}',
-                type: 'POST',
-                data: {
-                    'booking_id': bookingId,
-                    'action': action,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        alert(response.message);
-                        loadBookings();
-                        loadBookingDetails(bookingId);
-                    } else {
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('An error occurred. Please try again.');
+            card.append(cardBody);
+            bookingList.append(card);
+        });
+    }
+
+    function loadBookingDetails(bookingId) {
+        $.ajax({
+            url: '/get-booking-details/' + bookingId + '/',
+            type: 'GET',
+            success: function(response) {
+                if (response.status === 'success') {
+                    displayBookingDetails(response.booking);
+                } else {
+                    alert('Error: ' + response.message);
                 }
+            },
+            error: function() {
+                alert('An error occurred. Please try again.');
+            }
+        });
+    }
+
+    function displayBookingDetails(booking) {
+        $('#service-name').text(booking.service_name);
+        $('#event-date').text(booking.event_date);
+        $('#event-name').text(booking.event_name);
+        $('#num-days').text(booking.num_days);
+        $('#user-name').text(booking.user_name);
+        $('#user-email').text(booking.user_email);
+        $('#user-phone').text(booking.user_phone);
+        $('#event-address').text(booking.event_address || 'Not provided');
+        $('#user-address').text(booking.user_address || 'Not provided');
+        
+        $('#total-amount').text(booking.total_amount);
+        $('#booking-amount').text(booking.booking_amount);
+        $('#booking-date').text(booking.booking_date);
+        $('#agreement-date').text(booking.agreement_date || 'N/A');
+        $('#additional-requirements').text(booking.additional_requirements || 'None');
+
+        var imageContainer = $('#image-container');
+        imageContainer.empty();
+        if (booking.reference_images && booking.reference_images.length > 0) {
+            booking.reference_images.forEach(function(image_url) {
+                imageContainer.append('<img src="' + image_url + '" class="img-thumbnail m-1 reference-image" alt="Reference Image">');
             });
+        } else {
+            imageContainer.append('<p>No reference images provided.</p>');
         }
 
-        // Event Listeners
-        $('#filter-form select').change(loadBookings);
-        
-        $(document).on('click', '.booking-card', function() {
-            var bookingId = $(this).data('booking-id');
-            loadBookingDetails(bookingId);
-        });
+        $('#booking-details').data('booking-id', booking.id); // Set booking ID in modal
+        $('#booking-details').modal('show'); // Show the booking details
+    }
 
-        $(document).on('click', '.reference-image', function() {
-            var imgSrc = $(this).attr('src');
-            $('#modalImage').attr('src', imgSrc);
-            $('#imageModal').modal('show');
+    function processBooking(bookingId, action) {
+        $('#loading-spinner').show(); // Show loading spinner
+        $.ajax({
+            url: '{% url "process_booking" %}',
+            type: 'POST',
+            data: {
+                'booking_id': bookingId,
+                'action': action,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                $('#loading-spinner').hide(); // Hide loading spinner
+                if (response.status === 'success') {
+                    alert(response.message);
+                    loadBookings(); // Reload bookings after processing
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function() {
+                $('#loading-spinner').hide(); // Hide loading spinner
+                alert('An error occurred. Please try again.');
+            }
         });
+    }
 
-        $(document).on('click', '.approve-btn', function() {
-            var bookingId = $(this).data('booking-id');
-            processBooking(bookingId, 'approve');
-        });
-
-        $(document).on('click', '.reject-btn', function() {
-            var bookingId = $(this).data('booking-id');
-            processBooking(bookingId, 'reject');
-        });
-
-        // Initial load
-        loadBookings();
+    // Event Listeners
+    $('#filter-form select').change(loadBookings);
+    
+    $(document).on('click', '.booking-card', function() {
+        var bookingId = $(this).data('booking-id');
+        loadBookingDetails(bookingId);
     });
-    </script>
-    {% endblock %}
+
+    $(document).on('click', '#approve-btn', function() {
+        var bookingId = $('#booking-details').data('booking-id');
+        processBooking(bookingId, 'approve');
+    });
+
+    $(document).on('click', '#reject-btn', function() {
+        var bookingId = $('#booking-details').data('booking-id');
+        processBooking(bookingId, 'reject');
+    });
+
+    $(document).on('click', '#mark-completed-btn', function() {
+        var bookingId = $('#booking-details').data('booking-id'); // Get the booking ID from the modal
+        processBooking(bookingId, 'complete'); // Call the processBooking function with 'complete' action
+    });
+
+    // Initial load
+    loadBookings();
+});
+</script>
+{% endblock %}

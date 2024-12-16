@@ -1,98 +1,203 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard - Venue Management{% endblock %}
+{% block title %}Admin Dashboard{% endblock %}
 
 {% block extra_css %}
 <style>
-    .table-responsive {
+    /* Main container for the dashboard */
+    .dashboard-container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+    }
+    .welcome-title {
+        text-align: center;
+        font-size: 1.8em;
+        margin-bottom: 20px;
+    }
+
+    /* Category card styles */
+    .category-cards {
+        display: flex;
+        justify-content: space-around;
+        gap: 10px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+    .category-card {
+        background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+        flex: 1;
+        min-width: 150px;
+    }
+    .category-card:hover {
+        transform: translateY(-5px);
+        background-color: #e7e7e7;
+    }
+
+    /* Services grid */
+    .services-list {
+        display: none; /* Hide all initially */
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
         margin-top: 20px;
     }
 
-    .btn-primary {
-        background-color: #007bff;
+    /* Service card */
+    .service-card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: box-shadow 0.3s;
+        display: flex;
+        flex-direction: column;
+    }
+    .service-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Service card image */
+    .service-card img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+
+    /* Service details */
+    .service-details {
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+    .service-details h4 {
+        margin: 0;
+        font-size: 1.2em;
+        color: #333;
+    }
+
+  
+
+    /* Buttons */
+    .toggle-btn,
+    .view-brochure-btn {
+        padding: 6px 80px;
+        background-color: #5d1e07;
+        color: #fff;
         border: none;
-        transition: background-color 0.3s;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: auto;
+        width: 100%;
     }
-
-    .btn-primary:hover {
-        background-color: #0056b3;
-    }
-
-    .btn-danger {
-        background-color: #dc3545;
-        border: none;
-        transition: background-color 0.3s;
-    }
-
-    .btn-danger:hover {
-        background-color: #c82333;
+    .toggle-btn:hover,
+    .view-brochure-btn:hover {
+        background-color: #4d4b4b;
+        color: #fff;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h2>Manage Venues</h2>
+<div class="dashboard-container">
+    <h2 class="welcome-title" style="color: orange;">Welcome, {{ admin_name }}</h2>
+    
+    <!-- Category Cards with Service Counts -->
+    <div class="category-cards">
+        {% for category in categories_count %}
+            <div class="category-card" onclick="toggleCategory('{{ category.category }}')">
+                <h3 style="color: white;">{{ category.category }}</h3>
+                <span style="color: white;">{{ category.count }} services</span>
+            </div>
+        {% endfor %}
+    </div>
 
-    <!-- Venue Table -->
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead class="thead-dark">
-            <tr>
-                <th>Venue ID</th>
-                <th>Name</th>
-                <th>Location</th>
-                <th>Capacity</th>
-                <th>Price</th>
-                <th>Availability</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <!-- Dynamic data for venues will be placed here -->
-            {% for venue in venues %}
-            <tr>
-                <td>{{ venue.id }}</td>
-                <td>{{ venue.name }}</td>
-                <td>{{ venue.location }}</td>
-                <td>{{ venue.capacity }}</td>
-                <td>${{ venue.price }}</td>
-                <td>
-                    {% if venue.availability %}
-                        <span class="badge badge-success">Available</span>
-                    {% else %}
-                        <span class="badge badge-danger">Unavailable</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="{% url 'edit_venue' venue.id %}" class="btn btn-primary btn-sm">Edit</a>
-                    <a href="{% url 'delete_venue' venue.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this venue?');">Delete</a>
-                </td>
-            </tr>
+    <!-- Placeholder for the selected category name -->
+   <center> <h3 id="selected-category" style="display: none;"></h3> <!-- Initially hidden -->
+    
+    <!-- Services List for Each Category (Responsive Grid) -->
+    {% for category in categories_count %}
+        <div id="category-{{ category.category }}" class="services-list">
+            {% for service in services_by_category %}
+                {% if service.category == category.category %}
+                    <div class="service-card">
+                        <!-- Service Image -->
+                        {% if service.main_image %}
+                            <img src="{{ service.main_image.url }}" alt="{{ service.name }}">
+                        {% endif %}
+                       
+                        <!-- Service Details -->
+                        <div class="service-details">
+                            <h4>{{ service.name }}</h4><br>
+                            <p class="price">Price: ₹{{ service.price }}</p>
+                           
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p>Status: {{ service.get_status_display }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p> <a href="{{ service.city }}" target="_blank" class="ml-2">
+                                        <i class="fas fa-map-marker-alt"></i>Location
+                                    </a>
+                                </p>
+                                </div>
+                            </div>
+                           
+                            <div>
+                                <a href="{% url 'admin_service_details' service.id %}" class="view-brochure-btn" style="width: fit-content;">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
             {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    <div class="pagination justify-content-center mt-3">
-        {% if is_paginated %}
-        <ul class="pagination">
-            {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
-            {% endif %}
-            <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
-            {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
-            {% endif %}
-        </ul>
-        {% endif %}
-    </div>
+        </div>
+    {% endfor %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // You can add any additional JavaScript here if needed
+    function toggleCategory(category) {
+        // Hide all service lists
+        document.querySelectorAll('.services-list').forEach(function(list) {
+            list.style.display = 'none';
+        });
+        
+        // Show the selected category's service list
+        var categoryDiv = document.getElementById("category-" + category);
+        if (categoryDiv) {
+            categoryDiv.style.display = 'grid';
+        }
+
+        // Update the selected category heading
+        var selectedCategoryHeading = document.getElementById("selected-category");
+        selectedCategoryHeading.innerText = category + " Services";
+        selectedCategoryHeading.style.display = 'block'; // Show the heading
+    }
+
+    function toggleDescription(serviceId) {
+        var descriptionDiv = document.getElementById("description-" + serviceId);
+        var toggleButton = document.getElementById("toggle-" + serviceId);
+        var fadeOutDiv = document.getElementById("fade-" + serviceId);
+
+        // Toggle the expanded class
+        if (descriptionDiv.classList.contains("expanded")) {
+            descriptionDiv.classList.remove("expanded");
+            toggleButton.innerText = "View More";
+            fadeOutDiv.style.display = "block";
+        } else {
+            descriptionDiv.classList.add("expanded");
+            toggleButton.innerText = "View Less";
+            fadeOutDiv.style.display = "none";
+        }
+    }
 </script>
 {% endblock %}

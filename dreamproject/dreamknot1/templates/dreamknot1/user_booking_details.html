@@ -1,217 +1,378 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Bookings</title>
-    <!-- SweetAlert2 CSS -->
+    <title>Your Bookings - Dream Knot</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
-    <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             background-color: #f4f4f9;
             margin: 0;
-            padding: 0;
+            padding: 20px;
         }
+       
         h2 {
             text-align: center;
-            color: #333;
-            margin: 20px 0;
+            color: #440606; /* Maroon color */
+            margin-bottom: 20px;
         }
-        .container {
-            width: 80%;
-            margin: auto;
+        .filters {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+        .filter-title {
+            font-weight: bold;
+            margin-bottom: 10px;
         }
-        .table th, .table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
+        .booking-cards {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping of cards */
+            justify-content: flex-start; /* Align cards to the left */
         }
-        .table th {
-            background-color: #440606; /* Maroon color */
-            color: white;
+        .booking-cards .card {
+            flex: 1 1 calc(33.333% - 20px); /* 3 cards per row with space */
+            margin: 10px; /* Space between cards */
+            border: 1px solid #ddd; /* Border for the card */
+            border-radius: 8px; /* Rounded corners */
+            background-color: #fff; /* White background */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            transition: box-shadow 0.3s; /* Smooth transition for hover effect */
+            max-width: 300px; /* Set a maximum width for the card */
+            height: 370px;
         }
-        .table tr:nth-child(even) {
-            background-color: #f9f9f9;
+        .booking-cards .card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Shadow on hover */
         }
-        .table tr:hover {
-            background-color: #f1f1f1;
+        .booking-image {
+            width: 100%; /* Full width for the image */
+            height: 180px; /* Maintain aspect ratio */
+            border-radius: 5px 5px 0 0; /* Rounded top corners for the image */
+        }
+        .card-body {
+            padding: 10px; /* Reduced padding inside the card body */
+        }
+        .card-body h5 {
+            font-size: 1.2rem; /* Reduce the font size for the service name */
+            margin-bottom: 5px; /* Reduce the gap below the service name */
+        }
+        .card-body p {
+            font-size: 0.9rem; /* Reduce the font size for paragraph text */
+            margin-bottom: 3px; /* Reduce the gap between paragraphs */
+        }
+        .text-right {
+            margin-top: 5px; /* Add a small margin above the buttons */
         }
         .badge-danger {
             background-color: #dc3545;
             color: white;
-            padding: 5px;
-            border-radius: 3px;
         }
         .btn {
-            display: inline-block;
-            padding: 8px 12px;
             background-color: #dc3545;
             color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 4px;
+            font-size: 12px; /* Smaller button text */
         }
         .btn:hover {
             background-color: #c82333;
         }
-        .form-group {
-            margin-bottom: 15px;
+        .messages-container {
+            margin: 20px 0; /* Space above and below the messages */
+            padding: 15px; /* Padding inside the container */
+            border-radius: 5px; /* Rounded corners */
+            background-color: #f8d7da; /* Light red background for error messages */
+            color: #721c24; /* Dark red text color */
+            border: 1px solid #f5c6cb; /* Border color matching the background */
+            display: flex; /* Flexbox for alignment */
+            justify-content: center; /* Center the content */
+            align-items: center; /* Center vertically */
+            transition: opacity 0.5s ease; /* Smooth transition for fading out */
         }
-        .form-control {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+        .messages-container .messages {
+            list-style-type: none; /* Remove bullet points */
+            margin: 0; /* Remove default margin */
+            padding: 0; /* Remove default padding */
         }
-        .alert {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
+        .messages-container .messages li {
+            margin: 5px 0; /* Space between messages */
+            padding: 10px; /* Padding inside each message */
+            border-radius: 3px; /* Slightly rounded corners for messages */
         }
         .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            padding-top: 100px;
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
             left: 0;
             top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
         }
         .modal-content {
-            background-color: white;
-            margin: auto;
+            background-color: #fefefe; /* White background */
+            margin: auto; /* Center the modal */
             padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 10px;
+            border: 1px solid #888; /* Gray border */
+            border-radius: 10px; /* Rounded corners */
+            max-width: 800px; /* Set the maximum width of the modal */
+            width: 90%; /* Set the width to 90% of the viewport */
         }
         .modal-header {
-            font-size: 20px;
-            margin-bottom: 15px;
+            background-color: #440606; /* Maroon color */
+            color: white;
+            padding: 10px;
+            border-radius: 10px 10px 0 0; /* Rounded top corners */
         }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
+        .modal-footer {
+            padding: 10px;
         }
-        .close:hover, .close:focus {
-            color: black;
+        .navbar {
+            background-color: white; /* Maroon color */
+            padding: 15px 20px; /* Padding for the navbar */
+            position: fixed; /* Fix the navbar at the top */
+            top: 0; /* Align to the top */
+            left: 0; /* Align to the left */
+            right: 0; /* Align to the right */
+            z-index: 1000; /* Ensure it sits above other content */
+        }
+        
+        .navbar .logo {
             text-decoration: none;
+            background: linear-gradient(90deg, rgba(15,0,1,1) 0%, rgba(59,4,9,1) 28%, rgba(121,9,15,1) 74%, rgba(220,106,106,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 30px;
+            font-weight: 600;
+            font-family: 'Lucida Handwriting', cursive;
+            transition: background 0.3s ease;
+        }
+        
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+        }
+        
+        .navbar ul li {
+            margin: 0 20px; /* Increased space between menu items */
+            position: relative; /* Important for the dropdown */
+        }
+        
+        .navbar ul li a {
+            color: #480808;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        
+        .navbar ul li a:hover {
+            color: #ede8e7;
+        }
+        
+        /* Dropdown Styling */
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropbtn {
+            display: inline-block;
             cursor: pointer;
+            padding-right: 10px; /* Space between text and caret */
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            min-width: 160px; /* Dropdown width */
+            border-radius: 5px;
+            overflow: hidden; /* Prevent overflow for rounded corners */
+        }
+        
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #4b1005;
+            color: white;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        /* Caret animation */
+        .dropdown:hover .dropbtn i {
+            transform: rotate(180deg); /* Rotate caret icon on hover */
+            transition: transform 0.3s ease;
+        }
+        /* Footer */
+        .footer {
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            margin-top:50px;
+        }
+        .footer a {
+            color: #ffc107;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
-        <ul>
-            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">My Account<i class="fas fa-caret-down"></i></a>
-                <div class="dropdown-content">
-                    <a href="{% url 'user_booking_details' %}">My Bookings</a>
-                    <a href="{% url 'logout' %}" class="logout-button">Logout</a>
-                </div>
-            </li>
-        </ul>
-    </nav>
-
-    <div class="container">
-        <h2>Your Bookings</h2>
-
-        <!-- Display any success messages -->
-        {% if messages %}
-            <div class="alert alert-success" role="alert">
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
+    <ul>
+        <li><a href="{% url 'user_home' %}">Dashboard</a></li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">Todo List<i class="fas fa-caret-down"></i></a>
+            <div class="dropdown-content">
+                <a href="{% url 'current_month_todolist' %}">Todo List</a>
+                <a href="{% url 'todo_list' %}">All Tasks</a>
             </div>
-        {% endif %}
+        </li>
+        
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">Invitation<i class="fas fa-caret-down"></i></a>
+            <div class="dropdown-content">
+                <a href="{% url 'send_rsvp_invitation' %}">Invitation</a>
+                <a href="{% url 'invitation_list' %}">Invitation List</a>
+            </div>
+        </li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">My Account<i class="fas fa-caret-down"></i></a>
+            <div class="dropdown-content">
+                <a href="{% url 'user_booking_details' %}">My Bookings</a>
+                <a href="{% url 'favorite_list' %}">favourite list</a>
+            </div>
+        </li>
+        
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">
+                <i class="fa fa-user-circle"></i> {{ user_name }} <i class="fas fa-caret-down"></i>
+            </a>
+            <div class="dropdown-content">
+                <a href="{% url 'update_user_profile' %}">Update Profile</a>
+                <a href="{% url 'logout' %}" class="logout-button">Logout</a>
+            </div>
+        </li>
+    </ul>
+</nav>
+<br>
+<br>
+<br>
+    {% if messages %}
+    <div class="messages-container">
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <script>
+        setTimeout(function(){
+            document.querySelector('.messages-container').style.display = 'none';
+        }, 5000);
+    </script>
+    {% endif %}
+    <h2>Your Bookings</h2>
 
-        {% if bookings %}
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Service</th>
-                        <th>Event Date</th>
-                        <th>Event Location</th>
-                        <th>Event Name</th>
-                        <th>Number of Days</th>
-                        <th>Total Amount</th>
-                        <th>Booking Amount</th>
-                        <th>Status</th>
-                        <th>Time Until Event</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
+    <div class="row">
+        <!-- Filters Section -->
+        <div class="col-md-3">
+            <div class="filters">
+                <div class="filter-title">Filters</div>
+                <div class="form-group">
+                    <label for="order-status">Order Status</label>
+                    <select id="order-status" class="form-control">
+                        <option value="">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="order-time">Order Time</label>
+                    <select id="order-time" class="form-control">
+                        <option value="">All Time</option>
+                        <option value="last-30-days">Last 30 days</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                        <option value="2020">2020</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="apply-filters">Apply Filters</button>
+            </div>
+        </div>
+
+
+        <!-- Booking Cards Section -->
+        <div class="col-md-9">
+            {% if bookings %}
+                <div class="booking-cards">
                     {% for booking in bookings %}
-                        <tr>
-                            <td>{{ booking.service.name }}</td>
-                            <td>{{ booking.event_date }}</td>
-                            <td>{{ booking.event_address }}</td>
-                            <td>{{ booking.event_name }}</td>
-                            <td>{{ booking.num_days }}</td>
-                            <td>₹{{ booking.total_amount }}</td>
-                            <td>₹{{ booking.booking_amount }}</td>
-                            <td>
-                                {% if booking.book_status == 3 %}
-                                    <span class="badge badge-danger">Canceled</span>
-                                {% else %}
-                                    {{ booking.get_book_status_display }}
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if booking.event_date < today %}
-                                    Event completed
-                                {% elif booking.days_until_event == 0 %}
-                                    Today
-                                {% else %}
-                                    {{ booking.days_until_event }} day{{ booking.days_until_event|pluralize }}
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if booking.book_status != 3 and booking.event_date >= today %}
-                                    <button class="btn" onclick="openModal('{{ booking.id }}', {{ booking.is_refundable|yesno:'true,false' }})">Cancel Booking</button>
+                        <div class="card">
+                            <img src="{{ booking.service.main_image.url }}" alt="{{ booking.service.name }}" class="booking-image">
+                            <div class="card-body">
+                                <h5>{{ booking.service.name }}</h5>
+                                <p><strong>Event Name:</strong> {{ booking.event_name }}</p>
+                                <p><strong>Event Date:</strong> {{ booking.event_date }}</p>
+                                <p><strong>Status:</strong> 
+                                    {% if booking.book_status == 3 %}
+                                        <span class="badge badge-danger">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge badge-success">{{ booking.get_book_status_display }}</span>
+                                    {% endif %}
+                                </p>
+                                <p class="time-left">Time Left: {{ booking.days_until_event }} days</p>
+                                <div class="text-right">
                                     <button class="btn" onclick="openInvoiceModal('{{ booking.id }}', '{{ booking.service.name }}', '{{ booking.total_amount }}', '{{ booking.booking_amount }}', '{{ booking.get_book_status_display }}', '{{ booking.event_date }}', '{{ booking.cancellation_reason }}')">View Invoice</button>
-                                {% elif booking.book_status == 3 %}
-                                    <span class="text-muted">Booking canceled</span>
-                                {% else %}
-                                    <span class="text-muted">Event completed</span>
-                                {% endif %}
-                            </td>
-                        </tr>
+                                    {% if booking.book_status != 3 %}
+                                        <button class="btn" onclick="openModal('{{ booking.id }}', {{ booking.is_refundable|yesno:'true,false' }})">Cancel Booking</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
                     {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No bookings found.</p>
-        {% endif %}
+                </div>
+            {% else %}
+                <p>No bookings found.</p>
+            {% endif %}
+        </div>
     </div>
 
-    <!-- Modal Structure for Cancel Booking -->
+    <!-- Modal Structure for Cancellation -->
     <div id="cancelModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <div class="modal-header">Cancel Booking</div>
-            <form method="POST" action="{% url 'user_booking_details' %}">
+            <h2>Cancel Booking</h2>
+            <form id="cancelForm" method="POST" action="{% url 'user_booking_details' %}" onsubmit="return handleCancellation(event);">
                 {% csrf_token %}
                 <input type="hidden" name="booking_id" id="modal_booking_id">
                 <div class="form-group">
@@ -228,13 +389,56 @@
     <div id="invoiceModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeInvoiceModal()">&times;</span>
-            <div class="modal-header">Invoice</div>
-            <div id="invoiceDetails"></div>
-            <button id="downloadInvoice" class="btn">Download Invoice</button>
+            <div class="modal-header">
+                <h2>Invoice</h2>
+            </div>
+            <div id="invoiceDetails" class="invoice-details">
+                <!-- Invoice content will be dynamically inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button id="downloadInvoice" class="btn">Download Invoice</button>
+            </div>
         </div>
     </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 Dream Knot. All rights reserved.</p>
+        <p>Designed by <a href="#">Dream Knot</a></p>
+    </footer>
 
     <script>
+        // JavaScript functions for modals and other interactions
+        document.getElementById('apply-filters').addEventListener('click', function() {
+            const statusFilter = document.getElementById('order-status').value;
+            const timeFilter = document.getElementById('order-time').value;
+            const cards = document.querySelectorAll('.booking-cards .card');
+
+            cards.forEach(card => {
+                const status = card.querySelector('.badge').textContent.trim().toLowerCase();
+                const eventDate = new Date(card.querySelector('.time-left').textContent.replace('Time Left: ', '').replace(' days', ''));
+                const today = new Date();
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(today.getDate() - 30);
+
+                let showCard = true;
+
+                // Filter by status
+                if (statusFilter && status !== statusFilter) {
+                    showCard = false;
+                }
+
+                // Filter by time
+                if (timeFilter === 'last-30-days' && eventDate < thirtyDaysAgo) {
+                    showCard = false;
+                } else if (timeFilter && timeFilter !== 'last-30-days' && eventDate.getFullYear() !== parseInt(timeFilter)) {
+                    showCard = false;
+                }
+
+                // Show or hide the card
+                card.style.display = showCard ? 'block' : 'none';
+            });
+        });
+
         function openModal(bookingId, isRefundable) {
             document.getElementById("modal_booking_id").value = bookingId;
             document.getElementById("cancelModal").style.display = "block";
@@ -249,21 +453,49 @@
             }
         }
 
-        // Close the modal
         function closeModal() {
             document.getElementById("cancelModal").style.display = "none";
         }
 
-        // Open Invoice Modal
         function openInvoiceModal(bookingId, serviceName, totalAmount, bookingAmount, status, eventDate, cancellationReason) {
             const invoiceDetails = `
-                <h4>Invoice for Booking ID: ${bookingId}</h4>
-                <p><strong>Service Name:</strong> ${serviceName}</p>
-                <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
-                <p><strong>Booking Amount:</strong> ₹${bookingAmount}</p>
-                <p><strong>Status:</strong> ${status}</p>
-                <p><strong>Event Date:</strong> ${eventDate}</p>
-                <p><strong>Cancellation Reason:</strong> ${cancellationReason}</p>
+                <div class="invoice-header">
+                    <center><img src="{% static 'images/logo1.png' %}" alt="Dream Knot Logo" style="width: 150px; height: auto;"></center>
+                    <center><h3>Dream Knot</h3></center>
+                    <p>Address: 123 Dream St, Dream City, DC 12345</p>
+                    <p>Email: support@dreamknot.com</p>
+                    <p>Phone: 9744685133</p>
+                    <p>Invoice ID: ${bookingId}</p>
+                    <p>Date: ${new Date().toLocaleDateString()}</p>
+                </div>
+                <hr>
+                <div class="invoice-body">
+                    <h4>Invoice for Booking ID: ${bookingId}</h4>
+                    <p><strong>Service Name:</strong> ${serviceName}</p>
+                    <p><strong>Event Date:</strong> ${eventDate}</p>
+                    <p><strong>Status:</strong> ${status}</p>
+                    <p><strong>Cancellation Reason:</strong> ${cancellationReason}</p>
+                    <h5>Payment Summary</h5>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Description</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Amount</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 8px;">Booking Amount</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">₹${bookingAmount}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 8px;"><strong>Total Amount</strong></td>
+                            <td style="border: 1px solid #ddd; padding: 8px;"><strong>₹${totalAmount}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="invoice-footer">
+                    <p>Thank you for choosing Dream Knot!</p>
+                    <p>Please make the payment by the due date to avoid any late fees.</p>
+                    <p>If you have any questions regarding this invoice, please contact us.</p>
+                </div>
             `;
             document.getElementById("invoiceDetails").innerHTML = invoiceDetails;
             document.getElementById("invoiceModal").style.display = "block";
@@ -292,16 +524,13 @@
             var cancelModal = document.getElementById("cancelModal");
             var invoiceModal = document.getElementById("invoiceModal");
             if (event.target == cancelModal) {
-                cancelModal.style.display = "none";
+                closeModal();
             }
             if (event.target == invoiceModal) {
-                invoiceModal.style.display = "none";
+                closeInvoiceModal();
             }
         }
-    </script>
 
-    <!-- JavaScript Files -->
-    <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Logout Confirmation
             const logoutLinks = document.querySelectorAll('.logout-button, .nav-links a[href="{% url 'logout' %}"]');
@@ -327,5 +556,34 @@
             });
         });
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Logout Confirmation
+        const logoutLinks = document.querySelectorAll('.logout-button, .nav-links a[href="{% url 'logout' %}"]');
+
+        logoutLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, log me out!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = this.href;
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+    <!-- JavaScript Files -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </body>
 </html>

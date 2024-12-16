@@ -133,27 +133,53 @@
                 initialView: 'dayGridMonth',
                 events: '/get-booking-slots/{{ service.id }}/',
                 dateClick: function(info) {
+                    var clickedDate = new Date(info.dateStr);
                     var today = new Date();
                     today.setHours(0, 0, 0, 0);
-                    var clickedDate = new Date(info.dateStr);
 
-                    if (clickedDate <= today) {
-                        alert("You can't select today's date or past dates. Please choose a future date.");
+                    // Get the minimum date (7 days from now)
+                    var sevenDaysAhead = new Date();
+                    sevenDaysAhead.setDate(sevenDaysAhead.getDate() + 7);
+
+                    if (clickedDate < sevenDaysAhead) {
+                        alert("You can only select a date that is at least 7 days in the future.");
                         return;
                     }
 
-                    var isAvailable = !info.event || info.event.extendedProps.status === 'Available';
+                    var maxDate = new Date();
+                    maxDate.setFullYear(maxDate.getFullYear() + 3);
+                    if (clickedDate > maxDate) {
+                        alert("You can only select a date that is up to 3 years in the future.");
+                        return;
+                    }
+
+                    // Check if the clicked date is available
+                    var isAvailable = true;
+                    var events = calendar.getEvents();
+                    for (var i = 0; i < events.length; i++) {
+                        if (events[i].start.getTime() === clickedDate.getTime()) {
+                            var status = events[i].extendedProps.status;
+                            if (status === 'Pending' || status === 'Confirmed') {
+                                alert("This date is not available for booking as it is " + status + ".");
+                                isAvailable = false;
+                                break;
+                            }
+                        }
+                    }
 
                     if (isAvailable) {
                         // Redirect to the booking form with the selected date
                         window.location.href = "{% url 'book_service' service.id %}?selected_date=" + info.dateStr;
-                    } else {
-                        alert("We're sorry, but this date is already booked. Please choose another day for your special event.");
                     }
                 },
                 validRange: function(nowDate) {
+                    var minDate = new Date();
+                    minDate.setDate(minDate.getDate() + 7); // Minimum date is 7 days from now
+                    var maxDate = new Date();
+                    maxDate.setFullYear(maxDate.getFullYear() + 3); // Maximum date is 3 years from now
                     return {
-                        start: nowDate.getTime() + 24 * 60 * 60 * 1000 // start from tomorrow
+                        start: minDate,
+                        end: maxDate
                     };
                 },
                 eventColor: '#ffd1dc',
@@ -169,8 +195,6 @@
             });
 
             calendar.render();
-
-            // Remove the booking form and related JavaScript as it's no longer needed here
         });
     </script>
 </body>

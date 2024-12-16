@@ -57,6 +57,8 @@
 			<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 			<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 		<style>
 			/* Footer */
 			.footer {
@@ -77,6 +79,7 @@
     </head>
 	
 	<body>
+
 		<!--[if lte IE 9]>
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
         <![endif]-->
@@ -182,7 +185,13 @@
 
 		</section><!-- /.top-area-->
 		<!-- top-area End -->
-
+  {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
 		<!--welcome-hero start -->
 		<section id="home" class="welcome-hero">
 			<div class="container">
@@ -219,67 +228,31 @@
 						</button>
 					</div>
 				</div>
-			</div>
+			</div>-->
 
 		</section><!--/.welcome-hero-->
 		<!--welcome-hero end -->
 
-		<!--list-topics start -->
-	<!--	<section id="list-topics" class="list-topics">
-			<div class="container">
-				<div class="list-topics-content">
-					<ul>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-restaurant"></i>
-								</div>
-								<h2><a href="#">resturent</a></h2>
-								<p>150 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-travel"></i>
-								</div>
-								<h2><a href="#">destination</a></h2>
-								<p>214 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-building"></i>
-								</div>
-								<h2><a href="#">hotels</a></h2>
-								<p>185 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-pills"></i>
-								</div>
-								<h2><a href="#">healthcaree</a></h2>
-								<p>200 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-transport"></i>
-								</div>
-								<h2><a href="#">automotion</a></h2>
-								<p>120 listings</p>
-							</div>
-						</li>
-					</ul>
-				</div>
-			</div><!--/.container-->
-
-		</section><!--/.list-topics-->
-		<!--list-topics end-->
+	<!--list-topics start -->
+<section id="list-topics" class="list-topics">
+    <div class="container">
+        <div class="list-topics-content">
+            <ul>
+                {% for category in categories_count %}
+                <li>
+                    <div class="single-list-topics-content">
+                        <div class="single-list-topics-icon">
+                            <i class="fa {{ category.icon }}" style="color: #35424a; font-size: 36px;"></i> <!-- Dynamic Icon -->
+                        </div>
+                        <h2><a href="#">{{ category.category }}</a></h2>
+                        <p>{{ category.count }} listings</p> <!-- Display the count -->
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div><!--/.container-->
+</section><!--/list-topics-->
 
 		<!--works start -->
 		<!--<section id="works" class="works">
@@ -1065,34 +1038,46 @@
 		</section><!--/.blog-->
 		<!--blog end -->
 
-		<!--subscription strat -->
-		<!--<section id="contact"  class="subscription">
-			<div class="container">
-				<div class="subscribe-title text-center">
-					<h2>
-						do you want to add your business listing with us?
-					</h2>
-					<p>
-						Listrace offer you to list your business with us and we very much able to promote your Business.
-					</p>
-				</div>
-				<div class="row">
-					<div class="col-sm-12">
-						<div class="subscription-input-group">
-							<form action="#">
-								<input type="email" class="subscription-input-form" placeholder="Enter your email here">
-								<button class="appsLand-btn subscribe-btn" onclick="window.location.href='#'">
-									creat account
-								</button>
-							</form>
-						</div>
-					</div>	
-				</div>
-			</div>
-
-		</section><!--/subscription-->	
-		<!--subscription end -->
-
+				<!-- Subscription Start -->
+<section id="contact" class="subscription" style="background-color: #f9f9f9; padding: 40px 0;">
+    <div class="container" style="width: 80%; margin: auto; overflow: hidden;">
+        <div class="subscribe-title text-center" style="margin-bottom: 30px;">
+            <h2 style="color: #35424a; font-size: 28px; font-weight: bold;">Do you want to add your business listing with us?</h2>
+            <p style="color: #666; font-size: 16px;">Listrace offers you to list your business with us, and we are very much able to promote your business.</p>
+        </div>
+        
+        <!-- Contact Information Section -->
+        <!-- Contact Information Section -->
+        <div class="contact-info" style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 20px; padding: 20px; background-color: #ffffff; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+            <div style="flex: 1; min-width: 250px; margin-right: 20px;">
+                <h3 style="color: #35424a; margin-top: 0;">Contact Us to Get the Best Deals</h3>
+                <h4 style="color: #35424a;">For Vendors</h4>
+                <p style="margin: 5px 0;">
+					<i class="fas fa-envelope" style="color: #35424a; margin-right: 5px;"></i>
+					Email: 
+					<a href="mailto:vendordreamknot0@google.com" style="color: #35424a; text-decoration: none;">vendordreamknot0@google.com</a>
+				</p>
+				<p style="margin: 5px 0;">
+					<i class="fas fa-phone" style="color: #35424a; margin-right: 5px;"></i>
+					Phone: 
+					<span style="color: #35424a;">7736686345</span>
+				</p>
+				<p style="margin: 5px 0;">
+					<i class="fab fa-whatsapp" style="color: #35424a; margin-right: 5px;"></i>
+					Whatsapp: 
+					<a href="https://wa.me/7736686345" style="color: #35424a; text-decoration: none;">
+						<span style="color: #35424a;">7736686345</span>
+					</a>
+				</p>
+            </div>
+           
+            <div style="flex: 1; min-width: 250px; margin-left: 20px;">
+                <h4 style="color: #35424a;">Registered Address</h4>
+                <p style="margin: 5px 0;">Second Floor, Ocus Technopolis, Sector 54 Golf Course Road, Kottayam, Kerala, India, 122002</p>
+            </div>
+        </div>
+    </div>
+</section><!--/subscription-->   
 		<!--footer start-->
 		<!--<footer id="footer"  class="footer">
 			<div class="container">
@@ -1205,12 +1190,7 @@
 		     
         <!--Custom JS-->
         <script src="{% static 'assets/js/custom.js'%}"></script>
-		<script type="text/javascript">
-			window.history.forward();
-			function noBack() {
-				window.history.forward();
-			}
-		</script>
+		
     </body>
 	
 </html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Planning Services - Details</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: #35424a;
+            color: #ffffff;
+            padding: 10px 0;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+        }
+        .readmore {
+            background: #ffffff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s; /* Smooth transition for hover effect */
+        }
+        .readmore:hover {
+            transform: scale(1.02); /* Slightly enlarge on hover */
+            border: 2px solid #35424a; /* Add border on hover */
+        }
+        .readmore h2 {
+            color: #35424a;
+            font-weight: bold; /* Make headings bold */
+        }
+        .readmore p {
+            line-height: 1.6;
+        }
+        .readmore img {
+            max-width: 100%; /* Responsive image */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 5px; /* Rounded corners */
+            margin-bottom: 15px; /* Space below the image */
+        }
+        .back-button {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: #35424a;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .back-button:hover {
+            background: #2c3e50;
+        }
+        .testimonial, .faq, .contact-info {
+            background: #ffffff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .social-media {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .social-media a {
+            margin: 0 10px;
+            color: #35424a;
+            text-decoration: none;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Wedding Planning Services</h1>
+</header>
+
+<div class="container">
+    <div class="readmore" id="service1">
+        <h2>Find the Best Services and Book Them</h2>
+        {% comment %} <img src="https://via.placeholder.com/800x400?text=Wedding+Services" alt="Wedding Services"> {% endcomment %}
+        <p>
+            Explore a wide range of wedding services, from venues to caterers, and easily book them for your special day. 
+            Our platform provides you with a curated list of top-rated services, complete with reviews and pricing options.
+        </p>
+        <p>
+            Whether you're looking for a stunning venue, a talented photographer, or a delicious catering service, we have you covered. 
+            Our user-friendly interface allows you to compare services, read reviews, and make informed decisions.
+        </p>
+        <p>
+            <strong>Key Features:</strong>
+            <ul>
+                <li>Comprehensive listings of wedding services</li>
+                <li>User reviews and ratings</li>
+                <li>Easy booking process</li>
+                <li>Customer support for any inquiries</li>
+            </ul>
+        </p>
+    </div>
+
+    <div class="readmore" id="service2">
+        <h2>Use Our Wedding Checklist</h2>
+        {% comment %} <img src="https://via.placeholder.com/800x400?text=Wedding+Checklist" alt="Wedding Checklist"> {% endcomment %}
+        <p>
+            Stay organized with our comprehensive wedding checklist, ensuring you don’t miss any important details. 
+            Our checklist covers every aspect of wedding planning, from budgeting to guest lists, and helps you stay on track.
+        </p>
+        <p>
+            <strong>Checklist Features:</strong>
+            <ul>
+                <li>Customizable tasks based on your wedding type</li>
+                <li>Deadline reminders</li>
+                <li>Progress tracking</li>
+                <li>Printable version for offline use</li>
+            </ul>
+        </p>
+    </div>
+
+    <div class="readmore" id="service3">
+        <h2>Send Your Invitations Digitally</h2>
+        {% comment %} <img src="https://via.placeholder.com/800x400?text=Digital+Invitations" alt="Digital Invitations"> {% endcomment %}
+        <p>
+            Effortlessly send beautiful and personalized wedding invitations that reflect your unique style and theme. 
+            Our platform allows you to create digital invitations and send them directly to your guests via email.
+        </p>
+        <p>
+            <strong>Digital Invitation Features:</strong>
+            <ul>
+                <li>Wide selection of customizable templates</li>
+                <li>Personalized text and images to match your theme</li>
+                <li>Instant delivery via email to your guest list</li>
+                <li>Track Invitees list through our platform</li>
+            </ul>
+        </p>
+    </div>
+
+    <!-- Testimonials Section -->
+    <div class="testimonial">
+        <h2>User Testimonials</h2>
+        <p>"WedMeGood made my wedding planning so much easier! I found the best vendors and saved a lot of time." - Priya S.</p>
+        <p>"The checklist feature was a lifesaver. I felt organized and stress-free throughout the planning process." - Ankit R.</p>
+    </div>
+
+    <!-- FAQs Section -->
+    <div class="faq">
+        <h2>Frequently Asked Questions</h2>
+        <p><strong>Q: How do I book a vendor?</strong></p>
+        <p>A: You can browse our list of vendors, read reviews, and book directly through our platform.</p>
+        <p><strong>Q: Is there a mobile app available?</strong></p>
+        <p>A: Yes, we have a mobile app available for both Android and iOS for easy access on the go.</p>
+    </div>
+
+    {% comment %} <!-- Social Media Links -->
+    <div class="social-media">
+        <h2>Follow Us</h2>
+        <a href="https://www.facebook.com/wedmegood" target="_blank"><i class="fab fa-facebook-square"></i></a>
+        <a href="https://twitter.com/wedmegood" target="_blank"><i class="fab fa-twitter-square"></i></a>
+        <a href="https://www.instagram.com/wedmegood" target="_blank"><i class="fab fa-instagram-square"></i></a>
+    </div> {% endcomment %}
+
+    <!-- Contact Information Section -->
+    <div class="contact-info">
+        <h3>Contact Us to Get the Best Deals</h3>
+        <h4>For Vendors</h4>
+        <p>Email: <a href="mailto:dreamknot0@google.com">vendordreamknot0@google.com</a></p>
+        <p>Phone: 7736686345</p>
+
+        <h4>For Users</h4>
+        <p>Email: <a href="mailto:dreamknot0@google.com">infodreamknot0@google.com</a></p>
+        <p>Phone: 7756678765</p>
+
+        <h4>Registered Address</h4>
+        <p>Second Floor, Ocus Technopolis, Sector 54 Golf Course Road, Kottayam, Kerala, India, 122002</p>
+    </div>
+
+    <a href="{% url 'index' %}" class="back-button">Back to Home</a>
+</div>
+
+</body>
+</html>

@@ -119,9 +119,11 @@
     <div class="sidebar bg-dark">
         <nav class="nav flex-column">
             <a href="{% url 'vendor_home' %}" <i class="fas fa-home"></i> Home</a>
+            <a href="{% url 'vendor_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="{% url 'vendor_approve_booking' %}"><i class="fas fa-check"></i> Approve Bookings</a>
+
             <a href="#your-services" ><i class="fas fa-list"></i> Your Services</a>
             <a href="#add-new-service" ><i class="fas fa-plus"></i> Add New Service</a>
-            <a href="{% url 'vendor_approve_booking' %}" ><i class="fas fa-list"></i> Approve Bookings</a>
             <a href="{% url 'logout' %}" <i class="fas fa-sign-out-alt"></i> Logout</a>
         </nav>
     </div>

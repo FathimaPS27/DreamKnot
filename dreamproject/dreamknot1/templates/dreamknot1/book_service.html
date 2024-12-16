@@ -368,7 +368,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="phone">Phone Number</label>
+                            <label for="phone">Phone Number<span class="text-danger">*</span></label>
                             <input type="tel" name="phone" id="phone" value="{{ user.phone }}" class="form-control" required 
                                    pattern="^[6-9]\d{9}$" title="Phone number must be 10 digits and start with 6, 7, 8, or 9"
                                    placeholder="Enter 10-digit phone number">
@@ -376,48 +376,47 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="event_name">Event Name</label>
-                            <input type="text" name="event_name" class="form-control" required>
+                            <label for="event_name">Event Name<span class="text-danger">*</span></label>
+                            <input type="text" name="event_name" class="form-control" required placeholder="Enter event name">
                         </div>
 
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="event_date">Event Date</label>
+                                    <label for="event_date">Event Date<span class="text-danger">*</span></label>
                                     <input type="date" id="event_date" name="event_date" class="form-control" required>
-                                    <small class="form-text text-muted">Please select a date starting from tomorrow.</small>
                                     <div id="date_availability_message"></div>  <!-- Add this line -->
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="num_days">Number of Days</label>
-                                    <input type="number" id="num_days" name="num_days" min="1" value="1" class="form-control" required>
+                                    <input type="number" id="num_days" name="num_days" min="1" max="10" value="1" class="form-control" required>
                                 </div>
                             </div>
                         </div>
 
                         {% if not is_venue %}
                         <div class="form-group">
-                            <label for="event_address">Event location</label>
-                            <input type="text" name="event_address" class="form-control" required>
+                            <label for="event_address">Event location<span class="text-danger">*</span></label>
+                            <input type="text" name="event_address" class="form-control" placeholder="location where event will be held" required>
                         </div>
                     {% endif %}
                     
                     {% if is_venue %}
                         <div class="form-group">
-                            <label for="venue_city">Venue location</label>
+                            <label for="venue_city">Venue location<span class="text-danger">*</span></label>
                             <input type="text" name="venue_city" value="{{ venue_city }}" class="form-control" readonly>
                         </div>
                     {% endif %}
                         <div class="form-group">
-                            <label for="user_address">Your Address</label>
-                            <input type="text" name="user_address" class="form-control" required>
+                            <label for="user_address">Your Address<span class="text-danger">*</span></label>
+                            <input type="text" name="user_address" class="form-control" placeholder="eg: 123, street name, city, state, pincode" required>
                         </div>
 
                         <div class="form-group">
                             <label for="additional_requirements">Additional Requirements</label>
-                            <textarea name="additional_requirements" class="form-control" rows="3"></textarea>
+                            <textarea name="additional_requirements" class="form-control" rows="3" placeholder="share any additional requirements"></textarea>
                         </div>
 
                         <div class="form-group">
@@ -429,6 +428,8 @@
                             <div class="form-check">
                                 <input type="checkbox" name="agreed_to_terms" class="form-check-input" id="agreed_to_terms" required>
                                 <label class="form-check-label" for="agreed_to_terms">I agree to the <a href="#" id="terms-link">terms and conditions</a></label>
+                                <small class="form-text text-muted"><i><span class="text-danger">*</span>Read the terms and conditions carefully before agreeing</i></small>
+
                             </div>
                         </div>
                     </form>
@@ -463,7 +464,7 @@
                     </div> 
                 </div>
             </div>
-            <button type="submit" form="booking-form" class="btn btn-primary btn-block">BOOKING NOW</button>
+            <button type="submit" form="booking-form" class="btn btn-primary btn-block">CONFIRM BOOKING</button>
             <a href="{% url 'booking_calendar' service.id %}" class="btn btn-outline-primary btn-block mt-2">VIEW AVAILABILITY CALENDAR</a>
             <a href="{% url 'vendor_services' service.vendor.id %}" class="btn btn-outline-secondary btn-block mt-2">CANCEL</a>
         </div>
@@ -509,30 +510,38 @@
             var urlParams = new URLSearchParams(window.location.search);
             var selectedDate = urlParams.get('selected_date');
 
-            // Set minimum date to tomorrow
-            var tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            var minDate = tomorrow.toISOString().split('T')[0];
+            // Set minimum date to 7 days from current date
+        var sevenDaysAhead = new Date();
+        sevenDaysAhead.setDate(sevenDaysAhead.getDate() + 7);
+        var minDate = sevenDaysAhead.toISOString().split('T')[0];
 
-            var eventDateInput = document.getElementById('event_date');
-            eventDateInput.setAttribute('min', minDate);
+        var eventDateInput = document.getElementById('event_date');
+        eventDateInput.setAttribute('min', minDate); // Set minimum date
+
+        // Set maximum date to 3 years from now
+        var maxDate = new Date();
+        maxDate.setFullYear(maxDate.getFullYear() + 3);
+        var maxDateString = maxDate.toISOString().split('T')[0];
+        eventDateInput.setAttribute('max', maxDateString); // Set maximum date
 
             // If a date was selected, auto-fill the event_date field
-            if (selectedDate) {
-                var selectedDateObj = new Date(selectedDate);
-                if (selectedDateObj > tomorrow) {
-                    eventDateInput.value = selectedDate;
+           // If a date was selected, auto-fill the event_date field
+        if (selectedDate) {
+            var selectedDateObj = new Date(selectedDate);
+            if (selectedDateObj >= sevenDaysAhead) { // Ensure selected date is valid
+                eventDateInput.value = selectedDate;
                 }
             }
 
-            // Date validation
-            var today = new Date();
-            today.setDate(today.getDate() + 1);
-            var year = today.getFullYear();
-            var month = (today.getMonth() + 1).toString().padStart(2, '0');
-            var day = today.getDate().toString().padStart(2, '0');
-            var minDate = year + '-' + month + '-' + day;
-            document.getElementById('event_date').setAttribute('min', minDate);
+                
+                // Date validation
+                //var today = new Date();
+                //today.setDate(today.getDate() + 1);
+                //var year = today.getFullYear();
+                //var month = (today.getMonth() + 1).toString().padStart(2, '0');
+                //var day = today.getDate().toString().padStart(2, '0');
+                //var minDate = year + '-' + month + '-' + day;
+                //document.getElementById('event_date').setAttribute('min', minDate);
 
             // Function to format number to Indian Rupees format
             function formatToIndianRupees(number) {

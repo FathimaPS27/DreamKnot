@@ -1,7 +1,7 @@
 {% load static %}
 <!doctype html>
 <html class="no-js" lang="en">
-
+    
     <head>
         <!-- meta data -->
         <meta charset="utf-8">
@@ -53,6 +53,8 @@
 			<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 			<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+		
 		<style>
 			/* Footer */
 			.footer {
@@ -213,125 +215,100 @@
 		</section><!--/.welcome-hero-->
 		<!--welcome-hero end -->
 
-		<!--list-topics start -->
-		<!--<section id="list-topics" class="list-topics">
-			<div class="container">
-				<div class="list-topics-content">
-					<ul>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="fa fa-utensils"></i>
-								</div>
-								<h2><a href="#">Venues</a></h2>
-								<p>150 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-travel"></i>
-								</div>
-								<h2><a href="#">Decorators</a></h2>
-								<p>214 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-building"></i>
-								</div>
-								<h2><a href="#">hotels</a></h2>
-								<p>185 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-pills"></i>
-								</div>
-								<h2><a href="#">healthcaree</a></h2>
-								<p>200 listings</p>
-							</div>
-						</li>
-						<li>
-							<div class="single-list-topics-content">
-								<div class="single-list-topics-icon">
-									<i class="flaticon-transport"></i>
-								</div>
-								<h2><a href="#">automotion</a></h2>
-								<p>120 listings</p>
-							</div>
-						</li>
-					</ul>
-				</div>
-			</div><!--/.container-->
-
-		</section><!--/.list-topics-->
-		<!--list-topics end-->-->
-
-		<!--works start -->
-	<!--<section id="works" class="works">
+<!--list-topics start -->
+<section id="list-topics" class="list-topics">
+    <div class="container">
+        <div class="list-topics-content">
+            <ul>
+                {% for category in categories_count %}
+                <li>
+                    <div class="single-list-topics-content">
+                        <div class="single-list-topics-icon">
+                            <i class="fa {{ category.icon }}" style="color: #35424a; font-size: 36px;"></i> <!-- Dynamic Icon -->
+                        </div>
+                        <h2><a href="#">{{ category.category }}</a></h2>
+                        <p>{{ category.count }} listings</p> <!-- Display the count -->
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div><!--/.container-->
+</section><!--/list-topics-->
+		<section id="works" class="works">
 			<div class="container">
 				<div class="section-header">
-					<h2>how it works</h2>
-					<p>Learn More about how our website works</p>
+					<h2>How It Works</h2>
+					<p>Discover how our platform simplifies your wedding planning journey.</p>
 				</div><!--/.section-header-->
-				<!--<div class="works-content">
+				<div class="works-content">
 					<div class="row">
 						<div class="col-md-4 col-sm-6">
 							<div class="single-how-works">
 								<div class="single-how-works-icon">
-									<i class="flaticon-lightbulb-idea"></i>
+									<i class="fas fa-gift"></i> <!-- Icon for Booking Services -->
 								</div>
-								<h2><a href="#">Wedding Venue </a></h2>
+								<h2><a href="#" onclick="toggleDetails('service1')">Find the Best Services and Book Them</a></h2>
 								<p>
-									Search through a vast selection of venues to find the place that perfectly matches your wedding vision. 
+									Explore a wide range of wedding services, from venues to caterers, and easily book them for your special day.
 								</p>
-								<!--<button class="welcome-hero-btn how-work-btn" onclick="window.location.href='#'">
-									read more
-								</button>-->
-						<!--	</div>
-						</div>
-						<div class="col-md-4 col-sm-6">
-							<div class="single-how-works">
-								<div class="single-how-works-icon">
-									<i class="flaticon-networking"></i>
+								<button class="welcome-hero-btn how-work-btn" onclick="window.location.href='{% url 'readmore' %}#service1'">
+									Read More
+								</button>
+								<div id="details1" class="details" style="display:none;">
+									<p>Here you can find a curated list of top-rated wedding services, including reviews and pricing options. Easily compare and book the services that fit your needs.</p>
 								</div>
-								<h2><a href="#">Wedding Suppliers</a></h2>
-								<p>
-									Find the Best Wedding Suppliers near you in every category
-								</p>
-								
 							</div>
 						</div>
 						<div class="col-md-4 col-sm-6">
 							<div class="single-how-works">
 								<div class="single-how-works-icon">
-									<i class="flaticon-location-on-road"></i>
+									<i class="fas fa-check-circle"></i> <!-- Icon for Checklist -->
 								</div>
-								<h2><a href="#">Invitation Card </a></h2>
+								<h2><a href="#" onclick="toggleDetails('service2')">Use Our Wedding Checklist</a></h2>
 								<p>
-									Lorem ipsum dolor sit amet, consecte adipisicing elit, sed do eiusmod tempor incididunt ut laboremagna aliqua. 
+									Stay organized with our comprehensive wedding checklist, ensuring you don’t miss any important details.
 								</p>
+								<button class="welcome-hero-btn how-work-btn" onclick="window.location.href='{% url 'readmore' %}#service2'">
+									Read More
+								</button>
+								<div id="details2" class="details" style="display:none;">
+									<p>Our wedding checklist covers everything from venue selection to final touches, helping you stay on track throughout your planning process.</p>
+								</div>
+							</div>
+						</div>
+						<div class="col-md-4 col-sm-6">
+							<div class="single-how-works">
+								<div class="single-how-works-icon">
+									<i class="fas fa-envelope-open-text"></i> <!-- Icon for Designing Invitations -->
+								</div>
+								<h2><a href="#" onclick="toggleDetails('service3')">Design Your Invitations</a></h2>
+								<p>
+									Create beautiful and personalized wedding invitations that reflect your unique style and theme.
+								</p>
+								<button class="welcome-hero-btn how-work-btn" onclick="window.location.href='{% url 'readmore' %}#service3'">
+									Read More
+								</button>
+								
 								
 							</div>
 						</div>
 					</div>
 				</div>
 			</div><!--/.container-->
-		
 		</section><!--/.works-->
 		<!--works end -->
-
+		
+	
+{% comment %} 
 		<!--explore start -->
-		<!--<section id="explore" class="explore">
+		<section id="explore" class="explore">
 			<div class="container">
 				<div class="section-header">
 					<h2>explore</h2>
 					<p>Explore New place, food, culture around the world and many more</p>
 				</div><!--/.section-header-->
-				<!--<div class="explore-content">
+				<div class="explore-content">
 					<div class="row">
 						<div class=" col-md-4 col-sm-6">
 							<div class="single-explore-item">
@@ -734,7 +711,7 @@
 			</div><!--/.container-->
 
 		</section><!--/.explore-->
-		<!--explore end -->
+		<!--explore end --> {% endcomment %}
 
 		<!--reviews start -->
 		<!--<section id="reviews" class="reviews">
@@ -1050,34 +1027,36 @@
 		<!--</section><!--/.blog-->
 		<!--blog end -->
 
-		<!--subscription strat -->
-		<!--<section id="contact"  class="subscription">
-			<div class="container">
-				<div class="subscribe-title text-center">
-					<h2>
-						do you want to add your business listing with us?
-					</h2>
-					<p>
-						Listrace offer you to list your business with us and we very much able to promote your Business.
-					</p>
-				</div>
-				<div class="row">
-					<div class="col-sm-12">
-						<div class="subscription-input-group">
-							<form action="#">
-								<input type="email" class="subscription-input-form" placeholder="Enter your email here">
-								<button class="appsLand-btn subscribe-btn" onclick="window.location.href='#'">
-									creat account
-								</button>
-							</form>
-						</div>
-					</div>	
-				</div>
-			</div>
-
-		</section><!--/subscription-->	
-		<!--subscription end -->
-
+		<!-- Subscription Start -->
+<section id="contact" class="subscription" style="background-color: #f9f9f9; padding: 40px 0;">
+    <div class="container" style="width: 80%; margin: auto; overflow: hidden;">
+        <div class="subscribe-title text-center" style="margin-bottom: 30px;">
+            <h2 style="color: #35424a; font-size: 28px; font-weight: bold;">Do you want to add your business listing with us?</h2>
+            <p style="color: #666; font-size: 16px;">Listrace offers you to list your business with us, and we are very much able to promote your business.</p>
+        </div>
+        
+        <!-- Contact Information Section -->
+        <!-- Contact Information Section -->
+        <div class="contact-info" style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 20px; padding: 20px; background-color: #ffffff; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+            <div style="flex: 1; min-width: 250px; margin-right: 20px;">
+                <h3 style="color: #35424a; margin-top: 0;">Contact Us to Get the Best Deals</h3>
+                <h4 style="color: #35424a;">For Vendors</h4>
+                <p style="margin: 5px 0;">Email: <a href="mailto:vendordreamknot0@google.com" style="color: #35424a; text-decoration: none;">vendordreamknot0@google.com</a></p>
+                <p style="margin: 5px 0;">Phone: <span style="color: #35424a;">7736686345</span></p>
+            </div>
+            <div style="flex: 1; min-width: 250px;">
+                <h4 style="color: #35424a;">For Users</h4>
+                <p style="margin: 5px 0;">Email: <a href="mailto:infodreamknot0@google.com" style="color: #35424a; text-decoration: none;">infodreamknot0@google.com</a></p>
+                <p style="margin: 5px 0;">Phone: <span style="color: #35424a;">7756678765</span></p>
+            </div>
+            <div style="flex: 1; min-width: 250px; margin-left: 20px;">
+                <h4 style="color: #35424a;">Registered Address</h4>
+                <p style="margin: 5px 0;">Second Floor, Ocus Technopolis, Sector 54 Golf Course Road, Kottayam, Kerala, India, 122002</p>
+            </div>
+        </div>
+    </div>
+</section><!--/subscription-->    
+<!-- Subscription End -->
 		<!--footer start-->
 	<!--	<footer id="footer"  class="footer">
 			<div class="container">
@@ -1164,6 +1143,16 @@
 		     
         <!--Custom JS-->
         <script src="{% static 'assets/js/custom.js'%}"></script>
+		<script>
+			function toggleDetails(detailId) {
+				var details = document.getElementById(detailId);
+				if (details.style.display === "none") {
+					details.style.display = "block";
+				} else {
+					details.style.display = "none";
+				}
+			}
+			</script>
         
     </body>
 	

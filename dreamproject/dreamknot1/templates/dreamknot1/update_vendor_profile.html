@@ -148,11 +148,11 @@
         
             <div class="error">{{ errors.name }}</div>
             <label for="name">Name</label>
-            <input type="text" id="name" name="name" value="{{ name }}" required>
+            <input type="text" id="name" name="name" value="{{ name }}"  readonly required >
 
             <div class="error">{{ errors.email }}</div>
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="{{ email }}" required>
+            <input type="email" id="email" name="email" value="{{ email }}" readonly required>
 
             <div class="error">{{ errors.phone }}</div>
             <label for="phone">Phone</label>

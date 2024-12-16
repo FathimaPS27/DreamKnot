@@ -22,11 +22,39 @@ from django.core.exceptions import ValidationError
 from django.db.models import Avg
 from .models import Service, ServiceImage, Rating
 
-# index page
+from django.db.models import Count
+from django.shortcuts import render
+from .models import Service  # Make sure to import your Service model
+
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def index(request):
-    return render(request, 'dreamknot1/index.html')
- 
+    # Count and group services by category
+    categories_count = Service.objects.values('category').annotate(count=Count('id'))
+    
+    # Icon mapping for categories
+       # Icon mapping for categories
+    # Icon mapping for categories
+    icon_mapping = {
+        'Venue': 'fa-map-marker-alt',  # Corrected to match your category names
+        'Photography': 'fa-camera',  # Corrected to match your category names
+        'Catering': 'fa-concierge-bell',  # Already correct
+        'Decoration': 'fa-paint-roller',  # Add appropriate icon for Decoration
+        'MusicEntertainment': 'fa-music',  # Add appropriate icon for Music & Entertainment
+        'MakeupHair': 'fa-magic',  # Already correct
+        'Rentals': 'fa-box',  # Add appropriate icon for Rentals
+        'MehendiArtist': 'fa-paint-brush',  # Already correct
+    }
+
+    # Assign icons to categories
+    for category in categories_count:
+        category['icon'] = icon_mapping.get(category['category'], 'fa-question-circle')  # Default icon if not found
+        if category['icon'] == 'fa-question-circle':
+            print(f"Warning: No icon found for category '{category['category']}'")  # Log missing icons
+        print(category)  # Debugging line to check the output
+    context = {
+        'categories_count': categories_count,  # Pass the service counts and icons to the template
+    }
+    return render(request, 'dreamknot1/index.html', context)
 
 # user home page
 
@@ -37,7 +65,10 @@ from .models import UserSignup, UserProfile, Service
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def user_home(request):
-    user_name = request.session.get('user_name', 'user')
+    user_name = request.session.get('user_name')
+    if not user_name:
+        messages.error(request, "You must be logged in to view this page.")
+        return redirect('login') 
 
     user_instance = UserSignup.objects.filter(name=user_name).first()
 
@@ -72,9 +103,9 @@ def user_home(request):
     services = Service.objects.filter(status=1, availability=True)
 
     # Apply location filter by city
-    city = request.GET.get('city')
-    if city:
-        services = services.filter(city__icontains=city)
+    place = request.GET.get('city')
+    if place:
+        services = services.filter(city__icontains=place)
 
     # Apply other filters based on query parameters
     category = request.GET.get('category')
@@ -131,25 +162,53 @@ def user_home(request):
         'category': category,
         'price_range': price_range,
         'service_type': service_type,
-        'city': city,  # Pass city to the template
+        'city': place,  # Pass city to the template
         'search_query': search_query,
         'is_paginated': is_paginated,
         'page_obj': page_services,
     })
 
 
+
+def readmore(request):
+    return render(request, 'dreamknot1/readmore.html')
+
 # vendor home page
 
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-
-
+from django.db.models import Count  # Ensure Count is imported
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def vendor_home(request):
     user_name = request.session.get('user_name', 'vendor')
-    return render(request, 'dreamknot1/vendor_home.html', {'name': user_name})
 
+    # Count and group services by category for vendor home
+    categories_count = Service.objects.values('category').annotate(count=Count('id'))
+
+    # Icon mapping for categories
+    icon_mapping = {
+        'Venue': 'fa-map-marker-alt',  # Corrected to match your category names
+        'Photography': 'fa-camera',  # Corrected to match your category names
+        'Catering': 'fa-concierge-bell',  # Already correct
+        'Decoration': 'fa-paint-roller',  # Add appropriate icon for Decoration
+        'MusicEntertainment': 'fa-music',  # Add appropriate icon for Music & Entertainment
+        'MakeupHair': 'fa-magic',  # Already correct
+        'Rentals': 'fa-box',  # Add appropriate icon for Rentals
+        'MehendiArtist': 'fa-paint-brush',  # Already correct
+    }
+
+    # Assign icons to categories
+    for category in categories_count:
+        category['icon'] = icon_mapping.get(category['category'], 'fa-question-circle')  # Default icon if not found
+        if category['icon'] == 'fa-question-circle':
+            print(f"Warning: No icon found for category '{category['category']}'")  # Log missing icons
+        print(category)  # Debugging line to check the output
+
+    return render(request, 'dreamknot1/vendor_home.html', {
+        'name': user_name,
+        'categories_count': categories_count,  # Pass the service counts and icons to the template
+    })
 # for signup
 
 import uuid
@@ -302,6 +361,7 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 from .models import UserSignup
 
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -467,7 +527,7 @@ from .models import UserSignup, UserProfile
 
 # Update user profile
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def update_user_profile(request):
     if not request.session.get('user_id'):
         return redirect('login')
@@ -579,7 +639,7 @@ from django.contrib.auth.hashers import make_password
 from .models import UserSignup, VendorProfile
 
 # Update vendor profile
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def update_vendor_profile(request):
     if not request.session.get('user_id'):
         return redirect('login')
@@ -679,6 +739,7 @@ from django.views.decorators.cache import cache_control
 
 
 # user view for current month todo list
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def current_month_todolist(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -767,6 +828,7 @@ def current_month_todolist(request):
     })
 
 # user view for all tasks list
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def todo_list(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -948,6 +1010,7 @@ from io import TextIOWrapper
 from django.core.exceptions import ValidationError
 
 # user view for send e-invitation
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def send_rsvp_invitation(request):
     if not request.session.get('user_id'):
         return redirect('login')
@@ -1058,6 +1121,7 @@ from django.shortcuts import render, redirect
 from .models import UserSignup, RSVPInvitation
 
 # user view for invitation list
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def invitation_list(request):
     if not request.session.get('user_id'):
         messages.error(request, "You must be logged in to view your tasks.")
@@ -1470,6 +1534,7 @@ def edit_service(request, service_id):
         'categories': Service.CATEGORY_CHOICES,
         'errors': errors,
         'service_data': service_data,
+        'vendor_name': vendor_name,  # Add vendor_name to context
     }
 
     # Add category-specific data to the context
@@ -1525,6 +1590,7 @@ def user_name(request):
 
 
     # User Dashboard - View Vendor Services, Book, Rate, Favorite
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def user_dashboard(request):
     user_name = request.session.get('user_name', 'user')
     if not user_name:
@@ -1570,6 +1636,7 @@ def user_dashboard(request):
     })
 
 # user view for vendor services
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def vendor_services(request, vendor_id):
     user_name = request.session.get('user_name', '')
     if not user_name:
@@ -1588,7 +1655,7 @@ def vendor_services(request, vendor_id):
 # user view for service detail
 from django.shortcuts import render, get_object_or_404
 from .models import Service, VenueService, CateringService, PhotographyService, MusicEntertainmentService, MakeupHairService, RentalsService, MehendiArtistService, DecorationService
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def service_detail(request, service_id):
     user_name = request.session.get('user_name', '')
     if not user_name:
@@ -1627,6 +1694,75 @@ def service_detail(request, service_id):
     return render(request, 'dreamknot1/service_detail.html', context)
 
 
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.db.models import Count
+from django.views.decorators.cache import cache_control
+from .models import (
+    UserSignup, Service, VenueService, CateringService, PhotographyService, 
+    MusicEntertainmentService, MakeupHairService, RentalsService, 
+    MehendiArtistService, DecorationService
+)
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def admin_service_details(request, service_id):
+    # Ensure the user is logged in as an admin
+    user_id = request.session.get('user_id')
+    user_role = request.session.get('user_role')
+
+    if not (user_id and user_role == 'admin'):
+        messages.error(request, "You must be logged in as an admin to view this page.")
+        return redirect('login')
+
+    try:
+        admin = UserSignup.objects.get(id=user_id, role='admin', is_super=True)
+    except UserSignup.DoesNotExist:
+        messages.error(request, "Admin user not found.")
+        return redirect('login')
+
+    # Fetch the specific service
+    service = get_object_or_404(Service, id=service_id)
+    vendor_phone = service.vendor.user.phone
+
+    # Retrieve category-specific details based on the service's category
+    category_details = None
+    if service.category == 'Venue':
+        category_details = VenueService.objects.filter(service=service).first()
+    elif service.category == 'Catering':
+        category_details = CateringService.objects.filter(service=service).first()
+    elif service.category == 'Photography':
+        category_details = PhotographyService.objects.filter(service=service).first()
+    elif service.category == 'MusicEntertainment':
+        category_details = MusicEntertainmentService.objects.filter(service=service).first()
+    elif service.category == 'MakeupHair':
+        category_details = MakeupHairService.objects.filter(service=service).first()
+    elif service.category == 'Rentals':
+        category_details = RentalsService.objects.filter(service=service).first()
+    elif service.category == 'MehendiArtist':
+        category_details = MehendiArtistService.objects.filter(service=service).first()
+    elif service.category == 'Decoration':
+        category_details = DecorationService.objects.filter(service=service).first()
+
+    # Render the admin service detail view with relevant details
+    context = {
+        'admin_name': admin.name,
+        'service': service,
+        'vendor_phone': vendor_phone,
+        'category_details': category_details,
+    }
+
+    return render(request, 'dreamknot1/admin_service_details.html', context)
+
+
+
+
+
+
+
+
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.utils import timezone
@@ -1653,7 +1789,7 @@ def vendor_approve_booking(request):
     try:
         vendor_instance = VendorProfile.objects.get(user__id=user_id)
         bookings = Booking.objects.filter(service__vendor=vendor_instance)
-        
+
         context = {
             'bookings': bookings,
             'vendor_name': vendor_instance.user.name,
@@ -1665,6 +1801,17 @@ def vendor_approve_booking(request):
         return redirect('update_vendor_profile')
 
 
+
+
+
+from django.core.mail import EmailMessage
+from django.http import JsonResponse
+from django.views.decorators.cache import cache_control
+from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404
+from .models import VendorProfile, Booking, UserSignup
+from django.conf import settings
+from django.utils import timezone
 @require_POST
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def process_booking(request):
@@ -1685,49 +1832,76 @@ def process_booking(request):
             booking.book_status = 1  # Approved
             booking.vendor_confirmed_at = timezone.now()
             message = "Your booking has been approved."
+            
+            # Create the approved booking email
+            email_message = create_approved_booking_email(user, booking)
+            
+            # Send email to user
+            email = EmailMessage(
+                subject=f"Booking Approved for {booking.service.name}",
+                body=email_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email],
+            )
+            email.content_subtype = "html"  # Specify that the email content is HTML
+            email.send(fail_silently=False)  # Send the email
+
         elif action == 'reject':
             booking.book_status = 3  # Rejected/Cancelled
             booking.vendor_confirmed_at = None
-            message = "Your booking has been rejected."
+            booking.canceled_by_user = True
+            
+            # Call the dummy refund method
+            refund_success = dummy_refund_payment(booking)
+            if not refund_success:
+                return JsonResponse({'status': 'error', 'message': 'Refund failed. Please contact support.'})
+            
+            message = "Your booking has been rejected and the amount has been refunded."
+            
+            # Create the rejected booking email
+            email_message = create_rejected_booking_email(user, booking)
+            
+            # Send email to user
+            email = EmailMessage(
+                subject=f"Booking Rejected for {booking.service.name}",
+                body=email_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email],
+            )
+            email.content_subtype = "html"  # Specify that the email content is HTML
+            email.send(fail_silently=False)  # Send the email
+
+        elif action == 'complete':
+            booking.book_status = 2  # Completed
+            message = "Your booking has been marked as completed."
+            
+            # Additional details for the completed booking email
+            balance_payment = booking.total_amount - booking.booking_amount  # Calculate balance payment
+            account_number = "1234567890"  # Example account number
+            bank_name = "Example Bank"  # Example bank name
+            ifsc_code = "EXAM1234567"  # Example IFSC code
+            other_payment_methods = "Credit Card, PayPal"  # Example payment methods
+            payment_deadline = timezone.now() + timezone.timedelta(days=7)  # Example deadline (7 days from now)
+            
+            # Create the completed booking email
+            email_message = create_completed_booking_email(
+                user, booking, balance_payment, account_number, bank_name, ifsc_code, other_payment_methods, payment_deadline
+            )
+            
+            # Send email to user
+            email = EmailMessage(
+                subject=f"Booking Completed for {booking.service.name}",
+                body=email_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email],
+            )
+            email.content_subtype = "html"  # Specify that the email content is HTML
+            email.send(fail_silently=False)  # Send the email
+
         else:
             return JsonResponse({'status': 'error', 'message': 'Invalid action.'})
         
         booking.save()
-        
-        # Prepare detailed email message
-        email_message = f"""
-Dear {user.name},
-
-{message}
-
-Booking Details:
-- Service: {booking.service.name}
-- Event Date: {booking.event_date}
-- Event Name: {booking.event_name}
-- Event Address: {booking.event_address}
-- Number of Days: {booking.num_days}
-- Total Amount: ₹{booking.total_amount}
-- Booking Amount: ₹{booking.booking_amount}
-
-Additional Requirements:
-{booking.additional_requirements or 'None'}
-
-If you have any questions or concerns, please don't hesitate to contact us.
-
-Thank you for using our service.
-
-Best regards,
-Dream Knot Team
-        """
-        
-        # Send email to user
-        send_mail(
-            subject=f"Booking {action.capitalize()}d for {booking.service.name}",
-            message=email_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
         
         return JsonResponse({'status': 'success', 'message': f"Booking {action}d and email sent to user."})
 
@@ -1736,6 +1910,228 @@ Dream Knot Team
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
     
+
+def create_completed_booking_email(user, booking, balance_payment, account_number, bank_name, ifsc_code, other_payment_methods, payment_deadline):
+    return f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                margin: 0;
+                padding: 20px;
+                background-color: #f4f4f4;
+            }}
+            .container {{
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 5px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }}
+            h1, h2, h3 {{
+                color: #661c12;
+            }}
+            .summary {{
+                margin: 20px 0;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                background-color: #f9f9f9;
+            }}
+            .footer {{
+                margin-top: 20px;
+                font-size: 0.9em;
+                color: #777;
+            }}
+            .important-note {{
+                font-weight: bold;
+                color: #d9534f; /* Bootstrap danger color */
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Booking Completed</h1>
+            <p>Dear {user.name},</p>
+
+            <p>We hope this message finds you well!</p>
+
+            <p>We are delighted to inform you that your booking with Dream Knot has been successfully completed. Thank you for choosing us to be a part of your special day. Below are the final details of your booking along with instructions for the remaining balance payment.</p>
+
+            <div class="summary">
+                <h2>Booking Summary:</h2>
+                <ul>
+                    <li><strong>Service:</strong> {booking.service.name}</li>
+                    <li><strong>Event Date:</strong> {booking.event_date.strftime('%B %d, %Y')}</li>
+                    <li><strong>Event Name:</strong> {booking.event_name}</li>
+                    <li><strong>Event Address:</strong> {booking.event_address}</li>
+                    <li><strong>Number of Days:</strong> {booking.num_days}</li>
+                    <li><strong>Total Amount:</strong> ₹{booking.total_amount:,.2f}</li>
+                    <li><strong>Paid Amount:</strong> ₹{booking.booking_amount:,.2f}</li>
+                    <li><strong>Balance Payment Due:</strong> ₹{balance_payment:,.2f}</li>
+                </ul>
+                <p><strong>Additional Requirements:</strong> {booking.additional_requirements or 'None'}</p>
+            </div>
+
+            <h2>Payment Instructions:</h2>
+            <p>To complete the balance payment, please choose one of the following options. Kindly ensure that the payment is made by the specified deadline to avoid any late fees or service disruptions.</p>
+            <ul>
+                <li><strong>Bank Transfer:</strong>
+                    <ul>
+                        <li><strong>Account Number:</strong> {account_number}</li>
+                        <li><strong>Bank Name:</strong> {bank_name}</li>
+                        <li><strong>IFSC Code:</strong> {ifsc_code}</li>
+                    </ul>
+                </li>
+                <li><strong>Other Payment Methods:</strong> {other_payment_methods}</li>
+                <li><strong>UPI Payment:</strong> If you prefer UPI, you can use our UPI ID or pay via direct cash.</li>
+            </ul>
+
+            <h2>Payment Deadline:</h2>
+            <p>Please make the balance payment by {payment_deadline.strftime('%B %d, %Y')}. Late payments may incur additional fees as per our policy.</p>
+
+            <p class="important-note">Important Note: After completing the payment, please retain the payment confirmation or receipt for your records. Should you have any questions regarding your booking or require assistance with the payment process, do not hesitate to reach out to our customer support team.</p>
+
+            <p>Thank you once again for choosing Dream Knot! We look forward to helping you create more unforgettable memories in the future.</p>
+
+            <p>Warm regards,<br>The Dream Knot Team</p>
+
+            <div class="footer">
+                <p><em>This email serves as a record of your booking completion and payment details.</em></p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+
+def create_approved_booking_email(user, booking):
+    return f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                margin: 0;
+                padding: 20px;
+                background-color: #f4f4f4;
+            }}
+            .container {{
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 5px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }}
+            h1, h2 {{
+                color: #28a745; /* Green for approved */
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Booking Approved</h1>
+            <p>Dear {user.name},</p>
+            <p>We are pleased to inform you that your booking has been approved!</p>
+            <p>Thank you for choosing Dream Knot. We look forward to serving you on your special day.</p>
+            <p>Booking Details:</p>
+            <ul>
+                <li><strong>Service:</strong> {booking.service.name}</li>
+                <li><strong>Event Date:</strong> {booking.event_date.strftime('%B %d, %Y')}</li>
+                <li><strong>Event Name:</strong> {booking.event_name}</li>
+                <li><strong>Event Address:</strong> {booking.event_address}</li>
+            </ul>
+            <p>If you have any questions, feel free to reach out to our support team.</p>
+            <p>Warm regards,<br>The Dream Knot Team</p>
+        </div>
+    </body>
+    </html>
+    """
+
+def create_rejected_booking_email(user, booking):
+    return f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                margin: 0;
+                padding: 20px;
+                background-color: #f4f4f4;
+            }}
+            .container {{
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 5px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }}
+            h1, h2 {{
+                color: #dc3545; /* Red for rejected */
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Booking Rejected</h1>
+            <p>Dear {user.name},</p>
+            <p>We regret to inform you that your booking has been rejected.</p>
+            <p>We understand this may be disappointing, and we are here to assist you with any questions or concerns you may have.</p>
+            <p>Booking Details:</p>
+            <ul>
+                <li><strong>Service:</strong> {booking.service.name}</li>
+                <li><strong>Event Date:</strong> {booking.event_date.strftime('%B %d, %Y')}</li>
+                <li><strong>Event Name:</strong> {booking.event_name}</li>
+                <li><strong>Event Address:</strong> {booking.event_address}</li>
+            </ul>
+            <p>If you have any questions, please contact our support team.</p>
+            <p>Warm regards,<br>The Dream Knot Team</p>
+        </div>
+    </body>
+    </html>
+    """
+
+
+
+
+def dummy_refund_payment(booking):
+    """
+    Simulates a refund process for testing purposes.
+    
+    Args:
+        booking: An instance of the Booking model containing payment details.
+    
+    Returns:
+        bool: True if the refund is simulated successfully, False otherwise.
+    """
+    # Simulate some conditions for the refund
+    if not booking.razorpay_payment_id:
+        print("Refund failed: No payment ID found.")
+        return False
+
+    # Simulate refund eligibility check
+    if not booking.is_refundable():
+        print("Refund failed: Booking is not eligible for a refund.")
+        return False
+
+    # Simulate a successful refund process
+    print(f"Simulating refund for booking ID: {booking.id}")
+    print(f"Refund amount: ₹{booking.booking_amount}")
+
+    # Here you can simulate additional logic, such as updating the booking status
+    booking.book_status = 4  # Set status to 'Refunded'
+    booking.refund_amount = booking.booking_amount  # Set the refund amount
+    booking.save()  # Save the changes to the booking
+
+    print(f"Refund successful for booking ID: {booking.id}")
+    return True
+
+
+
 def get_booking_details(request, booking_id):
     user_id = request.session.get('user_id')
     
@@ -1764,6 +2160,8 @@ def get_booking_details(request, booking_id):
             'reference_images': [image.image.url for image in booking.reference_images.all()],
             'booking_date': booking.booking_date.strftime('%Y-%m-%d %H:%M:%S'),
             'terms_agreed': booking.user_agreed_to_terms,
+            'book_status': booking.book_status,  # Return the integer value
+            
             'agreement_date': booking.user_agreement_date.strftime('%Y-%m-%d %H:%M:%S') if booking.user_agreement_date else None,
         }
         
@@ -1924,11 +2322,22 @@ def user_booking_details(request):
     bookings = Booking.objects.filter(user=user_signup).select_related('service')
     
     today = timezone.now().date()
+
+    
     
     for booking in bookings:
         booking.days_until_event = (booking.event_date - today).days
         booking.is_refundable = booking.days_until_event > 30
 
+     # Determine if the service is a venue and set the venue city
+        if booking.service.category == 'Venue':
+            booking.is_venue = True
+            booking.venue_city = booking.service.city  # Assuming the venue city is the address
+        else:
+            booking.is_venue = False
+            booking.venue_city = booking.event_address  # Use event address for non-venue services
+
+    
     if request.method == 'POST':
         booking_id = request.POST.get('booking_id')
         cancellation_reason = request.POST.get('cancellation_reason')
@@ -2012,6 +2421,25 @@ def user_booking_details(request):
         'invoice_data': bookings  # Pass the bookings data for invoice generation
 
     })
+
+
+
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
+from .models import Booking
+
+# View to cancel a booking
+def cancel_booking(request, booking_id):
+    user_id = request.session.get('user_id')
+    
+    if not user_id:
+        messages.error(request, "You must be logged in to cancel a booking.")
+        return redirect('login')
+
+    booking = get_object_or_404(Booking, id=booking_id, user__id=user_id)
+    booking.delete()
+    messages.success(request, "Your booking has been canceled successfully.")
+    return redirect('user_booking_details')  # Redirect to the booking details page
 
 
 # dreamproject/dreamknot1/views.py
@@ -2144,6 +2572,7 @@ def book_service(request, service_id):
             'venue_city': venue_city,  # Pass the venue city
             'service_image': service_image,  # Pass the service image
             'category_details': category_details,  # Pass category-specific details
+            'booking': booking,  # Pass the booking object to the template
 
         })
 
@@ -2201,6 +2630,9 @@ def payment_success(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request.'})
 
 
+
+
+# for filter in vendor booking details
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from .models import Booking, VendorProfile
@@ -2223,6 +2655,13 @@ def get_vendor_bookings(request):
 
         # Start with all bookings for this vendor
         bookings = Booking.objects.filter(service__vendor=vendor_instance)
+         
+        # Count bookings by status
+        pending_count = bookings.filter(book_status=0).count()  # Pending
+        confirmed_count = bookings.filter(book_status=1).count()  # Confirmed
+        completed_count = bookings.filter(book_status=2).count()  # Completed
+        canceled_count = bookings.filter(book_status=3).count()  # Canceled
+        refunded_count = bookings.filter(book_status=4).count()  # Refunded
 
         # Apply status filter
         if status_filter != 'all':
@@ -2257,7 +2696,14 @@ def get_vendor_bookings(request):
 
         return JsonResponse({
             'status': 'success',
-            'bookings': booking_data
+            'bookings': booking_data,
+            'counts': {
+                'pending': pending_count,
+                'completed': completed_count,
+                'refunded': refunded_count,
+                'confirmed': confirmed_count,
+    }
+            
         })
 
     except VendorProfile.DoesNotExist:
@@ -2348,7 +2794,7 @@ def rate_service(request, service_id):
     try:
         service = Service.objects.get(id=service_id)
         user = UserSignup.objects.get(name=user_name)
-    except Service.DoesNotExist:
+    except Service.DoesNotExist: 
         return HttpResponse("Service not found.")
     except UserSignup.DoesNotExist:
         return HttpResponse("User not found.")
@@ -2392,19 +2838,28 @@ from django.views.decorators.cache import cache_control
 
     
 
-# admin view for dashboard
+from django.db.models import Count
+from django.shortcuts import render
+
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def admin_dashboard(request):
-    # Check if the user is logged in as an admin
     user_id = request.session.get('user_id')
     user_role = request.session.get('user_role')
     
     if user_id and user_role == 'admin':
         try:
             admin = UserSignup.objects.get(id=user_id, role='admin', is_super=True)
+            
+            # Count and group services by category
+            categories_count = Service.objects.values('category').annotate(count=Count('id'))
+            services_by_category = Service.objects.all().order_by('category')
+              # Preprocess categories for CSS class names
+            for category in categories_count:
+                category['css_class'] = category['category'].lower().replace(" ", "-")
             context = {
                 'admin_name': admin.name,
-                # Add any other context data you want to pass to the template
+                'categories_count': categories_count,
+                'services_by_category': services_by_category,
             }
             return render(request, 'dreamknot1/admin_dashboard.html', context)
         except UserSignup.DoesNotExist:
@@ -2413,6 +2868,7 @@ def admin_dashboard(request):
     else:
         messages.error(request, "You must be logged in as an admin to access this page.")
         return redirect('login')
+
 
 
 # admin view for base

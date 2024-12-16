@@ -255,40 +255,12 @@
 <body>
      <!-- Navbar -->
      <nav class="navbar">
-        <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
+        <a href="{% url 'admin_dashboard' %}" class="logo">Dream Knot</a>
         <ul>
-            <li><a href="{% url 'user_home' %}">Dashboard</a></li>
-            <li><a href="{% url 'user_dashboard' %}">Service Providers</a></li>
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">Todo List<i class="fas fa-caret-down"></i></a>
-                <div class="dropdown-content">
-                    <a href="{% url 'current_month_todolist' %}">Current Month</a>
-                    <a href="{% url 'todo_list' %}">All Tasks</a>
-                </div>
-            </li>
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn" id="">Invitation<i class="fas fa-caret-down"></i></a>
-                <div class="dropdown-content">
-                    <a href="{% url 'send_rsvp_invitation' %}">Send Invitation</a>
-                    <a href="{% url 'invitation_list' %}">Invitation List</a>
-                </div>
-            </li>
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn" id="account">My Account<i class="fas fa-caret-down"></i></a>
-                <div class="dropdown-content">
-                    <a href="{% url 'user_booking_details' %}">My Bookings</a>
-                    <a href="{% url 'favorite_list' %}" id="favourite"> favourite list</a>
-                </div>
-            </li>
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">
-                    <i class="fa fa-user-circle"></i> {{ user_name }} <i class="fas fa-caret-down"></i>
-                </a>
-                <div class="dropdown-content">
-                    <a href="{% url 'update_user_profile' %}">Update Profile</a>
-                    <a href="{% url 'logout' %}" class="logout-button">Logout</a>
-                </div>
-            </li>
+            <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'manage_predefined_tasks' %}">Manage Tasks</a></li>
+            <li><a href="{% url 'logout' %}" class="logout-button">Logout</a></li>
+          
         </ul>
     </nav>
 
@@ -668,26 +640,17 @@
                 
                 <div class="col-lg-4">
                     <div class="sticky-top" style="top: 90px;">
-                        <a href="{% url 'book_service' service.id %}" class="btn btn-success btn-action btn-block">
-                            <i class="fas fa-calendar-check mr-2"></i> Book Now
-                        </a>
+                        
                         <a href="{% url 'booking_calendar' service.id %}" class="btn btn-primary btn-action btn-block">
                             <i class="fas fa-calendar-alt mr-2"></i> View Availability
                         </a>
-                        <a href="{% url 'add_to_favorite' service.id %}" class="btn btn-danger btn-action btn-block" id="addToFavorite">
-                            <i class="fas fa-heart mr-2"></i> Add to Favorites
-                        </a>
-                        <a href="{% url 'vendor_services' service.vendor.id %}" class="btn btn-secondary btn-action btn-block">
-                            <i class="fas fa-arrow-left mr-2"></i> Back to Vendor
-                        </a>
+                       
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="heart-animation" id="heartAnimation">
-        <i class="fas fa-heart"></i>
-    </div>
+  
     <footer class="footer">
         <p>&copy; 2024 Dream Knot. All rights reserved.</p>
         <p>Designed by <a href="#">Dream Knot</a></p>
