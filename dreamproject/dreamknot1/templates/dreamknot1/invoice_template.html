@@ -1,0 +1,78 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 20px;">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <center><img src="data:image/jpeg;base64,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" alt="Dream Knot Logo" style="width: 150px; height: auto;"></center>
+
+
+        <h2 style="margin: 10px 0;">Dream Knot</h2>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <p><strong>Address:</strong> 123 Dream St, Dream City, DC 12345</p>
+        <p><strong>Email:</strong> support@dreamknot.com</p>
+        <p><strong>Phone:</strong> 9744685133</p>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <p><strong>Invoice ID:</strong> {{ booking.id }}</p>
+        <p><strong>Date:</strong> {{ today }}</p>
+    </div>
+
+    <hr style="border: none; border-top: 1px solid #000; margin: 20px 0;">
+
+    <div style="margin-bottom: 20px;">
+        <h3>Invoice Details</h3>
+        <p><strong>Service Name:</strong> {{ booking.service.name }}</p>
+        <p><strong>Event Date:</strong> {{ booking.event_date }}</p>
+        <p><strong>Status:</strong> {{ booking.get_book_status_display }}</p>
+        {% if booking.status == 'cancelled' %}
+        <p><strong>Cancellation Reason:</strong> {{ booking.cancellation_reason }}</p>
+        {% endif %}
+        
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <h3 style="text-align: center">Payment Summary</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="border: 1px solid #000; padding: 8px; text-align: left;">Description</th>
+                    <th style="border: 1px solid #000; padding: 8px; text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border: 1px solid #000; padding: 8px;">Booking Amount 50%</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">{{ booking.booking_amount }} rs/-</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000; padding: 8px;">Balance Amount to pay</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">{{ booking.booking_amount }} rs/-</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Total Amount</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">{{ booking.total_amount }} rs/-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <hr style="border: none; border-top: 1px solid #000; margin: 20px 0;">
+
+    <div>
+        <p>Thank you for choosing Dream Knot!</p>
+        <p>Please make the payment by the due date to avoid any late fees.</p>
+        <p>If you have any questions regarding this invoice, feel free to contact us at <strong>support@dreamknot.com</strong>.</p>
+        <p><em>This is a system-generated invoice and does not require a signature.</em></p>
+
+    </div>
+</body>
+</html>

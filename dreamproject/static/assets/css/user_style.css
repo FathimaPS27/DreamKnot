@@ -272,7 +272,7 @@ nav.navbar.bootsnav .navbar-toggle i{color: #600508;}
     background:rgba(29, 29, 30, 0.073);
     z-index: -1;
 }
-.welcome-hero-txt { padding-top: 55px;}
+.welcome-hero-txt { padding-top: 285px;}
 
 .welcome-hero-txt h2 {
     font-size: 48px;
@@ -280,12 +280,13 @@ nav.navbar.bootsnav .navbar-toggle i{color: #600508;}
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2.4px;
-    line-height: 1.4;
+    /* line-height: 1.4; */
+  
 }
 .welcome-hero-txt p {
-    font-size: 18px;
+    font-size: 15px;
     color: #fcfcfc;
-    margin-top: 25px;
+    margin-top: 5px;
 }
 
 .welcome-hero-serch-box{margin-top: 78px;display: flex;}

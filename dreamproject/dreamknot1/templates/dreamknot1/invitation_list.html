@@ -220,7 +220,6 @@
         <a href="{% url 'user_home' %}" class="logo">Dream Knot</a>
         <ul>
             <li><a href="{% url 'user_home' %}">Dashboard</a></li>
-            <li><a href="{% url 'user_dashboard' %}">Service Providers</a></li>
             <li class="dropdown">
                 <a href="javascript:void(0)" class="dropbtn">Todo List<i class="fas fa-caret-down"></i></a>
                 <div class="dropdown-content">
@@ -242,6 +241,8 @@
                     <a href="{% url 'favorite_list' %}">favourite list</a>
                 </div>
             </li>
+            <li><a href="{% url 'wedding_blogs' %}" id="wedding_blogs">blogs</a></li>
+
             <li class="dropdown">
                 <a href="javascript:void(0)" class="dropbtn">
                     <i class="fa fa-user-circle"></i> {{ user_name }} <i class="fas fa-caret-down"></i>

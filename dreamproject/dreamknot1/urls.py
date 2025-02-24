@@ -17,6 +17,20 @@ urlpatterns = [
     path('vendor/image/delete/<int:image_id>/',views.delete_vendor_image, name='delete_vendor_image'),
     path('get-vendor-bookings/', views.get_vendor_bookings, name='get_vendor_bookings'),
     path('readmore/', views.readmore, name='readmore'),  # Service details page
+    path('social-auth/', include('social_django.urls', namespace='social')),
+    path('wedding-blogs/', views.wedding_blogs_view, name='wedding_blogs'),
+
+
+    path('chatbot/', views.chatbot_response, name='chatbot_response'),
+    path('generate-image/', views.generate_image, name='generate_image'),
+    path('search-by-image/', views.search_by_image, name='search_by_image'),
+    path('download-invoice/<int:booking_id>/', views.download_invoice, name='download_invoice'),
+
+    path('user/rate/<int:service_id>/', views.rate_service, name='rate_service'),
+
+    path('feedback/<int:booking_id>/', views.submit_service_feedback, name='submit_service_feedback'),
+    path('vendor/analytics/<int:vendor_id>/', views.view_vendor_analytics, name='vendor_analytics'),
+
 
     #admin
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
@@ -24,12 +38,7 @@ urlpatterns = [
     path('toggle_status/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'),
     path('manage_predefined_tasks/', views.manage_predefined_tasks, name='manage_predefined_tasks'),
     path('service/<int:service_id>/', views.admin_service_details, name='admin_service_details'),
-
-
-    
-
-
-
+    path('analytics/', views.admin_analytics, name='admin_analytics'),
 
 
     # path('view_venues/', views.view_venues, name='view_venues'),
@@ -80,6 +89,10 @@ urlpatterns = [
 
     path('payment_success/', views.payment_success, name='payment_success'),
     path('cancel_booking/<int:booking_id>/', views.cancel_booking, name='cancel_booking'),
+
+    path('budget/optimize/', views.optimize_budget, name='optimize_budget'),
+    path('budget/view/', views.view_budget, name='view_budget'),
+    path('budget/analytics/', views.budget_analytics, name='budget_analytics'),
 
 ]
 if settings.DEBUG:

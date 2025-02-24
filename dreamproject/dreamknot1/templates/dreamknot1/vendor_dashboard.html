@@ -140,6 +140,52 @@
             {% endfor %}
         {% endif %}
 
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Service Performance</h5>
+                        <div class="row g-4">
+                            <!-- Overall Rating -->
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <div class="stat-value">{{ analytics.average_rating|floatformat:1 }}</div>
+                                    <div class="stat-label">Average Rating</div>
+                                </div>
+                            </div>
+                            <!-- Total Reviews -->
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <div class="stat-value">{{ analytics.total_reviews }}</div>
+                                    <div class="stat-label">Total Reviews</div>
+                                </div>
+                            </div>
+                            <!-- Positive Feedback -->
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <div class="stat-value">{{ analytics.sentiment_summary.positive }}</div>
+                                    <div class="stat-label">Positive Reviews</div>
+                                </div>
+                            </div>
+                            <!-- Areas for Improvement -->
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <div class="stat-value">{{ analytics.sentiment_summary.negative }}</div>
+                                    <div class="stat-label">Areas for Improvement</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end mt-3">
+                            <a href="{% url 'vendor_analytics' vendor.id %}" class="btn btn-primary">
+                                <i class="fas fa-chart-line"></i> View Detailed Analytics
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="your-services" class="container mb-5">
             <h2 class="mb-4 text-center pt-4">Services Offered by {{ vendor.company_name }}</h2>
           

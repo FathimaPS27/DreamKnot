@@ -22,7 +22,7 @@
             <img src="{% static 'images/logo1.png' %}" alt="Dream Knot Logo"> <!-- Replace with your logo path -->
         </div>
         <nav class="navbar1">
-            <a href="#">Dream Knot</a>
+            <a href="{% url 'index' %}">Dream Knot</a>
         </nav>
     </header>
     
@@ -57,7 +57,7 @@
                         </script>
                     {% endif %}
 
-                        <form method="post">
+                        <form method="post" id="loginForm">
                             {% csrf_token %}
                             
                             <!-- Social Login Buttons -->
@@ -67,15 +67,14 @@
                                     Sign in with Facebook
                                 </button> -->
                                <!-- Google login -->
-                            {% comment %} <a href="{% url 'social:begin' 'google-oauth2' %}" class="social-btn google-btn">
+                            {% comment %} <a href="{% url 'social:begin' 'google-oauth2' %}?next=/user_home/"" class="social-btn google-btn">
                                 <button type="button" id="googleSignInButton">
                                     <img src="{% static 'images/google.png' %}" alt="Google" style="height: 18px; margin-right: 10px;">
                                     Sign in with Google
                                 </button>
-                            </a> {% endcomment %}
-                            
-                            
-                            </div>
+                            </a>
+                          
+                            </div> {% endcomment %}
                            
                             
                             
@@ -88,6 +87,9 @@
 <div class="input-field">
     <input type="email" class="input" id="email" name="email" value="{{ email }}" required >
     <label for="email">Email</label>
+    <div id="emailError" class="error-message" style="color: red; display: none;">Invalid Gmail address</div>
+    <div id="emailSuccess" class="success-message" style="color: green; display: none;">Valid Gmail address</div> <!-- New success message -->
+
 </div>
 
                             
@@ -96,6 +98,10 @@
     <input type="password" class="input" id="password" name="password" value="{{ password }}" required>
     <label for="password">Password</label>
     <i class="fa fa-eye" id="togglePassword" style="cursor: pointer; position: absolute; right: 10px; top: 15px;"></i>
+    <div id="passwordError" class="error-message"  style="color: red; display: none; font-size: 0.8em;"></div>
+    <div id="passwordSuccess" class="success-message" style="color: green; display: none;">Password is strong</div> <!-- New success message -->
+
+
 </div>
                
                             <!-- Submit Button -->
@@ -136,7 +142,61 @@
             this.classList.toggle('fa-eye-slash');
         });
     </script>
-    
+    <script>
+         // ... existing code ...
+
+    // Live validation for email and password
+    const emailInput = document.querySelector('#email');
+    const passwordInput = document.querySelector('#password');
+    const emailError = document.querySelector('#emailError');
+    const emailSuccess = document.querySelector('#emailSuccess'); // New success message element
+    const passwordError = document.querySelector('#passwordError');
+    const passwordSuccess = document.querySelector('#passwordSuccess'); // New success message element
+
+
+    emailInput.addEventListener('input', function () {
+        const emailPattern = /^[a-zA-Z0-9_.+-]+@gmail\.com$/;
+        if (!emailPattern.test(emailInput.value)) {
+            emailError.style.display = 'block';
+            emailSuccess.style.display = 'none'; // Hide success message
+            emailInput.style.borderColor = 'red'; // Change border color to red
+            emailError.textContent = "Please enter a valid Gmail address.";
+        } else {
+            emailError.style.display = 'none';
+            emailSuccess.style.display = 'block'; // Show success message
+            emailInput.style.borderColor = 'green'; // Change border color to green
+        }
+    });
+    passwordInput.addEventListener('input', function () {
+        let errorMessages = [];
+        if (passwordInput.value.length < 8) {
+            errorMessages.push("Password must be at least 8 characters long.");
+        }
+        if (!/[A-Z]/.test(passwordInput.value)) {
+            errorMessages.push("Password needs an uppercase letter.");
+        }
+        if (!/[a-z]/.test(passwordInput.value)) {
+            errorMessages.push("Password needs a lowercase letter.");
+        }
+        if (!/[0-9]/.test(passwordInput.value)) {
+            errorMessages.push("Password needs a digit.");
+        }
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(passwordInput.value)) {
+            errorMessages.push("Password needs a special character.");
+        }
+
+        if (errorMessages.length > 0) {
+            passwordError.style.display = 'block';
+            passwordError.innerHTML = errorMessages.join('<br>'); // Display all error messages
+            passwordSuccess.style.display = 'none'; // Hide success message
+            passwordInput.style.borderColor = 'red'; // Change border color to red
+        } else {
+            passwordError.style.display = 'none';
+            passwordSuccess.style.display = 'block'; // Show success message
+            passwordInput.style.borderColor = 'green'; // Change border color to green
+        }
+        });
+    </script>
     
 </body>
 </html>

@@ -79,6 +79,8 @@
                                 {% if not email_is_valid %}
                                     <div class="invalid-feedback">Please enter a valid Gmail address.</div>
                                 {% endif %}
+                                <div id="emailValidation" class="valid-feedback" style="display: none;">✔️ Valid Email</div> <!-- Validation Message -->
+
                             </div>
                         
                             <!-- Password Input -->
@@ -86,6 +88,8 @@
                                 <input type="password" class="input" id="password" name="password" value="{{ request.POST.password }}" required>
                                 <label for="password">Password</label>
                                 <i class="fa fa-eye" id="togglePassword1" style="cursor: pointer; position: absolute; right: 10px; top: 10px;"></i> <!-- Eye Icon -->
+                                <div id="passwordValidation" class="valid-feedback" style="display: none;">✔️ Strong Password</div> <!-- Validation Message -->
+
                             </div>
 
                             <!-- Re-Password Input -->
@@ -93,7 +97,8 @@
                                 <input type="password" class="input" id="re-password" name="re_password" value="{{ request.POST.re_password }}" required>
                                 <label for="re-password">Re-Password</label>
                                 <i class="fa fa-eye" id="togglePassword2" style="cursor: pointer; position: absolute; right: 10px; top: 10px;"></i> <!-- Eye Icon -->
-                                
+                                <div id="rePasswordValidation" class="valid-feedback" style="display: none;">✔️ Passwords Match</div> <!-- Validation Message -->
+
                                 <!-- Error Message for Mismatching Passwords -->
                                 {% if passwords_do_not_match %}
                                     <div class="invalid-feedback">Passwords do not match.</div>
@@ -142,6 +147,8 @@
                                         {% if phone_is_invalid %}
                                             <div class="invalid-feedback">Enter a valid 10 digit phone number.</div>
                                         {% endif %}
+                                        <div id="phoneValidation" class="valid-feedback" style="display: none;">✔️ Valid Phone Number</div> <!-- Validation Message -->
+
                                     </div>
                                 </div>
                             </div>
@@ -195,6 +202,73 @@
         this.classList.toggle('fa-eye-slash');  // Toggle between eye and eye-slash
     });
 </script>
+<script>
+    // Live validation for email field
+    const emailInput = document.querySelector('#email');
+    const emailValidation = document.querySelector('#emailValidation');
+
+    emailInput.addEventListener('input', function () {
+        const emailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/; // Regex for Gmail validation
+        if (emailPattern.test(emailInput.value)) {
+            emailValidation.style.display = 'block'; // Show valid message
+            emailInput.classList.add('is-valid'); // Add Bootstrap valid class
+            emailInput.classList.remove('is-invalid'); // Remove invalid class
+        } else {
+            emailValidation.style.display = 'none'; // Hide valid message
+            emailInput.classList.remove('is-valid'); // Remove valid class
+            emailInput.classList.add('is-invalid'); // Add Bootstrap invalid class
+        }
+    });
+
+    // Live validation for password field
+    const passwordInput = document.querySelector('#password');
+    const passwordValidation = document.querySelector('#passwordValidation');
+
+    passwordInput.addEventListener('input', function () {
+        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/; // Regex for strong password
+        if (passwordPattern.test(passwordInput.value)) {
+            passwordValidation.style.display = 'block'; // Show valid message
+            passwordInput.classList.add('is-valid'); // Add Bootstrap valid class
+            passwordInput.classList.remove('is-invalid'); // Remove invalid class
+        } else {
+            passwordValidation.style.display = 'none'; // Hide valid message
+            passwordInput.classList.remove('is-valid'); // Remove valid class
+            passwordInput.classList.add('is-invalid'); // Add Bootstrap invalid class
+        }
+    });
+     // Live validation for re-password field
+     const rePasswordInput = document.querySelector('#re-password');
+     const rePasswordValidation = document.querySelector('#rePasswordValidation');
+ 
+     rePasswordInput.addEventListener('input', function () {
+         if (rePasswordInput.value === passwordInput.value) {
+             rePasswordValidation.style.display = 'block'; // Show valid message
+             rePasswordInput.classList.add('is-valid'); // Add Bootstrap valid class
+             rePasswordInput.classList.remove('is-invalid'); // Remove invalid class
+         } else {
+             rePasswordValidation.style.display = 'none'; // Hide valid message
+             rePasswordInput.classList.remove('is-valid'); // Remove valid class
+             rePasswordInput.classList.add('is-invalid'); // Add Bootstrap invalid class
+         }
+     });
+ 
+     // Live validation for phone number field
+     const phoneInput = document.querySelector('#phone');
+     const phoneValidation = document.querySelector('#phoneValidation');
+ 
+     phoneInput.addEventListener('input', function () {
+         const phonePattern = /^\d{10}$/; // Regex for 10 digit phone number
+         if (phonePattern.test(phoneInput.value)) {
+             phoneValidation.style.display = 'block'; // Show valid message
+             phoneInput.classList.add('is-valid'); // Add Bootstrap valid class
+             phoneInput.classList.remove('is-invalid'); // Remove invalid class
+         } else {
+             phoneValidation.style.display = 'none'; // Hide valid message
+             phoneInput.classList.remove('is-valid'); // Remove valid class
+             phoneInput.classList.add('is-invalid'); // Add Bootstrap invalid class
+         }
+     });
+ </script>
 
 </body>
 </html>

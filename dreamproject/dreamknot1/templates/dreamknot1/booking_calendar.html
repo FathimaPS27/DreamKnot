@@ -137,17 +137,10 @@
                     var today = new Date();
                     today.setHours(0, 0, 0, 0);
 
-                    // Get the minimum date (7 days from now)
-                    var sevenDaysAhead = new Date();
-                    sevenDaysAhead.setDate(sevenDaysAhead.getDate() + 7);
-
-                    if (clickedDate < sevenDaysAhead) {
-                        alert("You can only select a date that is at least 7 days in the future.");
-                        return;
-                    }
+                   
 
                     var maxDate = new Date();
-                    maxDate.setFullYear(maxDate.getFullYear() + 3);
+                    maxDate.setFullYear(maxDate.getFullYear() + 5);
                     if (clickedDate > maxDate) {
                         alert("You can only select a date that is up to 3 years in the future.");
                         return;
@@ -174,7 +167,7 @@
                 },
                 validRange: function(nowDate) {
                     var minDate = new Date();
-                    minDate.setDate(minDate.getDate() + 7); // Minimum date is 7 days from now
+                    minDate.setHours(0, 0, 0, 0); // Set to start of today
                     var maxDate = new Date();
                     maxDate.setFullYear(maxDate.getFullYear() + 3); // Maximum date is 3 years from now
                     return {

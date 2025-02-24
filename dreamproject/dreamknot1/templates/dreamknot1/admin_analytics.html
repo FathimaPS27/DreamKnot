@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.css" rel="stylesheet">
+<style>
+    .analytics-container {
+        padding: 2rem;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stats-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    
+    .stats-label {
+        color: #7f8c8d;
+        font-size: 1rem;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+    
+    .vendor-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .vendor-item {
+        padding: 1rem;
+        border-left: 4px solid;
+        margin-bottom: 0.5rem;
+        background: #f8f9fa;
+    }
+    
+    .vendor-item.good {
+        border-color: #2ecc71;
+    }
+    
+    .vendor-item.poor {
+        border-color: #e74c3c;
+    }
+    
+    .feedback-type-card {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+    }
+    
+    #wordCloud {
+        width: 100%;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <h2 class="mb-4">Analytics Dashboard</h2>
+    
+    <!-- Overall Statistics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value">{{ total_users }}</div>
+                <div class="stats-label">Total Users</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value">{{ total_vendors }}</div>
+                <div class="stats-label">Total Vendors</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value">{{ total_services }}</div>
+                <div class="stats-label">Total Services</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value">{{ total_bookings }}</div>
+                <div class="stats-label">Total Bookings</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Category Analysis -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h4>Category Ratings</h4>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h4>Feedback Type Analysis</h4>
+                <div class="chart-container">
+                    <canvas id="feedbackTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vendor Analysis -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h4>Top Performing Vendors</h4>
+                <ul class="vendor-list">
+                    {% for vendor in top_vendors %}
+                    <li class="vendor-item good">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="mb-0">{{ vendor.vendor.company_name }}</h5>
+                                <small>{{ vendor.total_reviews }} reviews</small>
+                            </div>
+                            <div class="text-end">
+                                <h4 class="mb-0">{{ vendor.average_rating|floatformat:1 }} ★</h4>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h4>Vendors Needing Improvement</h4>
+                <ul class="vendor-list">
+                    {% for vendor in bottom_vendors %}
+                    <li class="vendor-item poor">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="mb-0">{{ vendor.vendor.company_name }}</h5>
+                                <small>{{ vendor.total_reviews }} reviews</small>
+                            </div>
+                            <div class="text-end">
+                                <h4 class="mb-0">{{ vendor.average_rating|floatformat:1 }} ★</h4>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sentiment and Topics -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h4>Sentiment Trends</h4>
+                <div class="chart-container">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h4>Common Feedback Topics</h4>
+                <div id="wordCloud"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        console.log('Initializing charts...');
+        
+        // Category Ratings Chart
+        const categoryData = JSON.parse('{{ feedback_by_category|escapejs }}');
+        console.log('Category Data:', categoryData);
+        
+        if (categoryData && categoryData.length > 0) {
+            new Chart(document.getElementById('categoryChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: categoryData.map(item => item.service__category || 'Unknown'),
+                    datasets: [{
+                        label: 'Average Rating',
+                        data: categoryData.map(item => parseFloat(item.avg_rating) || 0),
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Feedback Type Analysis Chart
+        const feedbackTypeData = JSON.parse('{{ feedback_type_analysis|escapejs }}');
+        console.log('Feedback Type Data:', feedbackTypeData);
+        
+        if (feedbackTypeData && feedbackTypeData.length > 0) {
+            new Chart(document.getElementById('feedbackTypeChart').getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: feedbackTypeData.map(item => item.feedback_type || 'Unknown'),
+                    datasets: [{
+                        label: 'Average Rating',
+                        data: feedbackTypeData.map(item => parseFloat(item.avg_rating) || 0),
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        borderColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 5
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Sentiment Trends Chart
+        const sentimentData = JSON.parse('{{ sentiment_trends|escapejs }}');
+        console.log('Sentiment Data:', sentimentData);
+        
+        if (sentimentData && sentimentData.length > 0) {
+            new Chart(document.getElementById('sentimentChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: sentimentData.map(item => {
+                        const date = new Date(item.feedback__created_at__date);
+                        return date.toLocaleDateString();
+                    }),
+                    datasets: [{
+                        label: 'Positive',
+                        data: sentimentData.map(item => item.positive),
+                        borderColor: '#2ecc71',
+                        fill: false
+                    }, {
+                        label: 'Neutral',
+                        data: sentimentData.map(item => item.neutral),
+                        borderColor: '#f1c40f',
+                        fill: false
+                    }, {
+                        label: 'Negative',
+                        data: sentimentData.map(item => item.negative),
+                        borderColor: '#e74c3c',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        
+        // Word Cloud
+        const topics = JSON.parse('{{ top_topics|escapejs }}');
+        console.log('Topics Data:', topics);
+        
+        if (topics && Object.keys(topics).length > 0) {
+            const words = Object.entries(topics).map(([text, value]) => ({
+                text,
+                size: 10 + (value * 40 / Math.max(...Object.values(topics)))
+            }));
+            
+            const width = document.getElementById('wordCloud').offsetWidth;
+            const height = 300;
+            
+            const layout = d3.layout.cloud()
+                .size([width, height])
+                .words(words)
+                .padding(5)
+                .rotate(() => 0)
+                .fontSize(d => d.size)
+                .on('end', draw);
+            
+            function draw(words) {
+                d3.select('#wordCloud')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .append('g')
+                    .attr('transform', `translate(${width/2},${height/2})`)
+                    .selectAll('text')
+                    .data(words)
+                    .enter()
+                    .append('text')
+                    .style('font-size', d => `${d.size}px`)
+                    .style('font-family', 'Arial')
+                    .style('fill', () => `hsl(${Math.random() * 360}, 70%, 50%)`)
+                    .attr('text-anchor', 'middle')
+                    .attr('transform', d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+                    .text(d => d.text);
+            }
+            
+            layout.start();
+        }
+    } catch (error) {
+        console.error('Error initializing charts:', error);
+    }
+});
+</script>
+{% endblock %}

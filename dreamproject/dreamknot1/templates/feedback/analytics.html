@@ -1,0 +1,520 @@
+{% extends 'vendorbase.html' %}
+{% load static %}
+{% load feedback_filters %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.css" rel="stylesheet">
+<style>
+    .analytics-container {
+        padding: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        height: 100%;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    
+    .stat-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .chart-container {
+        position: relative;
+        margin: auto;
+        height: 300px;
+    }
+    
+    .topic-cloud {
+        height: 300px;
+        overflow: hidden;
+    }
+    
+    .topic-item {
+        display: inline-block;
+        padding: 5px 10px;
+        margin: 5px;
+        border-radius: 15px;
+        background: #f0f2f5;
+        transition: all 0.3s ease;
+    }
+    
+    .topic-item:hover {
+        background: #e1e5eb;
+        transform: scale(1.05);
+    }
+    
+    .sentiment-badge {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+    }
+    
+    .sentiment-positive { background-color: #d4edda; color: #155724; }
+    .sentiment-neutral { background-color: #fff3cd; color: #856404; }
+    .sentiment-negative { background-color: #f8d7da; color: #721c24; }
+    
+    .recommendation-item {
+        border-left: 3px solid #dee2e6;
+        padding-left: 1rem;
+        margin-left: 1rem;
+    }
+    
+    .feedback-quote {
+        background: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+    }
+    
+    .rating-stars {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Analytics Dashboard</h2>
+        <div class="date-range-picker">
+            <select id="timeRange" class="form-select">
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="365">Last year</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Overall Stats -->
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-value">{{ analytics.average_rating|floatformat:1 }}</div>
+                <div class="stat-label">Average Rating</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card" data-detail="Total Reviews" onclick="showFeedbacks('all')">
+                <div class="stat-value">{{ analytics.total_reviews }}</div>
+                <div class="stat-label">Total Reviews</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card" data-detail="Positive Feedbacks" onclick="showFeedbacks('positive')">
+                <div class="stat-value">{{ analytics.sentiment_summary.positive }}</div>
+                <div class="stat-label">Positive Feedback</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card" data-detail="Areas for Improvement" onclick="showFeedbacks('negative')">
+                <div class="stat-value">{{ analytics.sentiment_summary.negative }}</div>
+                <div class="stat-label">Areas for Improvement</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this after the existing stats cards -->
+    <div class="row g-4 mt-4">
+        <div class="col-12">
+            <div class="stat-card">
+                <h5>Recommended Improvements</h5>
+                
+                <!-- Critical Improvements -->
+                {% if recommendations.critical %}
+                <div class="mb-4">
+                    <h6 class="text-danger">
+                        <i class="fas fa-exclamation-circle"></i> Critical Areas
+                    </h6>
+                    {% for rec in recommendations.critical %}
+                    <div class="recommendation-item mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-danger me-2">{{ rec.category|title }}</span>
+                            <div class="rating-stars">
+                                {% for i in "12345"|make_list %}
+                                <i class="fas fa-star {% if forloop.counter <= rec.score %}text-warning{% else %}text-muted{% endif %}"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="mb-2"><strong>Suggestion:</strong> {{ rec.suggestion }}</p>
+                        <div class="feedback-examples">
+                            {% for feedback in rec.feedback %}
+                            <div class="feedback-quote text-muted fst-italic small">
+                                "{{ feedback.text }}"
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Important Improvements -->
+                {% if recommendations.important %}
+                <div class="mb-4">
+                    <h6 class="text-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Important Improvements
+                    </h6>
+                    <!-- Similar structure as critical improvements -->
+                </div>
+                {% endif %}
+                
+                <!-- Suggested Enhancements -->
+                {% if recommendations.suggested %}
+                <div class="mb-4">
+                    <h6 class="text-info">
+                        <i class="fas fa-lightbulb"></i> Suggested Enhancements
+                    </h6>
+                    <!-- Similar structure as critical improvements -->
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title" id="detailsModalLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Details will be populated here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-4">
+        <!-- Rating Trends -->
+        <div class="col-md-8">
+            <div class="stat-card">
+                <h5>Rating Trends</h5>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sentiment Distribution -->
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h5>Sentiment Distribution</h5>
+                <div class="chart-container">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-4">
+        <!-- Common Topics -->
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5>Common Feedback Topics</h5>
+                <div class="topic-cloud" id="topicCloud"></div>
+            </div>
+        </div>
+        
+        <!-- Recent Feedback -->
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5>Recent Feedback</h5>
+                <div class="recent-feedback-list">
+                    {% for feedback in recent_feedbacks %}
+                    <div class="feedback-item border-bottom py-2">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ feedback.rating }} ★</strong>
+                                <span class="text-muted ms-2">{{ feedback.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <span class="sentiment-badge sentiment-{{ feedback.sentiment.compound_score|sentiment_class }}">
+                                {{ feedback.sentiment.compound_score|sentiment_label }}
+                            </span>
+                        </div>
+                        <p class="mb-0 mt-1">{{ feedback.text_feedback }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add Bootstrap JS and its dependencies before other scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"></script>
+
+<!-- Existing scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Rating Trends Chart
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: {{ feedback_trends_dates|safe }},
+            datasets: [{
+                label: 'Average Rating',
+                data: {{ feedback_trends_ratings|safe }},
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 5,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Sentiment Distribution Chart
+    const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+    new Chart(sentimentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Positive', 'Neutral', 'Negative'],
+            datasets: [{
+                data: [
+                    {{ analytics.sentiment_summary.positive }},
+                    {{ analytics.sentiment_summary.neutral }},
+                    {{ analytics.sentiment_summary.negative }}
+                ],
+                backgroundColor: ['#2ecc71', '#f1c40f', '#e74c3c'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+   // Topic Cloud
+   const topics = {{ common_feedback_topics|safe }};
+   console.log('Topics data:', topics); // Debug log
+   
+   // Convert topics object to array of word objects
+   const words = Object.entries(topics).map(([text, value]) => ({
+       text,
+       size: value // Value is already normalized (10-100)
+   }));
+   
+   console.log('Word cloud data:', words); // Debug log
+   
+   if (words.length > 0) {
+       const width = document.getElementById('topicCloud').offsetWidth;
+       const height = 300;
+       
+       // Clear any existing content
+       d3.select('#topicCloud').html('');
+       
+       const layout = d3.layout.cloud()
+           .size([width, height])
+           .words(words)
+           .padding(5)
+           .rotate(() => 0)
+           .fontSize(d => d.size)
+           .on('end', draw);
+       
+       layout.start();
+       
+       function draw(words) {
+           d3.select('#topicCloud')
+               .append('svg')
+               .attr('width', width)
+               .attr('height', height)
+               .append('g')
+               .attr('transform', `translate(${width/2},${height/2})`)
+               .selectAll('text')
+               .data(words)
+               .enter()
+               .append('text')
+               .style('font-size', d => `${d.size}px`)
+               .style('font-family', 'Arial')
+               .style('fill', () => `hsl(${Math.random() * 360}, 70%, 50%)`)
+               .attr('text-anchor', 'middle')
+               .attr('transform', d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+               .text(d => d.text);
+       }
+   } else {
+       // If no topics data, display a message
+       document.getElementById('topicCloud').innerHTML = '<p class="text-muted text-center mt-4">No feedback topics available yet.</p>';
+   }
+    // Time Range Selector
+    document.getElementById('timeRange').addEventListener('change', function() {
+        const days = this.value;
+        window.location.href = `?days=${days}`;
+    });
+
+// Set the selected time range
+    const timeRange = document.getElementById('timeRange');
+    if (timeRange) {
+        timeRange.value = '{{ selected_days }}';
+    }
+});
+</script>
+<script>
+    function showFeedbacks(type) {
+        const modalElement = document.getElementById('detailsModal');
+        const modal = new bootstrap.Modal(modalElement);
+        
+        let title = '';
+        let feedbackList = '';
+        
+        if (type === 'all') {
+            title = 'All Reviews ({{ analytics.total_reviews }} reviews)';
+            feedbackList = `
+                <div class="feedback-list">
+                    {% regroup all_feedbacks by service as service_feedbacks %}
+                    {% for service_group in service_feedbacks %}
+                        <div class="service-section mb-4">
+                            <h5 class="service-title border-bottom pb-2 mb-3">
+                                {{ service_group.grouper.name }}
+                                <span class="badge bg-secondary ms-2">{{ service_group.list|length }} reviews</span>
+                            </h5>
+                            {% for feedback in service_group.list %}
+                                <div class="feedback-card mb-3 p-3 border rounded">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="rating">
+                                            <span class="badge {% if feedback.rating >= 4 %}bg-success{% elif feedback.rating >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                {{ feedback.rating }} ★
+                                            </span>
+                                            <small class="text-muted ms-2">{{ feedback.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-info me-2">{{ feedback.feedback_type|title }}</span>
+                                            <span class="sentiment-badge sentiment-{{ feedback.sentiment.compound_score|sentiment_class }}">
+                                                {{ feedback.sentiment.compound_score|sentiment_label }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p class="mb-0">{{ feedback.text_feedback }}</p>
+                                    {% if feedback.user %}
+                                        <small class="text-muted mt-2 d-block">
+                                            By: {{ feedback.user.name }}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle"></i> No reviews available
+                        </div>
+                    {% endfor %}
+                </div>
+            `;
+        } else if (type === 'positive') {
+            title = 'Positive Feedbacks';
+            feedbackList = `
+                <div class="feedback-list">
+                    {% for feedback in positive_feedbacks %}
+                        <div class="feedback-card mb-3 p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="rating">
+                                    <span class="badge bg-success">{{ feedback.rating }} ★</span>
+                                    <small class="text-muted ms-2">{{ feedback.created_at|date:"M d, Y" }}</small>
+                                </div>
+                                <span class="sentiment-badge sentiment-positive">
+                                    <i class="fas fa-smile"></i> Positive
+                                </span>
+                            </div>
+                            <p class="mb-0">{{ feedback.text_feedback }}</p>
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle"></i> No positive feedback available
+                        </div>
+                    {% endfor %}
+                </div>
+            `;
+        } else if (type === 'negative') {
+            title = 'Areas for Improvement';
+            feedbackList = `
+                <div class="feedback-list">
+                    {% for feedback in negative_feedbacks %}
+                        <div class="feedback-card mb-3 p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="rating">
+                                    <span class="badge bg-danger">{{ feedback.rating }} ★</span>
+                                    <small class="text-muted ms-2">{{ feedback.created_at|date:"M d, Y" }}</small>
+                                </div>
+                                <span class="sentiment-badge sentiment-negative">
+                                    <i class="fas fa-frown"></i> Needs Improvement
+                                </span>
+                            </div>
+                            <p class="mb-0">{{ feedback.text_feedback }}</p>
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle"></i> No improvement feedback available
+                        </div>
+                    {% endfor %}
+                </div>
+            `;
+        }
+        
+        document.getElementById('detailsModalLabel').textContent = title;
+        document.getElementById('modalBody').innerHTML = feedbackList;
+        
+        // Show the modal
+        modal.show();
+        
+        // Add event listeners for closing
+        const closeButtons = modalElement.querySelectorAll('[data-bs-dismiss="modal"]');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                modal.hide();
+            });
+        });
+    }
+</script>
+{% endblock %}

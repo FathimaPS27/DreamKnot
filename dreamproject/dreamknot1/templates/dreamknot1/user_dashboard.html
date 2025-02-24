@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css">
     <!-- SweetAlert2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <!-- SweetAlert2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -296,7 +297,336 @@
             transition: transform 0.3s ease;
         }
         
-        
+        /* styles.css */
+/* styles.css */
+.section-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2rem;
+    color: #333;
+    font-weight: bold;
+}
+
+.vendor-name {
+    font-size: 1.5rem;
+    color: #444;
+    margin: 20px 0 10px;
+    text-align: center;
+}
+
+.service-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s;
+}
+
+.service-item:hover {
+    transform: scale(1.02);
+}
+
+.service-image img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.service-details {
+    padding: 15px;
+    text-align: center;
+}
+
+.service-title {
+    font-size: 1.2rem;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.service-vendor {
+    font-size: 1rem;
+    color: #777;
+    margin-bottom: 10px;
+}
+
+.service-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.location-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.location-price i {
+    margin-right: 5px;
+    color: #e67e22;
+}
+
+.service-price {
+    font-weight: bold;
+    color: #e67e22;
+}
+
+.service-actions-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.action-btn {
+    padding: 8px 12px;
+    background-color: #3d0606;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background-color: rgb(106, 99, 99);
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #3d0606;
+    transition: color 0.3s;
+}
+
+.icon-btn:hover {
+    color: rgb(106, 99, 99);
+}
+.service-item.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s ease-in-out;
+}
+
+.service-item.card:hover {
+    transform: scale(1.05);
+}
+
+.service-image img {
+    height: 200px;
+    object-fit: cover;
+}
+
+.service-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.location-price {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.service-actions-row .btn {
+    font-size: 0.9rem;
+}
+
+.icon-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #777;
+}
+
+.icon-btn i:hover {
+    color: red;
+}
+
+
+
+
+
+.categories-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 20px;
+    padding: 20px 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.category-item {
+    min-width: 150px;
+    text-decoration: none;
+    text-align: center;
+    transition: transform 0.3s ease;
+    padding: 10px;
+}
+
+.category-image-wrapper {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 15px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.category-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.category-title {
+    font-size: 14px;
+    margin: 0;
+    color: #333;
+    white-space: nowrap;
+}
+
+.category-item:hover {
+    transform: translateY(-5px);
+    text-decoration: none;
+}
+
+.category-item:hover .category-image-wrapper {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.category-item:hover .category-image {
+    transform: scale(1.1);
+}
+
+.category-item:hover .category-title {
+    color: #C75B7A;
+}
+
+/* Custom scrollbar styling */
+.categories-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.categories-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.categories-wrapper::-webkit-scrollbar-thumb {
+    background: #C75B7A;
+    border-radius: 10px;
+}
+
+.categories-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #b44c69;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .category-item {
+        min-width: 120px;
+    }
+
+    .category-image-wrapper {
+        width: 90px;
+        height: 90px;
+    }
+
+    .category-title {
+        font-size: 12px;
+    }
+}
+
+.categories-section {
+    position: relative;
+    padding: 40px 0;
+    background-color: #fff;
+}
+
+.categories-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 20px;
+    padding: 20px 0;
+    overflow: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+}
+
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    color: #C75B7A;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.nav-arrow:hover {
+    background-color: #C75B7A;
+    color: #fff;
+    border-color: #C75B7A;
+}
+
+.prev-arrow {
+    left: -40px;
+}
+
+.next-arrow {
+    right: -40px;
+}
+
+.nav-arrow:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Your existing category styles... */
+
+@media (max-width: 768px) {
+    .nav-arrow {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+
+    .prev-arrow {
+        left: 15px;
+    }
+
+    .next-arrow {
+        right: 15px;
+    }
+}
 
     </style>
 </head>
@@ -347,40 +677,138 @@
         <h1>Find the best services tailored just for you.</h1>
     </header>
 
-    <!-- Filter and Search Section -->
-    <div class="filter-section">
-        <form method="GET">
-            <label for="category">Filter by Category:</label>
-            <select name="category" id="category">
-                <option value="">All Categories</option>
-                <option value="Photography">Photography</option>
-                <option value="Catering">Catering</option>
-                <option value="Venue">Venue</option>
-                <option value="Decoration">Decoration</option>
-                <option value="Music">Music</option>
-                <option value="Makeup">Makeup</option>
-                <option value="Florists">Florists</option>
-                <!--<option value="Transportation">Transportation</option>
-                <option value="Wedding Planners">Wedding Planners</option>
-                <option value="Bakeries">Bakeries</option>
-                <option value="Videography">Videography</option>
-                <option value="Invitations">Invitations</option>-->
-                <option value="Rentals">Rentals</option>
-                <!--<option value="Bride and Groom Wear">Bride and Groom Wear</option>
-                <option value="Mehndi">Mehndi</option>
-                <option value="Jewelry and Accessories">Jewelry and Accessories</option>
-                <option value="Food">Food</option>-->
-            </select>
-            <button type="submit">Filter</button>
-        </form>
 
-        <form method="GET">
-            <label for="search">Search Services:</label>
-            <input type="text" name="search" id="search" placeholder="Search...">
-            <button type="submit">Search</button>
-        </form>
+    <section class="categories-section" >
+        <div class="container">
+            <div class="section-title text-center mb-4">
+                <h3>Browse by Category</h3>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-12 position-relative">
+                    <!-- Add navigation arrows -->
+                    <button class="nav-arrow prev-arrow" id="prevButton">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="nav-arrow next-arrow" id="nextButton">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <div class="categories-wrapper" id="categoriesWrapper">
+                        <!-- Your existing category items -->
+                        <a href="{% url 'user_dashboard' %}?category=Venue" class="category-item">
+                            <div class="category-image-wrapper">
+                                <img src="{% static 'images/categories/venue3.jpg' %}" alt="Venue" class="category-image">
+                            </div>
+                            <h6 class="category-title">Venue</h6>
+                        </a>
+    
+                        <a href="{% url 'user_dashboard' %}?category=Photography" class="category-item">
+                            <div class="category-image-wrapper">
+                                <img src="{% static 'images/categories/photography.jpg' %}" alt="Photography" class="category-image">
+                            </div>
+                            <h6 class="category-title">Photography</h6>
+                        </a>
+    
+                        <a href="{% url 'user_dashboard' %}?category=Catering" class="category-item">
+                            <div class="category-image-wrapper">
+                                <img src="{% static 'images/categories/catering.jpg' %}" alt="Catering" class="category-image">
+                            </div>
+                            <h6 class="category-title">Catering</h6>
+                        </a>
+    
+                        <a href="{% url 'user_dashboard' %}?category=Decoration" class="category-item">
+                            <div class="category-image-wrapper">
+                                <img src="{% static 'images/categories/venue.jpg' %}" alt="Decoration" class="category-image">
+                            </div>
+                            <h6 class="category-title">Decoration</h6>
+                        </a>
+    
+                        <a href="{% url 'user_dashboard' %}?category=MusicEntertainment" class="category-item">
+                            <div class="category-image-wrapper">
+                                <img src="{% static 'images/categories/music.jpg' %}" alt="Music & Entertainment" class="category-image">
+                            </div>
+                            <h6 class="category-title">Music & Entertainment</h6>
+                        </a>
+    
+                        <a href="{% url 'user_dashboard' %}?category=MakeupHair" class="category-item">
+                            <div class="category-image-wrapper">
+                                <img src="{% static 'images/categories/makeup.jpg' %}" alt="Makeup & Hair" class="category-image">
+                            </div>
+                            <h6 class="category-title">Makeup & Hair</h6>
+                        </a>
+    
+                        <a href="{% url 'user_dashboard' %}?category=Rentals" class="category-item">
+                            <div class="category-image-wrapper">
+                                <img src="{% static 'images/categories/rentals.jpeg' %}" alt="Rentals" class="category-image">
+                            </div>
+                            <h6 class="category-title">Rentals</h6>
+                        </a>
+    
+                        <a href="{% url 'user_dashboard' %}?category=MehendiArtist" class="category-item">
+                            <div class="category-image-wrapper">
+                                <img src="{% static 'images/categories/mehendi.jpg' %}" alt="Mehendi Artist" class="category-image">
+                            </div>
+                            <h6 class="category-title">Mehendi Artist</h6>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   
+    <div class="container">
+        <h2 class="section-title">Services in {{ category }}</h2>
+        <div class="service-list">
+            {% if vendor_services %}
+                <div class="row">
+                    {% for vendor, services in vendor_services.items %}
+                        {% for service in services %}
+                            <div class="col-md-3">
+                                <div class="service-item">
+                                    <div class="service-image" style="position: relative;">
+                                        <img src="{{ service.main_image.url }}" alt="{{ service.name }}">
+                                        {% if service.rating >= 4 %}
+                                        <div class="service-badge" style="position: absolute; top: 10px; right: 10px; background-color: #ffc107; color: #000; padding: 5px 10px; border-radius: 20px; font-size: 12px;">
+                                            <i class="fas fa-award" style="margin-right: 3px;"></i> Top Rated
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="service-details">
+                                        <h4 class="service-title">{{ service.name }}</h4>
+                                        <!-- Rating Display -->
+                                        <div class="rating-stars" style="margin-bottom: 8px;">
+                                            {% for i in "12345" %}
+                                                <i class="fas fa-star" style="color: {% if forloop.counter <= service.rating %}#ffc107{% else %}#e4e5e9{% endif %}; font-size: 14px;"></i>
+                                            {% endfor %}
+                                            <span class="rating-number" style="margin-left: 5px; font-weight: bold;">{{ service.rating|floatformat:1 }}</span>
+                                            <span class="rating-count" style="color: #666; font-size: 12px;">({{ service.rating_count }} {% if service.rating_count == 1 %}review{% else %}reviews{% endif %})</span>
+                                        </div>
+                                        <p class="service-vendor">{{ vendor.company_name }}</p>
+                                        <p class="service-description">{{ service.description|truncatewords:8 }}</p>
+                                        <div class="location-price">
+                                            <p><i class="fas fa-map-marker-alt"></i> {{ vendor.user.place|default:"Not specified" }}</p>
+                                            <p class="service-price"><i class="fas fa-rupee-sign"></i> {{ service.price }}</p>
+                                        </div>
+                                        <div class="service-actions-row">
+                                            <a href="{% url 'service_detail' service.id %}" class="btn action-btn">View</a>
+                                            <button class="icon-btn" onclick="shareService('{{ service.name }}')" title="Share Service">
+                                                <i class="fas fa-share-alt"></i>
+                                            </button>
+                                        </div>                                        
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No services found in this category.</p>
+            {% endif %}
+        </div>
     </div>
-
+    
+    
     <!-- Service Listings with Cards -->
     <div class="service-section">
         <center>
@@ -449,5 +877,98 @@
         });
     });
 </script>
+<script>
+    // scripts.js
+document.addEventListener('DOMContentLoaded', function () {
+    // Example: Alert when a service is clicked
+    const serviceItems = document.querySelectorAll('.service-item');
+
+    serviceItems.forEach(item => {
+        item.addEventListener('click', function () {
+            const serviceName = this.querySelector('.service-title').innerText;
+            
+        });
+    });
+});
+</script>
+<script>
+    function shareService(serviceName) {
+        const shareText = `Check out this service: ${serviceName}`;
+        const shareUrl = window.location.href; // You can customize this to the specific service URL
+
+        // Use the Web Share API if supported
+        if (navigator.share) {
+            navigator.share({
+                title: 'Service Share',
+                text: shareText,
+                url: shareUrl,
+            })
+            .then(() => console.log('Share successful'))
+            .catch((error) => console.error('Error sharing:', error));
+        } else {
+            // Fallback for browsers that do not support the Web Share API
+            // Removed the alert dialog
+            console.log(`Share this link: ${shareUrl}`); // Log the link to the console instead
+        }
+    }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const wrapper = document.getElementById('categoriesWrapper');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const scrollAmount = 300; // Adjust this value to control scroll distance
+    
+        // Update button states
+        function updateButtonStates() {
+            prevButton.disabled = wrapper.scrollLeft <= 0;
+            nextButton.disabled = wrapper.scrollLeft >= wrapper.scrollWidth - wrapper.clientWidth;
+        }
+    
+        // Scroll left
+        prevButton.addEventListener('click', () => {
+            wrapper.scrollBy({
+                left: -scrollAmount,
+                behavior: 'smooth'
+            });
+            setTimeout(updateButtonStates, 100);
+        });
+    
+        // Scroll right
+        nextButton.addEventListener('click', () => {
+            wrapper.scrollBy({
+                left: scrollAmount,
+                behavior: 'smooth'
+            });
+            setTimeout(updateButtonStates, 100);
+        });
+    
+        // Update button states on scroll
+        wrapper.addEventListener('scroll', updateButtonStates);
+    
+        // Initial button state
+        updateButtonStates();
+    
+        // Handle touch events for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+    
+        wrapper.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+    
+        wrapper.addEventListener('touchmove', (e) => {
+            touchEndX = e.touches[0].clientX;
+            const diffX = touchStartX - touchEndX;
+            wrapper.scrollLeft += diffX;
+            touchStartX = touchEndX;
+        });
+    
+        // Update button states on window resize
+        window.addEventListener('resize', updateButtonStates);
+    });
+    </script>
+    
 </body>
 </html>

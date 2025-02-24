@@ -1,4 +1,5 @@
 {% load static %}
+{% load feedback_filters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -249,6 +250,155 @@
         .footer a:hover {
             text-decoration: underline;
         }
+        /* Reviews Section Styles */
+        .overall-rating {
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+        }
+        
+        .overall-rating .display-4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .stars {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .rating-bars {
+            padding: 20px;
+        }
+        
+        .rating-bar-item {
+            margin-bottom: 15px;
+        }
+        
+        .rating-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            width: 50px;
+        }
+        
+        .progress {
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+        
+        .progress-bar {
+            background-color: #ffc107;
+        }
+        
+        .rating-count {
+            font-size: 0.9rem;
+            color: #6c757d;
+            width: 50px;
+            text-align: right;
+        }
+        
+        .review-item {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .review-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            margin-right: 15px;
+        }
+        
+        .review-rating {
+            color: #ffc107;
+        }
+        
+        .review-content {
+            margin-top: 15px;
+            color: #4a4a4a;
+        }
+        
+        .sentiment-badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+        
+        /* Update navigation to include reviews section */
+        .nav-pills .nav-link[href="#reviews"] {
+            color: #333;
+            background-color: #f8f9fa;
+            border-radius: 20px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-pills .nav-link[href="#reviews"]:hover,
+        .nav-pills .nav-link[href="#reviews"].active {
+            color: #fff;
+            background-color: #320b0b;
+        }
+        .review-entry {
+            position: relative;
+        }
+        
+        .review-entry:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .user-review-group .card {
+            transition: transform 0.2s;
+        }
+
+        .user-review-group .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .review-entry {
+            padding: 15px 0;
+        }
+
+        .review-entry:first-child {
+            padding-top: 0;
+        }
+
+        .review-entry:last-child {
+            padding-bottom: 0;
+        }
+
+        .pagination .page-link {
+            color: #320b0b;
+            border-radius: 20px;
+            margin: 0 3px;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #320b0b;
+            border-color: #320b0b;
+        }
+
+        .pagination .page-link:hover {
+            background-color: #f8f9fa;
+            color: #320b0b;
+        }
         
     </style>
 </head>
@@ -316,9 +466,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="#gallery"><i class="fas fa-images"></i> Gallery</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#reviews"><i class="fas fa-star"></i> Reviews ({{ total_reviews }})</a>
+                    </li>
                 </ul>
             </div>
-
 
 
             <div class="row">
@@ -662,7 +814,168 @@
                         <h2>Description</h2>
                         <p>{{ service.description|linebreaksbr }}</p>
                     </div>
+                   
+                    <!-- Reviews and Ratings Section -->
+                    <div id="reviews" class="info-section">
+                        <h2>Reviews & Ratings</h2>
+                        
+                        <!-- Overall Rating Summary -->
+                        <div class="rating-summary mb-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-4 text-center">
+                                    <div class="overall-rating">
+                                        <h1 class="display-4 font-weight-bold">{{ avg_rating }}</h1>
+                                        <div class="stars">
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= avg_rating %}
+                                                    <i class="fas fa-star text-warning"></i>
+                                                {% elif forloop.counter <= avg_rating|add:"0.5" %}
+                                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-warning"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <p class="text-muted">Based on {{ total_reviews }} reviews</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="rating-bars">
+                                        {% for rating in "54321" %}
+                                            <div class="rating-bar-item d-flex align-items-center mb-2">
+                                                <div class="rating-label" style="width: 60px;">
+                                                    {{ rating }} <i class="fas fa-star text-warning"></i>
+                                                </div>
+                                                <div class="progress flex-grow-1" style="height: 10px;">
+                                                    <div class="progress-bar bg-warning" 
+                                                         role="progressbar" 
+                                                         style="width: {{ rating_percentages|get_item:rating }}%"
+                                                         aria-valuenow="{{ rating_percentages|get_item:rating }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                <div class="rating-count ml-2" style="width: 60px;">
+                                                    {{ rating_distribution|get_item:rating }}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+                        <!-- Reviews List -->
+                        <div class="reviews-list">
+                            {% if grouped_reviews %}
+                                {% for user_id, user_reviews in grouped_reviews.items %}
+                                    <div class="review-item card mb-4">
+                                        <div class="card-body">
+                                            <!-- User Info Header -->
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <div class="user-info">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="user-avatar mr-2">
+                                                            {% if user_reviews.0.user.profile_photo %}
+                                                                <img src="{{ user_reviews.0.user.profile_photo.url }}" alt="User" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                                            {% else %}
+                                                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                    {{ user_reviews.0.user.name|make_list|first }}
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0">{{ user_reviews.0.user.name }}</h6>
+                                                            <small class="text-muted">{{ user_reviews|length }} review{{ user_reviews|length|pluralize }}</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Reviews List -->
+                                            {% for review in user_reviews %}
+                                                <div class="review-entry {% if not forloop.first %}border-top mt-3 pt-3{% endif %}">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div class="review-rating">
+                                                            {% for i in "12345"|make_list %}
+                                                                {% if forloop.counter <= review.rating %}
+                                                                    <i class="fas fa-star text-warning"></i>
+                                                                {% else %}
+                                                                    <i class="far fa-star text-warning"></i>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                        <small class="text-muted">{{ review.created_at|date:"F d, Y" }}</small>
+                                                    </div>
+                                                    <div class="review-content">
+                                                        <p class="mb-2">{{ review.text_feedback }}</p>
+                                                        {% if review.sentiment %}
+                                                            <div class="sentiment-badge 
+                                                                {% if review.sentiment.compound_score >= 0.05 %}
+                                                                    badge badge-success
+                                                                {% elif review.sentiment.compound_score <= -0.05 %}
+                                                                    badge badge-danger
+                                                                {% else %}
+                                                                    badge badge-secondary
+                                                                {% endif %}">
+                                                                {% if review.sentiment.compound_score >= 0.05 %}
+                                                                    Positive
+                                                                {% elif review.sentiment.compound_score <= -0.05 %}
+                                                                    Negative
+                                                                {% else %}
+                                                                    Neutral
+                                                                {% endif %}
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+
+                                <!-- Pagination -->
+                                {% if page_obj.paginator.num_pages > 1 %}
+                                    <nav aria-label="Review pagination" class="mt-4">
+                                        <ul class="pagination justify-content-center">
+                                            {% if page_obj.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}#reviews" aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+
+                                            {% for num in page_obj.paginator.page_range %}
+                                                {% if page_obj.number == num %}
+                                                    <li class="page-item active">
+                                                        <span class="page-link">{{ num }}</span>
+                                                    </li>
+                                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page={{ num }}#reviews">{{ num }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+
+                                            {% if page_obj.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}#reviews" aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                {% endif %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="far fa-comment-alt fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No reviews yet. Be the first to review this service!</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                    
                 </div>
                 
@@ -717,44 +1030,50 @@
 
 
 
-
     </script>
     <script>
         $(document).ready(function() {
+            // Smooth scrolling for anchor links
+            $('a[href^="#"]').on('click', function(event) {
+                event.preventDefault();
+                var target = $(this.getAttribute('href'));
+                if(target.length) {
+                    $('html, body').stop().animate({
+                        scrollTop: target.offset().top - 90
+                    }, 1000);
+                }
+            });
 
-                // Smooth scrolling for anchor links
-                $('a[href^="#"]').on('click', function(event) {
-                    var target = $(this.getAttribute('href'));
-                    if( target.length ) {
-                        event.preventDefault();
-                        $('html, body').stop().animate({
-                            scrollTop: target.offset().top - 100
-                        }, 1000);
+            // Update active nav item on scroll
+            $(window).scroll(function() {
+                var scrollPosition = $(window).scrollTop();
+                var navHeight = $('.section-nav').outerHeight();
+                var offset = 100; // Adjusted offset
+
+                // Find the current section
+                $('.info-section').each(function() {
+                    var currentSection = $(this);
+                    var sectionTop = currentSection.offset().top - navHeight - offset;
+                    var sectionBottom = sectionTop + currentSection.outerHeight();
+
+                    if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                        var id = currentSection.attr('id');
+                        $('.nav-pills .nav-link').removeClass('active');
+                        $('.nav-pills .nav-link[href="#' + id + '"]').addClass('active');
+                        return false; // Exit the loop when the current section is found
                     }
                 });
-        
-                 // Update active nav item on scroll
-        $(window).scroll(function() {
-            var scrollDistance = $(window).scrollTop() + 30; // Adjusted offset
 
-            // Highlight the last section when scroll reaches bottom of the page
-            if ($(window).scrollTop() + $(window).height() == $(document).height()) {
-                $('.nav-pills a.active').removeClass('active');
-                $('.nav-pills a').last().addClass('active');
-            } else {
-                $('.info-section').each(function(i) {
-                    if ($(this).position().top <= scrollDistance) {
-                        $('.nav-pills a.active').removeClass('active');
-                        $('.nav-pills a').eq(i).addClass('active');
-                    }
-                });
-            }
+                // Handle case when scroll reaches bottom of page
+                if ($(window).scrollTop() + $(window).height() > $(document).height() - 100) {
+                    $('.nav-pills .nav-link').removeClass('active');
+                    $('.nav-pills .nav-link').last().addClass('active');
+                }
+            });
+
+            // Trigger scroll event on page load
+            $(window).scroll();
         });
-
-        // Trigger scroll event on page load
-        $(window).scroll();
-    });
-    
     </script>
        
         <!-- JavaScript Files -->
@@ -789,6 +1108,7 @@
     });
 </script>
 
-
 </body>
 </html>
+
+

@@ -7,6 +7,7 @@ from django.core.mail import send_mail
 from django.db.models import JSONField
 from django_countries.fields import CountryField
 from django.db import models
+from django.db.models import Avg
 
 class UserSignup(models.Model):
     name = models.CharField(max_length=100)
@@ -35,6 +36,12 @@ class UserSignup(models.Model):
     def is_superuser(self):
         return self.is_super
 
+    is_social_user = models.BooleanField(default=False)
+    google_id = models.CharField(max_length=255, blank=True, null=True)  # Add this field
+
+
+    def has_usable_password(self):
+        return not self.is_social_user
 
 class UserProfile(models.Model):
     user = models.OneToOneField(UserSignup, on_delete=models.CASCADE)
@@ -377,6 +384,52 @@ class ReferenceImage(models.Model):
     def __str__(self):
         return f"Reference Image {self.id}"
 
+# Service Feedback Model
+class ServiceFeedback(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='feedbacks')
+    user = models.ForeignKey(UserSignup, on_delete=models.CASCADE)
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
+    rating = models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')])
+    text_feedback = models.TextField()
+    feedback_type = models.CharField(max_length=50, choices=[
+        ('service_quality', 'Service Quality'),
+        ('communication', 'Communication'),
+        ('value_for_money', 'Value for Money'),
+        ('professionalism', 'Professionalism'),
+        ('overall', 'Overall Experience')
+    ])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    status = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('booking', 'feedback_type')
+
+    def __str__(self):
+        return f"Feedback for {self.service.name} by {self.user.name}"
+
+class SentimentAnalysis(models.Model):
+    feedback = models.OneToOneField(ServiceFeedback, on_delete=models.CASCADE, related_name='sentiment')
+    compound_score = models.FloatField()  # Overall sentiment score
+    positive_score = models.FloatField()
+    negative_score = models.FloatField()
+    neutral_score = models.FloatField()
+    analyzed_at = models.DateTimeField(auto_now=True)
+    keywords = models.JSONField(default=dict)  # Store extracted keywords and their frequencies
+    
+    def __str__(self):
+        return f"Sentiment Analysis for Feedback #{self.feedback.id}"
+
+class VendorAnalytics(models.Model):
+    vendor = models.OneToOneField(VendorProfile, on_delete=models.CASCADE, related_name='analytics')
+    average_rating = models.FloatField(default=0.0)
+    total_reviews = models.PositiveIntegerField(default=0)
+    sentiment_summary = models.JSONField(default=dict)  # Store aggregated sentiment data
+    common_feedback_topics = models.JSONField(default=dict)  # Store frequently mentioned topics
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Analytics for {self.vendor.company_name}"
 
 # Favorite Model
 class Favorite(models.Model):
@@ -435,3 +488,115 @@ def notify_user_task_status(sender, instance, created, **kwargs):
             fail_silently=False,
         )
         '''
+
+# Add these new models
+
+class WeddingBudget(models.Model):
+    user = models.OneToOneField(UserSignup, on_delete=models.CASCADE)
+    total_budget = models.DecimalField(max_digits=12, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    currency = models.CharField(max_length=10, default='INR')
+    wedding_type = models.CharField(max_length=50, choices=[
+        ('North_Indian', 'North Indian Wedding'),
+        ('South_Indian', 'South Indian Wedding'),
+        ('Bengali', 'Bengali Wedding'),
+        ('Marathi', 'Marathi Wedding'),
+        ('Muslim', 'Muslim Wedding'),
+        ('Christian', 'Christian Wedding'),
+        ('Destination', 'Destination Wedding'),
+    ])
+    guest_count = models.PositiveIntegerField()
+    wedding_date = models.DateField()
+    location = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return f"Budget for {self.user.name}'s Wedding"
+
+class BudgetAllocation(models.Model):
+    wedding_budget = models.ForeignKey(WeddingBudget, on_delete=models.CASCADE)
+    category = models.CharField(max_length=50, choices=[
+        ('Venue', 'Venue'),
+        ('Catering', 'Catering'),
+        ('Decoration', 'Decoration'),
+        ('Photography', 'Photography'),
+        ('Attire', 'Attire'),
+        ('Entertainment', 'Entertainment'),
+        ('Mehendi', 'Mehendi'),
+        ('Makeup', 'Makeup'),
+    ])
+    allocated_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    actual_spent = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    priority_level = models.IntegerField(choices=[(1, 'High'), (2, 'Medium'), (3, 'Low')])
+
+    # Add new fields for tracking
+    actual_vendors = models.ManyToManyField('Service', blank=True)
+    cost_savings = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=[
+        ('planning', 'Planning'),
+        ('in_progress', 'In Progress'),
+        ('booked', 'Booked'),
+        ('completed', 'Completed')
+    ], default='planning')
+
+    def calculate_savings(self):
+        """Calculate savings based on allocated vs actual spent"""
+        if self.actual_spent > 0:
+            return self.allocated_amount - self.actual_spent
+        return 0
+
+    def get_recommended_vendors(self):
+        """Get vendor recommendations based on budget and category"""
+        category_map = {
+            'Venue': 'venue_services',
+            'Catering': 'catering_services',
+            'Decoration': 'decoration_services',
+            'Photography': 'photography_services',
+            'Entertainment': 'music_entertainment_services',
+            'Mehendi': 'mehendi_artist_services',
+            'Makeup': 'makeup_hair_services'
+        }
+        
+        service_type = category_map.get(self.category)
+        if not service_type:
+            return []
+            
+        return Service.objects.filter(
+            **{service_type: True},
+            price__lte=self.allocated_amount,
+            availability=True
+        ).annotate(
+            average_rating=Avg('ratings__rating')
+        ).order_by('-average_rating')
+
+    def __str__(self):
+        return f"{self.category} allocation for {self.wedding_budget.user.name}"
+
+class WeddingEvent(models.Model):
+    wedding_budget = models.ForeignKey(WeddingBudget, on_delete=models.CASCADE)
+    event_name = models.CharField(max_length=50, choices=[
+        ('Engagement', 'Engagement'),
+        ('Haldi', 'Haldi'),
+        ('Mehendi', 'Mehendi'),
+        ('Sangeet', 'Sangeet'),
+        ('Wedding', 'Wedding'),
+        ('Reception', 'Reception'),
+    ])
+    date = models.DateField()
+    budget = models.DecimalField(max_digits=12, decimal_places=2)
+    guest_count = models.PositiveIntegerField()
+    venue = models.CharField(max_length=100, blank=True)
+    status = models.CharField(max_length=20, choices=[
+        ('planned', 'Planned'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed')
+    ], default='planned')
+
+    def __str__(self):
+        return f"{self.event_name} for {self.wedding_budget.user.name}"
+
+    class Meta:
+        ordering = ['date']
+

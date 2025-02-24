@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.hashers import make_password, check_password
-from .models import UserSignup, UserProfile, VendorProfile,WeddingTask,RSVPInvitation, VendorImage,Favorite, Booking
+from .models import UserSignup, UserProfile, VendorProfile,WeddingTask,RSVPInvitation, VendorImage,Favorite, Booking, WeddingBudget, BudgetAllocation, WeddingEvent
 from django_countries import countries
 from django.utils import timezone
 from django.utils.crypto import get_random_string
@@ -62,7 +62,7 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 from django.shortcuts import render
 from .models import UserSignup, UserProfile, Service
-
+from django.db.models import Avg, Count
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def user_home(request):
     user_name = request.session.get('user_name')
@@ -133,23 +133,27 @@ def user_home(request):
     search_query = request.GET.get('search')
     if search_query:
         services = services.filter(name__icontains=search_query)
+        
 
     # Pagination
-    paginator = Paginator(services, 9)
+    paginator = Paginator(services, 12)
     page_number = request.GET.get('page')
     page_services = paginator.get_page(page_number)
 
-    # Fetch service images
-    services_with_images = [
-        {
+    services_with_images = []
+    for service in page_services:
+        # Calculate average rating from service feedback
+        reviews = ServiceFeedback.objects.filter(service=service, status=True)
+        avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+        rating_count = reviews.count()
+        
+        services_with_images.append({
             'service': service,
             'main_image': service.main_image if service.main_image else None,
-            'vendor_company_name': service.vendor.company_name if service.vendor else None
-
-        }
-        for service in page_services
-    ]
-
+            'vendor_company_name': service.vendor.company_name if service.vendor else None,
+            'rating': round(float(avg_rating), 1),  # Round to 1 decimal place
+            'rating_count': rating_count
+        })
     # Add is_paginated to check if the queryset is paginated
     is_paginated = page_services.has_other_pages()
 
@@ -752,7 +756,7 @@ def current_month_todolist(request):
 
     if not user_profile.wedding_date:
         messages.warning(request, "Please set your wedding date to view tasks.")
-        return redirect('profile_update')
+        return redirect('update_user_profile')
 
     today = timezone.now().date()
     wedding_date = user_profile.wedding_date
@@ -842,7 +846,7 @@ def todo_list(request):
 
     if not user_profile.wedding_date:
         messages.warning(request, "Please set your wedding date to view tasks.")
-        return redirect('profile_update')
+        return redirect('update_user_profile')
 
     remaining_days = (user_profile.wedding_date - timezone.now().date()).days
 
@@ -1589,7 +1593,6 @@ def user_name(request):
     return {'user_name': user_name}
 
 
-    # User Dashboard - View Vendor Services, Book, Rate, Favorite
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def user_dashboard(request):
     user_name = request.session.get('user_name', 'user')
@@ -1616,15 +1619,25 @@ def user_dashboard(request):
         search_query = request.GET['search']
         services = services.filter(name__icontains=search_query)
 
-    # Get vendors and related services
+    # Fetch favorite services for the logged-in user
+    favorites = Favorite.objects.filter(user=user).values_list('service_id', flat=True)
+    
+   # Get vendors and related services
     vendor_services = {}
     for service in services:
         vendor = service.vendor
+        # Calculate average rating from service feedback
+        reviews = ServiceFeedback.objects.filter(service=service, status=True)
+        avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+        rating_count = reviews.count()
+        
+        # Add a flag to indicate if the service is liked
+        service.is_liked = service.id in favorites
+        # Add rating information
+        service.rating = round(float(avg_rating), 1)
+        service.rating_count = rating_count
         vendor_services.setdefault(vendor, []).append(service)
 
-    # Fetch favorite services for the logged-in user
-    favorites = Favorite.objects.filter(user=user).select_related('service')
-    
     # Fetch bookings for the logged-in user
     bookings = Booking.objects.filter(user=user).select_related('service')
 
@@ -1633,6 +1646,7 @@ def user_dashboard(request):
         'user_name': user_name,
         'favorites': favorites,
         'bookings': bookings,
+        'category': category if 'category' in request.GET else None,  # Pass the category to the template
     })
 
 # user view for vendor services
@@ -1650,7 +1664,14 @@ def vendor_services(request, vendor_id):
         'services': services,
         'user_name': user_name
     })
-
+from django.shortcuts import render, get_object_or_404
+from .models import (
+    Service, VenueService, CateringService, PhotographyService, 
+    MusicEntertainmentService, MakeupHairService, RentalsService, 
+    MehendiArtistService, DecorationService, ServiceFeedback
+)
+from django.db.models import Avg, Count, Max
+from django.core.paginator import Paginator
 
 # user view for service detail
 from django.shortcuts import render, get_object_or_404
@@ -1684,16 +1705,67 @@ def service_detail(request, service_id):
     elif service.category == 'Decoration':
         category_details = DecorationService.objects.filter(service=service).first()
 
+# Get reviews with user information
+    reviews = ServiceFeedback.objects.filter(service=service).select_related('user', 'sentiment').order_by('-created_at')
+    total_reviews = reviews.count()
+    
+    # Calculate average rating and rating distribution
+    avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+    
+    # Use string keys for rating_distribution
+    rating_distribution = {
+        '5': reviews.filter(rating=5).count(),
+        '4': reviews.filter(rating=4).count(),
+        '3': reviews.filter(rating=3).count(),
+        '2': reviews.filter(rating=2).count(),
+        '1': reviews.filter(rating=1).count()
+    }
+    
+    # Calculate rating percentages
+    rating_percentages = {}
+    if total_reviews > 0:
+        for rating in ['5', '4', '3', '2', '1']:
+            count = rating_distribution[rating]
+            rating_percentages[rating] = round((count / total_reviews) * 100, 1)
+    else:
+        # If no reviews, set all percentages to 0
+        for rating in ['5', '4', '3', '2', '1']:
+            rating_percentages[rating] = 0.0
+
+      # Group reviews by user
+    user_reviews = reviews.values('user').annotate(
+        review_count=Count('id'),
+        latest_review=Max('created_at')
+    ).order_by('-latest_review')
+
+    # Pagination
+    paginator = Paginator(list(user_reviews), 10)  # Show 10 users per page
+    page = request.GET.get('page', 1)
+    user_reviews_page = paginator.get_page(page)
+
+    # Get all reviews for users on current page
+    user_ids = [review['user'] for review in user_reviews_page]
+    grouped_reviews = {}
+    for user_id in user_ids:
+        user_reviews = reviews.filter(user=user_id).order_by('-created_at')
+        if user_reviews:
+            grouped_reviews[user_id] = list(user_reviews)
+
+
     context = {
         'service': service,
         'vendor_phone': vendor_phone,
         'category_details': category_details,
-        'user_name': user_name
+        'user_name': user_name,
+        'avg_rating': round(avg_rating, 1),
+        'rating_distribution': rating_distribution,
+        'rating_percentages': rating_percentages,
+        'total_reviews': total_reviews,
+        'page_obj': user_reviews_page,
+        'grouped_reviews': grouped_reviews
     }
 
     return render(request, 'dreamknot1/service_detail.html', context)
-
-
 
 
 
@@ -2201,10 +2273,10 @@ def get_booking_slots(request, service_id):
             'status': event_status
         })
 
-    # Logic for available slots (e.g., next 30 days)
-    today = timezone.now().date()
-    future_dates = [today + timedelta(days=i) for i in range(30)]  # Next 30 days
-    booked_dates = bookings.values_list('event_date', flat=True)  # Already booked dates
+    # Get available slots for the next 365 days
+    today = now().date()
+    future_dates = [today + timedelta(days=i) for i in range(365)]  # Next 365 days
+    booked_dates = bookings.values_list('event_date', flat=True)  # List of already booked dates
 
     for date in future_dates:
         if date not in booked_dates:
@@ -2262,7 +2334,7 @@ def get_booking_slots(request, service_id):
     # Optionally: Add available slots logic (e.g., next 30 days)
     # Assuming "available" means dates with no bookings in the next 30 days
     today = now().date()
-    future_dates = [today + timedelta(days=i) for i in range(365)]  # Next 30 days
+    future_dates = [today + timedelta(days=i) for i in range(1095)]  # Next 30 days
     booked_dates = bookings.values_list('event_date', flat=True)  # List of already booked dates
 
     for date in future_dates:
@@ -2422,6 +2494,49 @@ def user_booking_details(request):
 
     })
 
+
+
+from django.http import HttpResponse, HttpResponseRedirect
+from django.template.loader import render_to_string
+from django.shortcuts import get_object_or_404, redirect
+from xhtml2pdf import pisa
+from django.utils import timezone
+from .models import UserSignup, Booking  # Adjust the import paths as necessary
+
+def download_invoice(request, booking_id):
+    # Ensure the user is authenticated via session
+    user_name = request.session.get('user_name')
+    if not user_name:
+        return redirect('login')  # Redirect to login if the user is not authenticated
+
+    # Fetch the user and booking details
+    user_signup = get_object_or_404(UserSignup, name=user_name)
+    booking = get_object_or_404(Booking, id=booking_id, user=user_signup)
+
+    # Prepare the context for rendering the invoice template
+    context = {
+        'booking': booking,
+        'user_name': user_name,
+        'today': timezone.now().date(),
+    }
+
+    # Render the invoice template to an HTML string
+    html_string = render_to_string('dreamknot1/invoice_template.html', context)
+
+    # Set up the HTTP response for PDF generation
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="invoice_{booking_id}.pdf"'
+
+    # Convert the HTML to a PDF document
+    try:
+        pisa_status = pisa.CreatePDF(html_string, dest=response)
+        if pisa_status.err:  # Handle PDF generation errors
+            return HttpResponse('Error generating PDF. Please try again later.')
+    except Exception as e:
+        return HttpResponse(f"An unexpected error occurred: {str(e)}")
+
+    # Return the PDF as an attachment
+    return response
 
 
 from django.shortcuts import redirect, get_object_or_404
@@ -2619,8 +2734,45 @@ def payment_success(request):
             booking.book_status = 1  # Mark as confirmed
             booking.save()
 
+
+        
+   # Send email to the user about booking confirmation
+            subject = "Booking Payment Successful - Dream Knot"
+            message = f"""
+Dear {booking.user.name},
+
+We are delighted to inform you that your payment has been successfully received, and your booking has been marked as confirmed. 
+
+Booking Details:
+- Booking ID: {booking.id}
+- Payment ID: {payment_id}
+- Event Date: {booking.event_date}
+- Service: {booking.service.name}
+- Vendor: {booking.service.vendor.user.name}
+- Total Amount: {booking.total_amount}
+- Booking Amount: {booking.booking_amount}
+- Remaining Balance: {booking.total_amount-booking.booking_amount}
+
+Please note that the service provider will review your booking and confirm the details shortly. You will receive a notification once the service provider confirms the booking.
+
+Thank you for choosing Dream Knot for your special day.
+
+Best regards,  
+The Dream Knot Team
+"""
+            recipient_email = booking.user.email
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [recipient_email],
+                fail_silently=False
+            )
+
+
+
                # Redirect to bookings page with a success message
-            messages.success(request, 'Payment verified successfully. Your booking is confirmed.')
+            messages.success(request, 'Payment verified successfully. Your booking is confirmed wait for vendor approval.')
             return redirect('user_booking_details')  # Replace 'bookings' with your actual bookings URL name
 
 
@@ -2871,6 +3023,90 @@ def admin_dashboard(request):
 
 
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.views.decorators.cache import cache_control
+from django.db.models import Avg, Count, Q
+from django.db import models
+import json
+from django.core.serializers.json import DjangoJSONEncoder
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def admin_analytics(request):
+    user_id = request.session.get('user_id')
+    user_role = request.session.get('user_role')
+    
+    if user_id and user_role == 'admin':
+        try:
+            admin = UserSignup.objects.get(id=user_id, role='admin', is_super=True)
+            
+            # Get overall statistics
+            total_users = UserSignup.objects.filter(role='user').count()
+            total_vendors = UserSignup.objects.filter(role='vendor').count()
+            total_services = Service.objects.count()
+            total_bookings = Booking.objects.count()
+            
+            # Get feedback statistics by category
+            feedback_by_category = list(ServiceFeedback.objects.values(
+                'service__category'
+            ).annotate(
+                avg_rating=Avg('rating'),
+                total_feedback=Count('id')
+            ).order_by('-avg_rating'))
+            
+            # Get top and bottom rated vendors
+            top_vendors = VendorAnalytics.objects.select_related('vendor').order_by('-average_rating')[:5]
+            bottom_vendors = VendorAnalytics.objects.select_related('vendor').order_by('average_rating')[:5]
+            
+            # Get feedback type analysis
+            feedback_type_analysis = list(ServiceFeedback.objects.values(
+                'feedback_type'
+            ).annotate(
+                avg_rating=Avg('rating'),
+                total_count=Count('id')
+            ).order_by('feedback_type'))
+            
+            # Get sentiment trends
+            sentiment_trends = list(SentimentAnalysis.objects.values(
+                'feedback__created_at__date'
+            ).annotate(
+                positive=Count('id', filter=Q(compound_score__gte=0.05)),
+                negative=Count('id', filter=Q(compound_score__lte=-0.05)),
+                neutral=Count('id', filter=Q(compound_score__gt=-0.05, compound_score__lt=0.05))
+            ).order_by('-feedback__created_at__date')[:30])
+            
+            # Get most common feedback topics
+            all_topics = {}
+            for analytics in VendorAnalytics.objects.all():
+                if analytics.common_feedback_topics:  # Check if not None
+                    for topic, freq in analytics.common_feedback_topics.items():
+                        all_topics[topic] = all_topics.get(topic, 0) + freq
+            
+            top_topics = dict(sorted(all_topics.items(), key=lambda x: x[1], reverse=True)[:20])
+            
+            context = {
+                'admin_name': admin.name,
+                'total_users': total_users,
+                'total_vendors': total_vendors,
+                'total_services': total_services,
+                'total_bookings': total_bookings,
+                'feedback_by_category': json.dumps(feedback_by_category, cls=DjangoJSONEncoder),
+                'top_vendors': top_vendors,
+                'bottom_vendors': bottom_vendors,
+                'feedback_type_analysis': json.dumps(feedback_type_analysis, cls=DjangoJSONEncoder),
+                'sentiment_trends': json.dumps(sentiment_trends, cls=DjangoJSONEncoder),
+                'top_topics': json.dumps(top_topics)
+            }
+            
+            return render(request, 'dreamknot1/admin_analytics.html', context)
+            
+        except UserSignup.DoesNotExist:
+            messages.error(request, "Admin user not found.")
+            return redirect('login')
+    else:
+        messages.error(request, "You must be logged in as an admin to access this page.")
+        return redirect('login')
+
 # admin view for base
 def base(request):
     user_id = request.session.get('user_id')
@@ -3105,3 +3341,1220 @@ def list_predefined_tasks(request):
         messages.error(request, "You must be logged in as an admin to view predefined tasks.")
         return redirect('login')
 
+from django.shortcuts import redirect
+from django.contrib import messages
+from social_django.utils import load_strategy, load_backend
+from social_core.exceptions import AuthAlreadyAssociated, AuthException
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def google_login_callback(request):
+    try:
+        error_message = request.session.get('error_message')
+        if error_message:
+            messages.error(request, error_message)
+            del request.session['error_message']
+            return redirect('login')
+
+        # Check if user is already authenticated via social
+        if request.session.get('is_social'):
+            user_id = request.session.get('user_id')
+            if user_id:
+                try:
+                    user = UserSignup.objects.get(id=user_id)
+                    if user.is_social_user:
+                        messages.success(request, "Successfully logged in with Google!")
+                        return redirect('user_home')
+                except UserSignup.DoesNotExist:
+                    pass
+
+        # If we get here, something went wrong
+        messages.error(request, "Something went wrong during Google login.")
+        return redirect('login')
+
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return redirect('login')
+    
+import requests
+from bs4 import BeautifulSoup
+from django.core.cache import cache
+from django.shortcuts import render
+from datetime import datetime
+import random
+from django.conf import settings
+
+def extract_image_from_content(content):
+    try:
+        soup = BeautifulSoup(content, 'lxml')
+        img = soup.find('img')
+        return img['src'] if img else None
+    except Exception as e:
+        print(f"Error extracting image: {e}")
+        return None
+    
+
+def fetch_rss_content(url):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'xml')
+            items = soup.find_all('item')
+            if not items:
+                print(f"No items found in feed: {url}")
+            return items if items else []
+        else:
+            print(f"Failed to fetch feed: {url} with status code: {response.status_code}")
+    except Exception as e:
+        print(f"RSS Feed error: {e} for URL: {url}")
+        if response is not None:
+            print(f"Response content: {response.content}")
+    return []
+
+def fetch_wedding_blogs(search_query=None):
+    blogs = []
+    
+    # 1. Wedding Blog RSS Feeds
+    rss_feeds = [
+        {
+            'url': 'https://www.confettidaydreams.com/feed/',
+            'source': 'Confetti Daydreams'
+        },
+        {
+            'url': 'https://www.weddingbee.com/feed/',
+            'source': 'Wedding Bee'
+        },
+        {
+            'url': 'https://www.stylemepretty.com/feed/',
+            'source': 'Style Me Pretty'
+        },
+        {
+            'url': 'https://greenweddingshoes.com/feed/',
+            'source': 'Green Wedding Shoes'
+        },
+        {
+            'url': 'https://ruffledblog.com/feed/',
+            'source': 'Ruffled Blog'
+        },
+        {
+            'url': 'https://bridalmusings.com/feed/',
+            'source': 'Bridal Musings'
+        },
+        {
+            'url': 'https://www.loveandlavender.com/feed/',
+            'source': 'Love and Lavender'
+        },
+        {
+            'url': 'https://offbeatbride.com/feed/',
+            'source': 'Offbeat Bride'
+        }
+    ]
+
+    for feed in rss_feeds:
+        try:
+            items = fetch_rss_content(feed['url'])
+            for item in items[:15]:
+                try:
+                    title = item.find('title').text if item.find('title') else 'Wedding Article'
+                    content = item.find('description').text[:200] if item.find('description') else ''
+                    # Filter based on search query
+                    if search_query and (search_query.lower() not in title.lower() and search_query.lower() not in content.lower()):
+                        continue  # Skip if search query is not in title or content
+                    blogs.append({
+                        'type': 'article',
+                        'title': title,
+                        'content': content,
+                        'image_url': extract_image_from_content(item.find('description').text) if item.find('description') else None,
+                        'author': feed['source'],
+                        'date': item.find('pubDate').text if item.find('pubDate') else datetime.now().strftime('%B %d, %Y'),
+                        'category': 'Wedding_Tips',
+                        'link': item.find('link').text if item.find('link') else '#',
+                        'likes': random.randint(50, 200),
+                        'comments': random.randint(5, 30)
+                    })
+                except Exception as e:
+                    print(f"Error processing RSS item: {e}")
+                    continue
+        except Exception as e:
+            print(f"Error processing feed {feed['url']}: {e}")
+            continue
+
+    # 2. Fetch images from Unsplash using the search query
+    fetch_unsplash_images(blogs, search_query)
+
+    # 3. Pexels Wedding Photos API using the search query
+    try:
+        headers = {'Authorization': settings.PEXELS_API_KEY}
+        response = requests.get(
+            f'https://api.pexels.com/v1/search?query={search_query or "wedding"}&per_page=25',
+            headers=headers
+        )
+        if response.status_code == 200:
+            photos = response.json().get('photos', [])
+            for photo in photos:
+                blogs.append({
+                    'type': 'inspiration',
+                    'title': 'Wedding Inspiration',
+                    'image_url': photo['src']['large'],
+                    'category': 'Wedding_Inspiration',
+                    'photographer': photo['photographer'],
+                    'link': photo['url'],
+                    'likes': random.randint(100, 500),
+                    'saves': random.randint(50, 200)
+                })
+    except Exception as e:
+        print(f"Pexels API error: {e}")
+
+    # 4. YouTube Wedding Videos using the search query
+    try:
+        youtube_url = "https://www.googleapis.com/youtube/v3/search"
+        params = {
+            'part': 'snippet',
+            'q': search_query or 'wedding ideas',  # Use the search query
+            'type': 'video',
+            'maxResults': 15,
+            'key': settings.YOUTUBE_API_KEY,
+            'relevanceLanguage': 'en',
+            'videoDuration': 'medium'
+        }
+        response = requests.get(youtube_url, params=params)
+        if response.status_code == 200:
+            videos = response.json().get('items', [])
+            for video in videos:
+                blogs.append({
+                    'type': 'video',
+                    'title': video['snippet']['title'],
+                    'content': video['snippet']['description'][:150],
+                    'thumbnail_url': video['snippet']['thumbnails']['high']['url'],
+                    'video_id': video['id']['videoId'],
+                    'category': 'Wedding_Videos',
+                    'author': video['snippet']['channelTitle'],
+                    'date': datetime.strptime(
+                        video['snippet']['publishedAt'], 
+                        '%Y-%m-%dT%H:%M:%SZ'
+                    ).strftime('%B %d, %Y'),
+                    'views': random.randint(1000, 50000),
+                    'link': f"https://www.youtube.com/watch?v={video['id']['videoId']}"
+                })
+    except Exception as e:
+        print(f"YouTube API error: {e}")
+
+    # Add fallback content if no content was fetched
+    if not blogs:
+        blogs.append({
+            'type': 'article',
+            'title': 'Wedding Planning Tips',
+            'content': 'Discover the latest trends in wedding planning and decoration.',
+            'image_url': '/static/images/categories/placeholder.jpg',
+            'author': 'Wedding Blog',
+            'date': datetime.now().strftime('%B %d, %Y'),
+            'category': 'Wedding_Tips',
+            'link': '#',
+            'likes': random.randint(50, 200),
+            'comments': random.randint(5, 30)
+        })
+
+    return blogs
+def wedding_blogs_view(request):
+    # Check if the user is logged in
+    user_id = request.session.get('user_id')
+    if not user_id:
+        messages.error(request, "You must be logged in to view wedding blogs.")
+        return redirect('login')  # Redirect to the login page
+
+    # Get the search query from the request
+    search_query = request.GET.get('search')
+
+    # Get blogs from cache or fetch new ones
+    cached_blogs = cache.get(f'wedding_blogs_{search_query}')  # Cache based on search query
+    if not cached_blogs:
+        cached_blogs = fetch_wedding_blogs(search_query)  # Pass the search query
+        cache.set(f'wedding_blogs_{search_query}', cached_blogs, 3600)
+
+    # Filter by category
+    category = request.GET.get('category')
+    if category and category.lower() != 'all':
+        blogs = [blog for blog in cached_blogs if blog['category'] == category]
+    else:
+        blogs = cached_blogs
+
+    # Search functionality
+    if search_query:
+        blogs = [
+            blog for blog in blogs 
+            if search_query.lower() in blog['title'].lower() 
+            or search_query.lower() in blog.get('content', '').lower()
+        ]
+
+    context = {
+        'blogs': blogs,
+        'categories': [
+            ('All', 'all'),
+            ('Wedding_Tips', 'Tips & Ideas'),
+            ('Wedding_Inspiration', 'Inspiration'),
+            ('Wedding_Videos', 'Videos')
+        ],
+        'current_category': category or 'All',
+        'search_query': search_query
+    }
+    
+    return render(request, 'dreamknot1/wedding_blogs.html', context)
+def fetch_unsplash_images(blogs, search_query=None):
+    try:
+        headers = {'Authorization': f'Client-ID {settings.API_SETTINGS["UNSPLASH"]["ACCESS_KEY"]}'}
+        response = requests.get(
+            'https://api.unsplash.com/search/photos',
+            headers=headers,
+            params={'query': search_query or 'wedding', 'per_page': settings.API_SETTINGS['UNSPLASH']['PER_PAGE']}
+        )
+        if response.status_code == 200:
+            photos = response.json().get('results', [])
+            for photo in photos:
+                blogs.append({
+                    'type': 'inspiration',
+                    'title': 'Wedding Inspiration',
+                    'image_url': photo['urls']['regular'],  # Use the appropriate size
+                    'category': 'Wedding_Inspiration',
+                    'photographer': photo['user']['name'],
+                    'link': photo['links']['html'],
+                    'likes': random.randint(100, 500),
+                    'saves': random.randint(50, 200)
+                })
+        else:
+            print(f"Error fetching from Unsplash: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Unsplash API error: {e}")
+
+
+# dreamproject/dreamknot1/views.py
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import logging
+from openai import OpenAI  # Import the OpenAI client
+from django.conf import settings
+import os
+# Set your OpenAI API key
+api_key = os.getenv('OPENAI_API_KEY')  # Renamed for clarity since this appears to be an OpenAI key# Your DeepAI API key
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Initialize the OpenAI client
+client = OpenAI(api_key=api_key)
+
+@csrf_exempt  # Disable CSRF for this view (use with caution)
+def chatbot_response(request):
+    if request.method == 'POST':
+        user_message = request.POST.get('message')
+
+        if not user_message:
+            return JsonResponse({'error': 'No message provided'}, status=400)
+
+        try:
+            # Call the AI service to get a response
+            completion = client.chat.completions.create(
+                model="gpt-4o-mini",  # Use the appropriate model
+                messages=[{"role": "user", "content": user_message}]
+            )
+
+            # Log the full response for debugging
+            logger.info(f"OpenAI response: {completion}")
+
+            # Check if choices are available
+            if not completion.choices:
+                return JsonResponse({'error': 'No response from AI'}, status=500)
+
+            # Extract the AI's response using dot notation
+            ai_message = completion.choices[0].message.content  # Use dot notation here
+            return JsonResponse({'response': ai_message})
+
+        except Exception as e:
+            logger.error(f"Error fetching response from OpenAI: {e}")
+            return JsonResponse({'error': 'Failed to get response from AI'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+import os  # Ensure this import is present
+import time  # Ensure this import is present
+import base64  # Ensure this import is present
+import requests  # Ensure this import is present
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import logging
+import nltk
+from collections import Counter
+from textblob import TextBlob
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from django.utils.html import strip_tags  # Add this import
+
+
+# Replace with your actual Hugging Face API key
+HUGGING_FACE_API_KEY = os.getenv('HUGGING_FACE_API_KEY')
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def generate_image(request):
+    if request.method == 'POST':
+        user_description = request.POST.get('description')
+
+        if not user_description:
+            return JsonResponse({'error': 'No description provided'}, status=400)
+
+        try:
+            logger.info(f"Generating image with description: {user_description}")
+
+            # API request headers
+            headers = {
+                'Authorization': f'Bearer {HUGGING_FACE_API_KEY}',
+                'Content-Type': 'application/json'
+            }
+
+            # Payload with user input and optional parameters
+            payload = {
+                'text_prompts': [{'text': user_description}],
+                'cfg_scale': 7.5,  # Prompt adherence (lower = more creative)
+                'width': 1024,  # Allowed width
+                'height': 1024,  # Allowed height
+                'samples': 1  # Number of images to generate
+            }
+
+            # Make API request
+            response = requests.post(
+                'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image',
+                headers=headers,
+                json=payload
+            )
+
+            logger.info(f"Response status code: {response.status_code}")
+
+            # Handle API response
+            if response.status_code == 200:
+                response_data = response.json()
+
+                if 'artifacts' in response_data and response_data['artifacts']:
+                    # Extract base64 image data
+                    image_data = response_data['artifacts'][0].get('base64')
+                    if image_data:
+                        # Ensure the directory exists
+                        os.makedirs('media/generated_images', exist_ok=True)  # Create directory if it doesn't exist
+                        
+                        # Save the image to a file
+                        image_file_path = f'media/generated_images/image_{int(time.time())}.png'
+                        with open(image_file_path, 'wb') as image_file:
+                            image_file.write(base64.b64decode(image_data))
+                        
+                        # Return the URL of the saved image
+                        return JsonResponse({'image_url': f'/{image_file_path}'})
+                else:
+                    logger.error("No artifacts found in response.")
+                    return JsonResponse({'error': 'No images generated'}, status=500)
+            else:
+                logger.error(f"API returned an error: {response.text}")
+                return JsonResponse({'error': 'Failed to generate image'}, status=response.status_code)
+
+        except Exception as e:
+            logger.error(f"Error generating image: {e}")
+            return JsonResponse({'error': 'An error occurred'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+from django.core.files.storage import FileSystemStorage
+
+@csrf_exempt
+def search_by_image(request):
+    if request.method == 'POST' and request.FILES['image']:
+        uploaded_file = request.FILES['image']
+        fs = FileSystemStorage()
+        filename = fs.save(uploaded_file.name, uploaded_file)
+        file_url = fs.url(filename)
+
+        try:
+            # Call the Google Vision API (replace with actual API endpoint)
+            with open(file_url, 'rb') as image_file:
+                image_content = image_file.read()
+
+            response = requests.post(
+                'https://vision.googleapis.com/v1/images:annotate?key=YOUR_GOOGLE_VISION_API_KEY',  # Replace with your API key
+                json={
+                    'requests': [{
+                        'image': {
+                            'content': image_content.decode('ISO-8859-1')  # Encode the image content
+                        },
+                        'features': [{
+                            'type': 'LABEL_DETECTION',
+                            'maxResults': 5
+                        }]
+                    }]
+                }
+            )
+
+            if response.status_code == 200:
+                labels = response.json().get('responses')[0].get('labelAnnotations', [])
+                return JsonResponse({'labels': labels})
+            else:
+                return JsonResponse({'error': 'Failed to analyze image'}, status=response.status_code)
+
+        except Exception as e:
+            logger.error(f"Error searching by image: {e}")
+            return JsonResponse({'error': 'Failed to analyze image'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+# Example Django view for image upload
+from django.http import JsonResponse
+from django.core.files.storage import FileSystemStorage
+
+def upload_image(request):
+    if request.method == 'POST' and request.FILES.get('image'):
+        image = request.FILES['image']
+        fs = FileSystemStorage()
+        filename = fs.save(image.name, image)
+        image_url = fs.url(filename)  # Generate the URL for the uploaded image
+        return JsonResponse({'success': True, 'image_url': image_url})
+    return JsonResponse({'success': False, 'message': 'No image uploaded'})
+
+
+
+
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from textblob import TextBlob
+from collections import Counter
+import json
+from .models import ServiceFeedback, SentimentAnalysis, VendorAnalytics
+from django.db.models import Avg, Count
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+
+
+def submit_service_feedback(request, booking_id):
+    print("Starting submit_service_feedback")  # Debug log
+    user_id = request.session.get('user_id')
+    print(f"User ID from session: {user_id}")  # Debug log
+    
+    if not user_id:
+        print("No user_id in session, redirecting to login")  # Debug log
+        return redirect('login')
+    
+    try:
+        booking = get_object_or_404(Booking, id=booking_id, user_id=user_id)
+        print(f"Found booking: {booking.id}")  # Debug log
+    except Exception as e:
+        print(f"Error finding booking: {str(e)}")  # Debug log
+        messages.error(request, 'Invalid booking.')
+        return redirect('user_bookings')
+    
+    if request.method == 'POST':
+        try:
+            print("POST data:", request.POST)  # Debug log
+            feedback_types = ['service_quality', 'communication', 'value_for_money', 'professionalism', 'overall']
+            
+            for feedback_type in feedback_types:
+                rating = request.POST.get(f'rating_{feedback_type}')
+                text_feedback = request.POST.get(f'feedback_{feedback_type}')
+                print(f"Processing {feedback_type}: rating={rating}, text={text_feedback}")  # Debug log
+                
+                if rating and text_feedback:
+                    try:
+                        # Try to get existing feedback
+                        feedback, created = ServiceFeedback.objects.get_or_create(
+                            booking=booking,
+                            feedback_type=feedback_type,
+                            defaults={
+                                'service': booking.service,
+                                'user_id': user_id,
+                                'rating': rating,
+                                'text_feedback': text_feedback
+                            }
+                        )
+                        
+                        if not created:
+                            # Update existing feedback
+                            feedback.rating = rating
+                            feedback.text_feedback = text_feedback
+                            feedback.save()
+                            print(f"Updated existing feedback for {feedback_type}")  # Debug log
+                        else:
+                            print(f"Created new feedback for {feedback_type}")  # Debug log
+                        
+                        # Analyze sentiment and update vendor analytics
+                        analyze_sentiment(feedback)
+                        update_vendor_analytics(booking.service.vendor)
+                        
+                        # Notify vendor about new feedback
+                        if created:
+                            notify_vendor_new_feedback(booking.service.vendor, booking)
+                            
+                    except Exception as e:
+                        print(f"Error processing feedback for {feedback_type}: {str(e)}")  # Debug log
+                        raise e
+            
+            messages.success(request, 'Thank you for your feedback!')
+            return redirect('user_booking_details')
+            
+        except Exception as e:
+            print(f"Error in feedback submission: {str(e)}")  # Debug log
+            messages.error(request, f'Error submitting feedback: {str(e)}')
+            return redirect('user_booking_details')
+    
+    # For GET request, display the feedback form
+    feedback_types = ['service_quality', 'communication', 'value_for_money', 'professionalism', 'overall']
+    context = {
+        'booking': booking,
+        'feedback_types': feedback_types
+    }
+    return render(request, 'feedback/feedback_form.html', context)
+
+def analyze_sentiment(feedback):
+    try:
+        print(f"\nAnalyzing feedback text: {feedback.text_feedback}")
+        
+        # Initialize VADER sentiment analyzer
+        analyzer = SentimentIntensityAnalyzer()
+        
+        # Get sentiment scores from VADER (this doesn't require NLTK resources)
+        vader_scores = analyzer.polarity_scores(feedback.text_feedback)
+        #print(f"VADER scores: {vader_scores}")
+        
+        # Initialize empty keyword dict in case TextBlob fails
+        keyword_dict = {}
+        
+        try:
+            # Try to import and download required NLTK data
+            import nltk
+            try:
+                nltk.data.find('tokenizers/punkt')
+                nltk.data.find('taggers/averaged_perceptron_tagger')
+            except LookupError:
+                print("Downloading required NLTK data...")
+                nltk.download('punkt')
+                nltk.download('averaged_perceptron_tagger')
+                nltk.download('brown')  # Additional corpus that might be needed
+                nltk.download('universal_tagset')  # Additional tagset that might be needed
+            
+            # Try TextBlob analysis
+            blob = TextBlob(feedback.text_feedback)
+            print(f"TextBlob tags: {blob.tags}")
+            
+            # Extract keywords (nouns and adjectives)
+            keywords = []
+            for word, tag in blob.tags:
+                if tag.startswith(('JJ', 'NN')):  # Adjectives and Nouns
+                    clean_word = word.lower().strip()
+                    if len(clean_word) > 2:  # Only include words longer than 2 characters
+                        keywords.append(clean_word)
+            
+            print(f"Extracted keywords: {keywords}")
+            
+            # Count keyword frequencies
+            keyword_freq = Counter(keywords).most_common(10)
+            keyword_dict = dict(keyword_freq)
+            print(f"Keyword frequencies: {keyword_dict}")
+            
+        except Exception as e:
+            print(f"TextBlob processing error: {str(e)}")
+            # Try downloading corpora directly
+            try:
+                import subprocess
+                print("Attempting to download TextBlob corpora...")
+                subprocess.run(['python', '-m', 'textblob.download_corpora'])
+            except Exception as e:
+                print(f"Error downloading corpora: {str(e)}")
+            keyword_dict = {}
+        
+        # Create or update sentiment analysis (this will work even if TextBlob fails)
+        sentiment, created = SentimentAnalysis.objects.update_or_create(
+            feedback=feedback,
+            defaults={
+                'compound_score': vader_scores['compound'],
+                'positive_score': vader_scores['pos'],
+                'negative_score': vader_scores['neg'],
+                'neutral_score': vader_scores['neu'],
+                'keywords': keyword_dict
+            }
+        )
+        
+        print(f"Saved sentiment analysis - keywords: {sentiment.keywords}")
+        
+        # Update vendor analytics
+        update_vendor_analytics(feedback.service.vendor)
+        
+        return sentiment
+        
+    except Exception as e:
+        print(f"Error in analyze_sentiment: {str(e)}")
+        # Create a basic sentiment analysis record even if everything fails
+        sentiment, created = SentimentAnalysis.objects.update_or_create(
+            feedback=feedback,
+            defaults={
+                'compound_score': 0.0,
+                'positive_score': 0.0,
+                'negative_score': 0.0,
+                'neutral_score': 1.0,
+                'keywords': {}
+            }
+        )
+        return sentiment
+        
+def update_vendor_analytics(vendor):
+    
+    feedbacks = ServiceFeedback.objects.filter(
+        service__vendor=vendor,
+        status=True
+    ).select_related('sentiment')
+    
+    # Calculate average ratings and total reviews
+    avg_rating = feedbacks.aggregate(Avg('rating'))['rating__avg'] or 0.0
+    total_reviews = feedbacks.count()
+    
+    # Initialize counters
+    sentiment_data = {'positive': 0, 'negative': 0, 'neutral': 0}
+    all_keywords = {}
+    
+    # Process each feedback
+    for feedback in feedbacks:
+        try:
+            sentiment = feedback.sentiment
+            # Update sentiment counters
+            if sentiment.compound_score >= 0.05:
+                sentiment_data['positive'] += 1
+            elif sentiment.compound_score <= -0.05:
+                sentiment_data['negative'] += 1
+            else:
+                sentiment_data['neutral'] += 1
+            
+            # Update keyword frequencies
+            if sentiment.keywords:
+                for keyword, freq in sentiment.keywords.items():
+                    freq = int(freq) if isinstance(freq, (int, float)) else 1
+                    all_keywords[keyword] = all_keywords.get(keyword, 0) + freq
+        except (SentimentAnalysis.DoesNotExist, AttributeError):
+            continue
+    
+    # Format common topics for word cloud
+    if all_keywords:
+        # Get top 20 keywords
+        sorted_keywords = sorted(all_keywords.items(), key=lambda x: x[1], reverse=True)[:20]
+        max_freq = sorted_keywords[0][1]
+        min_freq = sorted_keywords[-1][1]
+        
+        # Normalize frequencies to a range suitable for d3.layout.cloud (10-100)
+        if max_freq != min_freq:
+            common_topics = {
+                word: int(10 + ((freq - min_freq) * 90) / (max_freq - min_freq))
+                for word, freq in sorted_keywords
+            }
+        else:
+            common_topics = {word: 50 for word, _ in sorted_keywords}
+    else:
+        common_topics = {}
+    
+    # Update analytics
+    VendorAnalytics.objects.update_or_create(
+        vendor=vendor,
+        defaults={
+            'average_rating': avg_rating,
+            'total_reviews': total_reviews,
+            'sentiment_summary': sentiment_data,
+            'common_feedback_topics': common_topics
+        }
+    )
+def notify_vendor_new_feedback(vendor, booking):
+    subject = 'New Feedback Received'
+    context = {
+        'vendor_name': vendor.company_name,
+        'service_name': booking.service.name,
+        'booking_date': booking.booking_date
+    }
+    
+    html_message = render_to_string('emails/new_feedback_notification.html', context)
+    plain_message = strip_tags(html_message)
+    
+    send_mail(
+        subject,
+        plain_message,
+        'noreply@dreamknot.com',
+        [vendor.user.email],
+        html_message=html_message,
+        fail_silently=True
+    )
+
+
+def view_vendor_analytics(request, vendor_id):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+    
+    vendor = get_object_or_404(VendorProfile, id=vendor_id, user_id=user_id)
+    
+    try:
+        analytics = vendor.analytics
+    except VendorAnalytics.DoesNotExist:
+        analytics = VendorAnalytics.objects.create(
+            vendor=vendor,
+            sentiment_summary={'positive': 0, 'neutral': 0, 'negative': 0},
+            common_feedback_topics={}
+        )
+    
+    # Get recent feedbacks
+    recent_feedbacks = ServiceFeedback.objects.filter(
+        service__vendor=vendor
+    ).select_related('sentiment').order_by('-created_at')[:5]
+    
+     # Get negative feedbacks for areas of improvement
+    negative_feedbacks = ServiceFeedback.objects.filter(
+        service__vendor=vendor,
+        sentiment__compound_score__lt=-0.05  # Adjust threshold as needed
+    ).select_related('sentiment').order_by('-created_at')
+    
+       # Get positive feedbacks
+    positive_feedbacks = ServiceFeedback.objects.filter(
+        service__vendor=vendor,
+        sentiment__compound_score__gt=0.05
+    ).select_related('sentiment').order_by('-created_at')
+
+
+    # Get feedback trends over time
+    days = request.GET.get('days', '30')  # Default to 30 days
+    try:
+        days = int(days)
+    except ValueError:
+        days = 30
+    
+    from_date = timezone.now() - timezone.timedelta(days=days)
+    
+    feedback_trends = ServiceFeedback.objects.filter(
+        service__vendor=vendor,
+        created_at__gte=from_date
+    ).values('created_at__date').annotate(
+        avg_rating=Avg('rating'),
+        count=Count('id')
+    ).order_by('created_at__date')
+    
+    # Prepare data for charts
+    import json
+    feedback_trends_dates = json.dumps([trend['created_at__date'].strftime('%Y-%m-%d') for trend in feedback_trends])
+    feedback_trends_ratings = json.dumps([float(trend['avg_rating']) if trend['avg_rating'] else 0 for trend in feedback_trends])
+    
+    # Ensure sentiment_summary has all required keys
+    if not analytics.sentiment_summary:
+        analytics.sentiment_summary = {'positive': 0, 'neutral': 0, 'negative': 0}
+        analytics.save()
+    
+    # Ensure common_feedback_topics exists and is properly formatted
+    if not analytics.common_feedback_topics:
+        analytics.common_feedback_topics = {}
+        analytics.save()
+    
+    # Convert common_feedback_topics to the format expected by d3.layout.cloud
+    common_feedback_topics = json.dumps(analytics.common_feedback_topics)
+    
+    # Generate recommendations
+    all_feedbacks = ServiceFeedback.objects.filter(
+        service__vendor=vendor
+    ).select_related(
+        'service',
+        'user',
+        'sentiment'
+    ).order_by(
+        'service__name',
+        '-created_at'
+    )
+    
+    recommendations = generate_recommendations(all_feedbacks)
+    
+    context = {
+        'analytics': analytics,
+        'feedback_trends': feedback_trends,
+        'vendor': vendor,
+        'recent_feedbacks': recent_feedbacks,
+        'negative_feedbacks': negative_feedbacks,
+        'positive_feedbacks': positive_feedbacks,  
+        'selected_days': days,
+        'feedback_trends_dates': feedback_trends_dates,
+        'feedback_trends_ratings': feedback_trends_ratings,
+        'common_feedback_topics': common_feedback_topics,
+        'recommendations': recommendations,
+        'all_feedbacks': all_feedbacks
+    }
+    
+    return render(request, 'feedback/analytics.html', context)
+
+def generate_recommendations(feedbacks):
+    # Initialize recommendation categories
+    recommendations = {
+        'critical': [],
+        'important': [],
+        'suggested': []
+    }
+    
+    # Analyze feedback patterns
+    feedback_patterns = {
+        'service_quality': {'scores': [], 'comments': []},
+        'communication': {'scores': [], 'comments': []},
+        'value_for_money': {'scores': [], 'comments': []},
+        'professionalism': {'scores': [], 'comments': []},
+        'overall': {'scores': [], 'comments': []}
+    }
+    
+    # Aggregate feedback by type
+    for feedback in feedbacks:
+        category = feedback.feedback_type
+        if category in feedback_patterns:
+            feedback_patterns[category]['scores'].append(feedback.rating)
+            if hasattr(feedback, 'sentiment'):
+                if feedback.sentiment.compound_score < -0.05:  # Negative sentiment
+                    feedback_patterns[category]['comments'].append({
+                        'text': feedback.text_feedback,
+                        'sentiment': feedback.sentiment.compound_score,
+                        'rating': feedback.rating
+                    })
+    
+    # Generate recommendations based on patterns
+    for category, data in feedback_patterns.items():
+        if data['scores']:
+            avg_score = sum(data['scores']) / len(data['scores'])
+            negative_comments = [c for c in data['comments'] if c['sentiment'] < -0.05]
+            
+            # Critical issues (low scores and negative sentiment)
+            if avg_score <= 3 and negative_comments:
+                recommendations['critical'].append({
+                    'category': category,
+                    'score': avg_score,
+                    'feedback': negative_comments[:3],  # Top 3 negative comments
+                    'suggestion': get_improvement_suggestion(category, avg_score)
+                })
+            # Important improvements (moderate scores with negative feedback)
+            elif avg_score <= 4 and negative_comments:
+                recommendations['important'].append({
+                    'category': category,
+                    'score': avg_score,
+                    'feedback': negative_comments[:2],  # Top 2 negative comments
+                    'suggestion': get_improvement_suggestion(category, avg_score)
+                })
+            # Suggested enhancements (good scores but with some negative feedback)
+            elif negative_comments:
+                recommendations['suggested'].append({
+                    'category': category,
+                    'score': avg_score,
+                    'feedback': negative_comments[:1],  # Top negative comment
+                    'suggestion': get_improvement_suggestion(category, avg_score)
+                })
+    
+    return recommendations
+
+def get_improvement_suggestion(category, score):
+    suggestions = {
+        'service_quality': {
+            'low': "Consider reviewing and standardizing service delivery processes. Focus on consistency and quality control.",
+            'medium': "Look for opportunities to enhance service features and delivery methods.",
+            'high': "Maintain high standards while exploring innovative service improvements."
+        },
+        'communication': {
+            'low': "Implement a structured communication protocol. Consider response time improvements and clarity in messages.",
+            'medium': "Enhance communication channels and frequency of updates to clients.",
+            'high': "Fine-tune communication style and explore proactive update systems."
+        },
+        'value_for_money': {
+            'low': "Review pricing strategy and service offerings. Consider package deals or added value services.",
+            'medium': "Analyze cost-value relationship and identify areas for additional value.",
+            'high': "Look for ways to add premium features while maintaining current pricing."
+        },
+        'professionalism': {
+            'low': "Establish clear professional guidelines and conduct training sessions.",
+            'medium': "Reinforce professional standards and customer service best practices.",
+            'high': "Continue professional development and look for excellence opportunities."
+        },
+        'overall': {
+            'low': "Conduct a comprehensive service audit and implement improvement action plan.",
+            'medium': "Focus on specific areas of improvement while maintaining strengths.",
+            'high': "Build on current success while exploring innovative enhancements."
+        }
+    }
+    
+    if score <= 3:
+        return suggestions[category]['low']
+    elif score <= 4:
+        return suggestions[category]['medium']
+    else:
+        return suggestions[category]['high']
+
+from django.shortcuts import render, redirect
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+import tensorflow as tf
+from decimal import Decimal
+from django.contrib import messages
+
+def initialize_budget_model():
+    model = tf.keras.Sequential([
+        tf.keras.layers.Dense(64, activation='relu', input_shape=(8,)),
+        tf.keras.layers.Dense(32, activation='relu'),
+        tf.keras.layers.Dense(16, activation='relu'),
+        tf.keras.layers.Dense(8, activation='sigmoid')
+    ])
+    model.compile(optimizer='adam', loss='mse')
+    return model
+
+def optimize_budget(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+    
+    try:
+        wedding_budget = WeddingBudget.objects.get(user_id=request.session['user_id'])
+        allocations = BudgetAllocation.objects.filter(wedding_budget=wedding_budget)
+        events = WeddingEvent.objects.filter(wedding_budget=wedding_budget)
+        
+        context = {
+            'wedding_budget': wedding_budget,
+            'allocations': allocations,
+            'events': events,
+            'total_spent': sum(a.actual_spent for a in allocations),
+            'remaining_budget': wedding_budget.total_budget - sum(a.actual_spent for a in allocations)
+        }
+    except WeddingBudget.DoesNotExist:
+        context = {}
+
+    if request.method == 'POST':
+        try:
+            # Get form data
+            total_budget = Decimal(request.POST.get('total_budget', '0').replace(',', ''))
+            guest_count = int(request.POST.get('guest_count', '0'))
+            wedding_type = request.POST.get('wedding_type', '')
+            wedding_date = request.POST.get('wedding_date', '')
+            location = request.POST.get('location', '')
+
+            if not all([total_budget, guest_count, wedding_type, wedding_date, location]):
+                raise ValueError("All fields are required")
+
+            # Create or update wedding budget
+            wedding_budget, created = WeddingBudget.objects.update_or_create(
+                user_id=request.session['user_id'],
+                defaults={
+                    'total_budget': total_budget,
+                    'guest_count': guest_count,
+                    'wedding_type': wedding_type,
+                    'wedding_date': wedding_date,
+                    'location': location
+                }
+            )
+
+            # Delete existing allocations and events if updating
+            if not created:
+                BudgetAllocation.objects.filter(wedding_budget=wedding_budget).delete()
+                WeddingEvent.objects.filter(wedding_budget=wedding_budget).delete()
+
+            # Create budget allocations
+            allocation_percentages = {
+                'Venue': Decimal('0.25'),
+                'Catering': Decimal('0.30'),
+                'Decoration': Decimal('0.15'),
+                'Photography': Decimal('0.10'),
+                'Attire': Decimal('0.08'),
+                'Entertainment': Decimal('0.05'),
+                'Mehendi': Decimal('0.04'),
+                'Makeup': Decimal('0.03')
+            }
+
+            # Create allocations
+            for category, percentage in allocation_percentages.items():
+                amount = (total_budget * percentage).quantize(Decimal('0.01'))
+                BudgetAllocation.objects.create(
+                    wedding_budget=wedding_budget,
+                    category=category,
+                    allocated_amount=amount,
+                    priority_level=1 if percentage >= Decimal('0.20') else (2 if percentage >= Decimal('0.10') else 3)
+                )
+
+            # Create wedding events
+            default_events = [
+                ('Engagement', Decimal('0.10')),
+                ('Haldi', Decimal('0.05')),
+                ('Mehendi', Decimal('0.15')),
+                ('Sangeet', Decimal('0.20')),
+                ('Wedding', Decimal('0.35')),
+                ('Reception', Decimal('0.15'))
+            ]
+
+            # Convert wedding_date string to date object
+            main_wedding_date = datetime.strptime(wedding_date, '%Y-%m-%d').date()
+
+            # Create events with relative dates
+            for event_name, budget_percentage in default_events:
+                event_budget = (total_budget * budget_percentage).quantize(Decimal('0.01'))
+                
+                # Calculate event date based on wedding date
+                if event_name == 'Wedding':
+                    event_date = main_wedding_date
+                elif event_name == 'Reception':
+                    event_date = main_wedding_date + timedelta(days=1)
+                elif event_name in ['Sangeet', 'Mehendi']:
+                    event_date = main_wedding_date - timedelta(days=1)
+                elif event_name == 'Haldi':
+                    event_date = main_wedding_date - timedelta(days=2)
+                else:  # Engagement
+                    event_date = main_wedding_date - timedelta(days=30)
+
+                # Create the event
+                WeddingEvent.objects.create(
+                    wedding_budget=wedding_budget,
+                    event_name=event_name,
+                    date=event_date,
+                    budget=event_budget,
+                    guest_count=guest_count if event_name in ['Wedding', 'Reception'] 
+                              else int(guest_count * 0.7)
+                )
+                print(f"Created event: {event_name} on {event_date} with budget ₹{event_budget:,.2f}")
+
+            messages.success(request, 'Budget and events created successfully!')
+            
+            # Update context with new data
+            allocations = BudgetAllocation.objects.filter(wedding_budget=wedding_budget)
+            events = WeddingEvent.objects.filter(wedding_budget=wedding_budget)
+            context = {
+                'wedding_budget': wedding_budget,
+                'allocations': allocations,
+                'events': events,
+                'total_spent': sum(a.actual_spent for a in allocations),
+                'remaining_budget': total_budget - sum(a.actual_spent for a in allocations)
+            }
+
+            return render(request, 'dreamknot1/optimize_budget.html', context)
+
+        except ValueError as e:
+            messages.error(request, f'Invalid input: {str(e)}')
+        except Exception as e:
+            print(f"Error creating budget: {str(e)}")
+            messages.error(request, f'Error: {str(e)}')
+
+    return render(request, 'dreamknot1/optimize_budget.html', context)
+def view_budget(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+    
+    try:
+        wedding_budget = WeddingBudget.objects.get(user_id=request.session['user_id'])
+        allocations = BudgetAllocation.objects.filter(wedding_budget=wedding_budget)
+        events = WeddingEvent.objects.filter(wedding_budget=wedding_budget)
+
+        context = {
+            'wedding_budget': wedding_budget,
+            'allocations': allocations,
+            'events': events,
+            'total_spent': sum(a.actual_spent for a in allocations),
+            'remaining_budget': wedding_budget.total_budget - sum(a.actual_spent for a in allocations)
+        }
+        return render(request, 'dreamknot1/view_budget.html', context)
+
+    except WeddingBudget.DoesNotExist:
+        messages.info(request, 'Please set up your wedding budget first.')
+        return redirect('optimize_budget')
+
+from .utils.budget_dataset import WeddingBudgetDataset
+
+def train_budget_model():
+    """Train the budget optimization model"""
+    dataset = WeddingBudgetDataset()
+    dataset.generate_synthetic_data()
+    X_train, X_test, y_train, y_test, scaler = dataset.get_training_data()
+    
+    model = tf.keras.Sequential([
+        tf.keras.layers.Dense(64, activation='relu', input_shape=(6,)),
+        tf.keras.layers.Dense(32, activation='relu'),
+        tf.keras.layers.Dense(16, activation='relu'),
+        tf.keras.layers.Dense(8, activation='sigmoid')
+    ])
+    
+    model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+    model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.2)
+    
+    return model, scaler
+
+
+from django.db.models import Sum, Avg, Count
+from django.db.models.functions import Coalesce
+
+def budget_analytics(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+    
+    try:
+        wedding_budget = WeddingBudget.objects.get(user_id=request.session['user_id'])
+        allocations = BudgetAllocation.objects.filter(wedding_budget=wedding_budget)
+        
+        # Calculate overall budget metrics
+        total_allocated = allocations.aggregate(Sum('allocated_amount'))['allocated_amount__sum'] or 0
+        total_spent = allocations.aggregate(Sum('actual_spent'))['actual_spent__sum'] or 0
+        
+        try:
+            total_savings = sum(alloc.calculate_savings() for alloc in allocations)
+            percentage_spent = (total_spent / wedding_budget.total_budget * 100) if wedding_budget.total_budget else 0
+            wedding_date = wedding_budget.wedding_date
+            days_to_wedding = (wedding_date - datetime.now().date()).days if wedding_date else 0
+        except (ZeroDivisionError, TypeError):
+            total_savings = 0
+            percentage_spent = 0
+            days_to_wedding = 0
+        
+        # Get vendor recommendations
+        recommendations = {}
+        for alloc in allocations:
+            if alloc.status in ['planning', 'in_progress']:
+                recommended_vendors = alloc.get_recommended_vendors()[:3]
+                if recommended_vendors:
+                    recommendations[alloc.category] = recommended_vendors
+        
+        # Generate cost-saving tips
+        tips = generate_cost_saving_tips(wedding_budget, allocations)
+        
+        context = {
+            'wedding_budget': wedding_budget,
+            'allocations': allocations,
+            'total_allocated': total_allocated,
+            'total_spent': total_spent,
+            'total_savings': total_savings,
+            'percentage_spent': percentage_spent,
+            'days_to_wedding': days_to_wedding,
+            'recommendations': recommendations,
+            'tips': tips,
+        }
+        
+        return render(request, 'dreamknot1/budget_analytics.html', context)
+        
+    except WeddingBudget.DoesNotExist:
+        messages.info(request, 'Please set up your wedding budget first.')
+        return redirect('optimize_budget')
+    except Exception as e:
+        messages.error(request, f'Error loading budget analytics: {str(e)}')
+        return redirect('user_home')
+
+def generate_cost_saving_tips(wedding_budget, allocations):
+    """Generate personalized cost-saving tips based on budget analysis"""
+    tips = []
+    
+    # Check if it's peak season
+    wedding_month = wedding_budget.wedding_date.month
+    if wedding_month in [11, 12, 1, 2]:
+        tips.append({
+            'category': 'Seasonal',
+            'tip': 'Consider shifting your wedding date to off-peak season for better rates',
+            'potential_savings': '15-20%'
+        })
+    
+    # Check guest count optimization
+    if wedding_budget.guest_count > 500:
+        tips.append({
+            'category': 'Guest List',
+            'tip': 'Reducing guest count by 20% could significantly lower catering and venue costs',
+            'potential_savings': '₹' + str(int(wedding_budget.total_budget * Decimal('0.15')))
+        })
+    
+    # Venue optimization
+    venue_alloc = allocations.filter(category='Venue').first()
+    if venue_alloc and venue_alloc.status == 'planning':
+        tips.append({
+            'category': 'Venue',
+            'tip': 'Consider booking morning slots or weekday venues for better rates',
+            'potential_savings': '20-30%'
+        })
+    
+    return tips

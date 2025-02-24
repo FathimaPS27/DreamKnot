@@ -1,0 +1,169 @@
+{% extends 'userbase.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Budget Overview Card -->
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                            <h5 class="text-muted">Total Budget</h5>
+                            <h3 class="text-primary">₹{{ wedding_budget.total_budget|floatformat:0 }}</h3>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="text-muted">Total Spent</h5>
+                            <h3 class="text-success">₹{{ total_spent|floatformat:0 }}</h3>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="text-muted">Remaining</h5>
+                            <h3 class="text-info">₹{{ remaining_budget|floatformat:0 }}</h3>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="progress-circle" 
+                                 data-value="{% if wedding_budget.total_budget %}{{ total_spent|div:wedding_budget.total_budget|mul:100|floatformat:0 }}{% else %}0{% endif %}">
+                                <div class="progress-circle-inner"></div>
+                            </div>
+                            <p class="mt-2">Budget Utilized</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Allocations -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Budget Allocations</h5>
+                </div>
+                <div class="card-body">
+                    {% for allocation in allocations %}
+                    <div class="budget-category mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6>{{ allocation.category }}</h6>
+                            <span class="badge {% if allocation.actual_spent > allocation.allocated_amount %}bg-danger{% else %}bg-success{% endif %}">
+                                ₹{{ allocation.actual_spent|floatformat:0 }} / ₹{{ allocation.allocated_amount|floatformat:0 }}
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar {% if allocation.actual_spent > allocation.allocated_amount %}bg-danger{% else %}bg-success{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {% if allocation.allocated_amount and allocation.allocated_amount != 0 %}{{ allocation.actual_spent|div:allocation.allocated_amount|mul:100|floatformat:0 }}{% else %}0{% endif %}%">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Events Timeline -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Wedding Events</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for event in events %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>{{ event.event_name }}</h6>
+                                <p class="text-muted mb-1">{{ event.date|date:"M d, Y" }}</p>
+                                <p class="mb-0">₹{{ event.budget|floatformat:0 }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress-circle {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    margin: 0 auto;
+}
+.progress-circle-inner {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+.timeline-item {
+    padding-left: 40px;
+    position: relative;
+    margin-bottom: 20px;
+}
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #007bff;
+}
+.timeline-content {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize progress circles
+    document.querySelectorAll('.progress-circle').forEach(circle => {
+        const value = circle.getAttribute('data-value');
+        const circumference = 2 * Math.PI * 45;
+        const offset = circumference - (value / 100 * circumference);
+        
+        circle.innerHTML = `
+            <svg class="progress-ring" width="100" height="100">
+                <circle class="progress-ring__circle" 
+                        stroke="#e9ecef"
+                        stroke-width="8"
+                        fill="transparent"
+                        r="45"
+                        cx="50"
+                        cy="50"/>
+                <circle class="progress-ring__circle-progress" 
+                        stroke="#28a745"
+                        stroke-width="8"
+                        fill="transparent"
+                        r="45"
+                        cx="50"
+                        cy="50"
+                        style="stroke-dasharray: ${circumference} ${circumference};
+                               stroke-dashoffset: ${offset}"/>
+                <text x="50" y="50" 
+                      text-anchor="middle" 
+                      dominant-baseline="middle"
+                      fill="#28a745"
+                      font-size="16">
+                    ${value}%
+                </text>
+            </svg>`;
+    });
+});
+</script>
+{% endblock %} 

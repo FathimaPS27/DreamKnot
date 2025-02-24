@@ -1,0 +1,466 @@
+{% extends 'usersbase.html' %}
+{% load static %}
+
+{% block title %}Service Feedback - Dream Knot{% endblock %}
+
+{% block content %}
+<div class="feedback-container">
+    <!-- Header Section -->
+    <div class="page-header">
+        <div class="header-icon">
+            <i class="fas fa-comment-dots"></i>
+        </div>
+        <h1>Service Feedback</h1>
+        <p class="header-description">
+            Your feedback helps us improve our services and assists other couples in making informed decisions.
+        </p>
+    </div>
+
+    <!-- Booking Information Section -->
+    <div class="booking-details">
+        <div class="section-header">
+            <i class="fas fa-info-circle"></i>
+            <h2>Booking Information</h2>
+        </div>
+        <div class="booking-info">
+            <div class="booking-info-item">
+                <div class="info-icon">
+                    <i class="fas fa-concierge-bell"></i>
+                </div>
+                <div class="info-content">
+                    <strong>Service</strong>
+                    <span>{{ booking.service.name }}</span>
+                </div>
+            </div>
+            <div class="booking-info-item">
+                <div class="info-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="info-content">
+                    <strong>Event Date</strong>
+                    <span>{{ booking.booking_date|date:"F d, Y" }}</span>
+                </div>
+            </div>
+            <div class="booking-info-item">
+                <div class="info-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div class="info-content">
+                    <strong>Vendor</strong>
+                    <span>{{ booking.service.vendor.name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Form Section -->
+    <form method="post" action="{% url 'submit_service_feedback' booking.id %}" id="feedbackForm">
+        {% csrf_token %}
+        {% for type in feedback_types %}
+        <div class="feedback-card">
+            <div class="feedback-header">
+                <div class="header-content">
+                    <i class="fas fa-star"></i>
+                    <h3>{{ type|title }}</h3>
+                </div>
+            </div>
+            <div class="feedback-body">
+                <!-- Rating Section -->
+                <div class="form-group rating-group">
+                    <label>How would you rate this aspect?</label>
+                    <div class="rating-stars">
+                        {% for i in "12345" %}
+                        <input type="radio" id="star{{ i }}_{{ type }}" name="rating_{{ type }}" value="{{ i }}" required>
+                        <label class="star-label" for="star{{ i }}_{{ type }}" title="{{ i }} stars">★</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <!-- Feedback Textarea -->
+                <div class="form-group">
+                    <label>Share your experience</label>
+                    <textarea name="feedback_{{ type }}" class="feedback-textarea" placeholder="Tell us about your experience with {{ type|title }}..." required></textarea>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Submit Button -->
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-paper-plane"></i>
+                Submit Feedback
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* General Styles */
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        color: #333;
+        margin: 0;
+        padding: 0;
+    }
+
+    .feedback-container {
+        max-width: 1200px; /* Increased from 1000px */
+        margin: 2rem auto;
+        padding: 2.5rem; /* Increased padding */
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        width: 100%; /* Added to ensure some margin on very wide screens */
+        
+    }
+
+    /* Header Styles */
+    .page-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .header-icon {
+        font-size: 3rem;
+        color: #440606;
+        margin-bottom: 1rem;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #440606;
+        margin-bottom: 0.5rem;
+    }
+
+    .header-description {
+        color: #666;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Booking Details Styles */
+    .booking-details {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .section-header i {
+        color: #440606;
+        font-size: 1.5rem;
+    }
+
+    .section-header h2 {
+        color: #440606;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .booking-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .booking-info-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .booking-info-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-icon {
+        background: #440606;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .info-content {
+        flex: 1;
+    }
+
+    .info-content strong {
+        display: block;
+        color: #440606;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-content span {
+        font-size: 1.1rem;
+        color: #333;
+        font-weight: 500;
+    }
+
+    /* Feedback Card Styles */
+    .feedback-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .feedback-header {
+        background: linear-gradient(135deg, #440606 0%, #5a0808 100%);
+        padding: 1.25rem;
+        color: white;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .header-content i {
+        font-size: 1.25rem;
+    }
+
+    .header-content h3 {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .feedback-body {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        color: #333;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+
+    .rating-group {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+
+    .rating-stars {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+
+    .rating-stars input {
+        display: none; /* Hide the radio buttons */
+    }
+
+    .star-label {
+        cursor: pointer;
+        font-size: 2.5rem;
+        color: #ddd; /* Default star color */
+        transition: all 0.3s ease;
+    }
+
+    /* Highlight stars on hover */
+    .rating-stars label:hover,
+    .rating-stars label:hover ~ label {
+        color: #ffd700; /* Gold color for hover */
+    }
+
+    /* Highlight selected stars */
+    .rating-stars input:checked ~ label {
+        color: #ffd700; /* Gold color for selected stars */
+    }
+
+    /* Highlight stars when a radio button is checked */
+    .rating-stars input:checked + label {
+        color: #ffd700; /* Gold color for the selected star */
+    }
+
+    .feedback-textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-size: 1rem;
+        resize: vertical;
+        transition: all 0.3s ease;
+    }
+
+    .feedback-textarea:focus {
+        border-color: #440606;
+        box-shadow: 0 0 0 3px rgba(68, 6, 6, 0.1);
+        outline: none;
+    }
+
+    /* Submit Button Styles */
+    .form-actions {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #440606 0%, #5a0808 100%);
+        color: white;
+        padding: 1rem 3rem;
+        border: none;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(68, 6, 6, 0.2);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .feedback-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+
+        .booking-info {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Star Rating Hover and Selection Logic
+        const ratingContainers = document.querySelectorAll('.rating-stars');
+        ratingContainers.forEach(container => {
+            const stars = container.querySelectorAll('.star-label');
+            const inputs = container.querySelectorAll('input[type="radio"]');
+
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    const hoveredStar = this;
+                    let isHovering = true;
+
+                    // Highlight stars up to the hovered star
+                    stars.forEach(s => {
+                        if (isHovering) {
+                            s.style.color = '#ffd700'; // Gold color
+                        } else {
+                            s.style.color = '#ddd'; // Default color
+                        }
+                        if (s === hoveredStar) {
+                            isHovering = false;
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseout', function() {
+                    // Reset stars to their default or selected state
+                    const checkedInput = container.querySelector('input[type="radio"]:checked');
+                    if (checkedInput) {
+                        const checkedValue = checkedInput.value;
+                        stars.forEach((s, index) => {
+                            if (index < checkedValue) {
+                                s.style.color = '#ffd700'; // Gold color for selected stars
+                            } else {
+                                s.style.color = '#ddd'; // Default color
+                            }
+                        });
+                    } else {
+                        stars.forEach(s => {
+                            s.style.color = '#ddd'; // Default color
+                        });
+                    }
+                });
+
+                star.addEventListener('click', function() {
+                    const selectedInput = this.previousElementSibling;
+                    selectedInput.checked = true;
+
+                    // Highlight stars up to the selected star
+                    const selectedValue = selectedInput.value;
+                    stars.forEach((s, index) => {
+                        if (index < selectedValue) {
+                            s.style.color = '#ffd700'; // Gold color
+                        } else {
+                            s.style.color = '#ddd'; // Default color
+                        }
+                    });
+                });
+            });
+        });
+
+        // Form Submission Logic
+        const form = document.getElementById('feedbackForm');
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            requiredFields.forEach(field => {
+                if (!field.value) {
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            if (isValid) {
+                const submitBtn = form.querySelector('.submit-btn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                form.submit();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Please fill in all required fields',
+                    confirmButtonColor: '#440606'
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -70,9 +70,11 @@
             font-size: 0.9rem; /* Reduce the font size for paragraph text */
             margin-bottom: 3px; /* Reduce the gap between paragraphs */
         }
-        .text-right {
+        .text{
             margin-top: 5px; /* Add a small margin above the buttons */
+          
         }
+        
         .badge-danger {
             background-color: #dc3545;
             color: white;
@@ -81,7 +83,7 @@
             background-color: #dc3545;
             color: white;
             font-size: 12px; /* Smaller button text */
-        }
+        } 
         .btn:hover {
             background-color: #c82333;
         }
@@ -351,12 +353,18 @@
                                     {% endif %}
                                 </p>
                                 <p class="time-left">Time Left: {{ booking.days_until_event }} days</p>
-                                <div class="text-right">
-                                    <button class="btn" onclick="openInvoiceModal('{{ booking.id }}', '{{ booking.service.name }}', '{{ booking.total_amount }}', '{{ booking.booking_amount }}', '{{ booking.get_book_status_display }}', '{{ booking.event_date }}', '{{ booking.cancellation_reason }}')">View Invoice</button>
+                                <div class="text d-flex justify-content-between">
+                                    <button class="btn mr-2" onclick="openInvoiceModal('{{ booking.id }}', '{{ booking.service.name }}', '{{ booking.total_amount }}', '{{ booking.booking_amount }}', '{{ booking.get_book_status_display }}', '{{ booking.event_date }}', '{{ booking.cancellation_reason }}')">View Invoice</button>
                                     {% if booking.book_status != 3 %}
-                                        <button class="btn" onclick="openModal('{{ booking.id }}', {{ booking.is_refundable|yesno:'true,false' }})">Cancel Booking</button>
+                                        <button class="btn mr-2" onclick="openModal('{{ booking.id }}', {{ booking.is_refundable|yesno:'true,false' }})">Cancel Booking</button>
+                                    {% endif %}
+                                    {% if booking.book_status == 2 %}
+                                        <button type="button" class="btn" onclick="window.location.href='{% url 'submit_service_feedback' booking.id %}'">
+                                            <i class="fas fa-star"></i> Rate & Review
+                                        </button>
                                     {% endif %}
                                 </div>
+                               
                             </div>
                         </div>
                     {% endfor %}
@@ -405,6 +413,7 @@
         <p>&copy; 2024 Dream Knot. All rights reserved.</p>
         <p>Designed by <a href="#">Dream Knot</a></p>
     </footer>
+    
 
     <script>
         // JavaScript functions for modals and other interactions
@@ -458,6 +467,9 @@
         }
 
         function openInvoiceModal(bookingId, serviceName, totalAmount, bookingAmount, status, eventDate, cancellationReason) {
+            // Set the booking ID in the hidden input field
+            document.getElementById("modal_booking_id").value = bookingId;
+
             const invoiceDetails = `
                 <div class="invoice-header">
                     <center><img src="{% static 'images/logo1.png' %}" alt="Dream Knot Logo" style="width: 150px; height: auto;"></center>
@@ -474,7 +486,7 @@
                     <p><strong>Service Name:</strong> ${serviceName}</p>
                     <p><strong>Event Date:</strong> ${eventDate}</p>
                     <p><strong>Status:</strong> ${status}</p>
-                    <p><strong>Cancellation Reason:</strong> ${cancellationReason}</p>
+                    <p id="cancellationReasonSection" style="display: none;"><strong>Cancellation Reason:</strong> ${cancellationReason}</p>
                     <h5>Payment Summary</h5>
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
@@ -482,8 +494,12 @@
                             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Amount</th>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 8px;">Booking Amount</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">Booking Amount 50%</td>
                             <td style="border: 1px solid #ddd; padding: 8px;">₹${bookingAmount}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 8px;">Balance Amount to pay</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">₹${totalAmount - bookingAmount}.00</td>
                         </tr>
                         <tr>
                             <td style="border: 1px solid #ddd; padding: 8px;"><strong>Total Amount</strong></td>
@@ -499,6 +515,11 @@
             `;
             document.getElementById("invoiceDetails").innerHTML = invoiceDetails;
             document.getElementById("invoiceModal").style.display = "block";
+
+            // Check the status and show/hide the cancellation reason
+            if (status === 'cancelled') {
+                document.getElementById('cancellationReasonSection').style.display = 'block';
+            }
         }
 
         function closeInvoiceModal() {
@@ -507,16 +528,12 @@
 
         // Download Invoice Functionality
         document.getElementById("downloadInvoice").onclick = function() {
-            const invoiceContent = document.getElementById("invoiceDetails").innerHTML;
-            const blob = new Blob([invoiceContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'invoice.html'; // Change the file name as needed
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const bookingId = document.getElementById("modal_booking_id").value; // Get the booking ID from the hidden input
+            if (bookingId) {
+                window.location.href = `/download-invoice/${bookingId}/`; // Construct the URL with the booking ID
+            } else {
+                console.error("Booking ID is not available.");
+            }
         }
 
         // Close modal if user clicks outside of it
