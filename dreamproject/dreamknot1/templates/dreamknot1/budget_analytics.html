@@ -173,15 +173,59 @@
                 <div class="timeline-item">
                     <h5>{{ allocation.category }}</h5>
                     <p>Allocated: ₹{{ allocation.allocated_amount|floatformat:0 }}</p>
-                    <p>Spent: ₹{{ allocation.actual_spent|floatformat:0 }}</p>
+                    <p>
+                        {% for category in category_spent %}
+                            {% if category.service__category == allocation.category %}
+                                Spent: ₹{{ category.total_spent|floatformat:0 }}
+                            {% endif %}
+                        {% endfor %}
+                    </p>
                     <div class="progress">
-                        <div class="progress-bar" role="progressbar" 
-                             style="width: {% if allocation.allocated_amount and allocation.allocated_amount != 0 %}{{ allocation.actual_spent|div:allocation.allocated_amount|mul:100|floatformat:0 }}{% else %}0{% endif %}%">
-                        </div>
+                        {% for category in category_spent %}
+                            {% if category.service__category == allocation.category %}
+                                {% with percent=category.total_spent|div:allocation.allocated_amount|mul:100 %}
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ percent|floatformat:0 }}%;" 
+                                         aria-valuenow="{{ percent|floatformat:0 }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                         {{ percent|floatformat:0 }}%
+                                    </div>
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
                     </div>
+                    
                 </div>
                 {% endfor %}
             </div>
+        </div>
+    </div>
+
+    <!-- Category-wise Spend Details -->
+    <div class="card mt-5">
+        <div class="card-body">
+            <h3>Category-wise Spend Overview</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Spent Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in category_spent %}
+                    <tr>
+                        <td>{{ category.service__category }}</td>
+                        <td>₹{{ category.total_spent|floatformat:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center">No spending recorded in this category.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -296,8 +340,47 @@
 
     // Export budget report
     function exportBudgetReport() {
-        // Implementation for exporting report
-        alert('Generating PDF report...');
+        // Show loading indicator
+        const btn = document.querySelector('button[onclick="exportBudgetReport()"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        btn.disabled = true;
+
+        // Make request to export endpoint
+        fetch('/budget/export-report/', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'wedding_budget_report.pdf';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            // Reset button
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating PDF report. Please try again.');
+            
+            // Reset button
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
     }
 
     // Save new expense

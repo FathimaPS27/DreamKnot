@@ -523,7 +523,7 @@ class BudgetAllocation(models.Model):
         ('Attire', 'Attire'),
         ('Entertainment', 'Entertainment'),
         ('Mehendi', 'Mehendi'),
-        ('Makeup', 'Makeup'),
+        ('MakeupHair', 'Makeup & Hair'),  # Ensure this matches the Service model
     ])
     allocated_amount = models.DecimalField(max_digits=12, decimal_places=2)
     actual_spent = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -556,7 +556,7 @@ class BudgetAllocation(models.Model):
             'Photography': 'photography_services',
             'Entertainment': 'music_entertainment_services',
             'Mehendi': 'mehendi_artist_services',
-            'Makeup': 'makeup_hair_services'
+            'MakeupHair': 'makeup_hair_services'
         }
         
         service_type = category_map.get(self.category)

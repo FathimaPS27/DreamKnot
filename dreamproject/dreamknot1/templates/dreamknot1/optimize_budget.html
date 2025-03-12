@@ -87,41 +87,63 @@
             </div>
         </div>
 
+        <!-- Display Total Spend -->
+        <div class="alert alert-info">
+            <h4>Total Spend: ₹{{ total_spent|floatformat:0 }}</h4>
+        </div>
+
         <!-- Budget Summary Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="text-muted">Total Budget</h5>
-                        <h3 class="text-primary">₹{{ wedding_budget.total_budget|floatformat:0 }}</h3>
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card budget-card bg-primary text-white">
+                    <div class="card-body">
+                        <h5>Total Budget</h5>
+                        <h3>₹{{ wedding_budget.total_budget|floatformat:0 }}</h3>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="text-muted">Total Spent</h5>
-                        <h3 class="text-success">₹{{ total_spent|floatformat:0 }}</h3>
+            <div class="col-md-4">
+                <div class="card budget-card bg-success text-white">
+                    <div class="card-body">
+                        <h5>Total Spent</h5>
+                        <h3>₹{{ total_spent|floatformat:0 }}</h3>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="text-muted">Remaining</h5>
-                        <h3 class="text-info">₹{{ remaining_budget|floatformat:0 }}</h3>
+            <div class="col-md-4">
+                <div class="card budget-card bg-info text-white">
+                    <div class="card-body">
+                        <h5>Remaining Budget</h5>
+                        <h3>₹{{ remaining_budget|floatformat:0 }}</h3>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="progress-circle" 
-                             data-value="{% if wedding_budget.total_budget %}{{ total_spent|div:wedding_budget.total_budget|mul:100|floatformat:0 }}{% else %}0{% endif %}">
-                        </div>
-                        <p class="mt-2">Budget Utilized</p>
-                    </div>
-                </div>
+        </div>
+
+        <!-- Category-wise Spend Details -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h4>Category-wise Spend</h4>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Spent Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in category_spent %}
+                        <tr>
+                            <td>{{ category.service__category }}</td>
+                            <td>₹{{ category.total_spent|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center">No spending recorded in this category.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -136,9 +158,27 @@
                         {% for allocation in allocations %}
                         <div class="budget-category mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6>{{ allocation.category }}</h6>
-                                <span class="badge {% if allocation.actual_spent > allocation.allocated_amount %}bg-danger{% else %}bg-success{% endif %}">
-                                    ₹{{ allocation.actual_spent|floatformat:0 }} / ₹{{ allocation.allocated_amount|floatformat:0 }}
+                                <div>
+                                    <h6>{{ allocation.category }}</h6>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge {% if allocation.priority_level == 1 %}bg-danger{% elif allocation.priority_level == 2 %}bg-warning{% else %}bg-info{% endif %} me-2">
+                                            Priority: {{ allocation.priority_level }}
+                                        </span>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-secondary" 
+                                                onclick="updatePriority('{{ allocation.id }}', '{{ allocation.category }}', {{ allocation.priority_level }})">
+                                            <i class="fas fa-edit"></i> Edit Priority
+                                        </button>
+                                    </div>
+                                </div>
+                                <span class="badge {% if category.total_spent > allocation.allocated_amount %}bg-danger{% else %}bg-success{% endif %}">
+                                    <!-- Display category-wise spent amount -->
+                                    Allocated: ₹{{ allocation.allocated_amount|floatformat:0 }} / 
+                                    {% for category in category_spent %}
+                                    {% if  category.service__category == allocation.category %}
+                                            Spent: ₹{{  category.total_spent|floatformat:0 }} 
+                                        {% endif %}
+                                    {% endfor %}
                                 </span>
                             </div>
                             <div class="progress" style="height: 10px;">
@@ -194,6 +234,40 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Modal for Priority Update -->
+<div class="modal fade" id="updatePriorityModal" tabindex="-1" aria-labelledby="updatePriorityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updatePriorityModalLabel">Update Priority</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="priorityUpdateForm" method="POST" action="{% url 'update_priority' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="allocation_id" id="allocation_id">
+                    <div class="mb-3">
+                        <label for="category_name" class="form-label">Category</label>
+                        <input type="text" id="category_name" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="priority_level" class="form-label">Priority Level</label>
+                        <select name="priority_level" id="priority_level" class="form-select" required>
+                            <option value="1">High Priority (1)</option>
+                            <option value="2">Medium Priority (2)</option>
+                            <option value="3">Low Priority (3)</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -272,6 +346,8 @@
 }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
 // Form validation
 (function() {
@@ -337,5 +413,37 @@ function showBudgetForm() {
     document.getElementById('budgetOverviewSection').classList.add('d-none');
     document.getElementById('budgetFormSection').classList.remove('d-none');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Debug logging
+    console.log('Priority update script loaded');
+    
+    window.updatePriority = function(allocationId, category, currentPriority) {
+        console.log('Updating priority:', { allocationId, category, currentPriority });
+        
+        const modal = document.getElementById('updatePriorityModal');
+        if (!modal) {
+            console.error('Modal element not found');
+            return;
+        }
+        
+        // Set form values
+        document.getElementById('allocation_id').value = allocationId;
+        document.getElementById('category_name').value = category;
+        document.querySelector('select[name="priority_level"]').value = currentPriority;
+        
+        // Show modal using Bootstrap
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+    }
+    
+    // Add form submission handler
+    const form = document.getElementById('priorityUpdateForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submitted');
+        });
+    }
+});
 </script>
 {% endblock %} 

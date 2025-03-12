@@ -4303,13 +4303,21 @@ def optimize_budget(request):
         wedding_budget = WeddingBudget.objects.get(user_id=request.session['user_id'])
         allocations = BudgetAllocation.objects.filter(wedding_budget=wedding_budget)
         events = WeddingEvent.objects.filter(wedding_budget=wedding_budget)
-        
+
+        # Fetch total spent from bookings
+        bookings = Booking.objects.filter(user_id=request.session['user_id'])
+        total_spent = bookings.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+
+        # Calculate category-wise spent amounts
+        category_spent = bookings.values('service__category').annotate(total_spent=Sum('total_amount')).order_by('service__category')
+
         context = {
             'wedding_budget': wedding_budget,
             'allocations': allocations,
             'events': events,
-            'total_spent': sum(a.actual_spent for a in allocations),
-            'remaining_budget': wedding_budget.total_budget - sum(a.actual_spent for a in allocations)
+            'total_spent': total_spent,
+            'remaining_budget': wedding_budget.total_budget - total_spent,
+            'category_spent': category_spent  # Add category-wise spent amounts to context
         }
     except WeddingBudget.DoesNotExist:
         context = {}
@@ -4343,26 +4351,34 @@ def optimize_budget(request):
                 BudgetAllocation.objects.filter(wedding_budget=wedding_budget).delete()
                 WeddingEvent.objects.filter(wedding_budget=wedding_budget).delete()
 
-            # Create budget allocations
+            # Create budget allocations with dynamic priority levels
             allocation_percentages = {
-                'Venue': Decimal('0.25'),
-                'Catering': Decimal('0.30'),
-                'Decoration': Decimal('0.15'),
-                'Photography': Decimal('0.10'),
-                'Attire': Decimal('0.08'),
-                'Entertainment': Decimal('0.05'),
-                'Mehendi': Decimal('0.04'),
-                'Makeup': Decimal('0.03')
+                'Venue': {'percentage': Decimal('0.25'), 'priority': 1},
+                'Catering': {'percentage': Decimal('0.30'), 'priority': 1},
+                'Decoration': {'percentage': Decimal('0.15'), 'priority': 2},
+                'Photography': {'percentage': Decimal('0.10'), 'priority': 2},
+                'Attire': {'percentage': Decimal('0.08'), 'priority': 2},
+                'Entertainment': {'percentage': Decimal('0.05'), 'priority': 3},
+                'Mehendi': {'percentage': Decimal('0.04'), 'priority': 3},
+                'MakeupHair': {'percentage': Decimal('0.03'), 'priority': 3}
             }
-
-            # Create allocations
-            for category, percentage in allocation_percentages.items():
-                amount = (total_budget * percentage).quantize(Decimal('0.01'))
+            
+            # Adjust allocations based on wedding type
+            if wedding_type == 'Destination':
+                for category, data in allocation_percentages.items():
+                    if data['priority'] == 1:
+                        data['percentage'] += Decimal('0.02')
+                    elif data['priority'] == 3:
+                        data['percentage'] -= Decimal('0.01')
+            
+            # Create allocations with priorities
+            for category, data in allocation_percentages.items():
+                amount = (total_budget * data['percentage']).quantize(Decimal('0.01'))
                 BudgetAllocation.objects.create(
                     wedding_budget=wedding_budget,
                     category=category,
                     allocated_amount=amount,
-                    priority_level=1 if percentage >= Decimal('0.20') else (2 if percentage >= Decimal('0.10') else 3)
+                    priority_level=data['priority']
                 )
 
             # Create wedding events
@@ -4410,12 +4426,16 @@ def optimize_budget(request):
             # Update context with new data
             allocations = BudgetAllocation.objects.filter(wedding_budget=wedding_budget)
             events = WeddingEvent.objects.filter(wedding_budget=wedding_budget)
+            # Fetch updated total spent from bookings
+            bookings = Booking.objects.filter(user_id=request.session['user_id'])
+            total_spent = bookings.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+            
             context = {
                 'wedding_budget': wedding_budget,
                 'allocations': allocations,
                 'events': events,
-                'total_spent': sum(a.actual_spent for a in allocations),
-                'remaining_budget': total_budget - sum(a.actual_spent for a in allocations)
+                'total_spent': total_spent,
+                'remaining_budget': total_budget - total_spent
             }
 
             return render(request, 'dreamknot1/optimize_budget.html', context)
@@ -4480,10 +4500,16 @@ def budget_analytics(request):
     try:
         wedding_budget = WeddingBudget.objects.get(user_id=request.session['user_id'])
         allocations = BudgetAllocation.objects.filter(wedding_budget=wedding_budget)
+        bookings = Booking.objects.filter(user_id=request.session['user_id'])
+
+        # Calculate total spent
+        total_spent = bookings.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+
+        # Calculate category-wise spent amounts
+        category_spent = bookings.values('service__category').annotate(total_spent=Sum('total_amount')).order_by('service__category')
         
         # Calculate overall budget metrics
         total_allocated = allocations.aggregate(Sum('allocated_amount'))['allocated_amount__sum'] or 0
-        total_spent = allocations.aggregate(Sum('actual_spent'))['actual_spent__sum'] or 0
         
         try:
             total_savings = sum(alloc.calculate_savings() for alloc in allocations)
@@ -4495,13 +4521,29 @@ def budget_analytics(request):
             percentage_spent = 0
             days_to_wedding = 0
         
-        # Get vendor recommendations
+        # Get vendor recommendations with ratings
         recommendations = {}
         for alloc in allocations:
             if alloc.status in ['planning', 'in_progress']:
-                recommended_vendors = alloc.get_recommended_vendors()[:3]
+                # Increase the number of recommended vendors
+                recommended_vendors = alloc.get_recommended_vendors()[:5]  # Fetch 5 vendors instead of 3
                 if recommended_vendors:
-                    recommendations[alloc.category] = recommended_vendors
+                    processed_vendors = []
+                    for vendor in recommended_vendors:
+                        # Calculate average rating and count
+                        reviews = ServiceFeedback.objects.filter(service=vendor, status=True)
+                        avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+                        rating_count = reviews.count()
+                        
+                        processed_vendors.append({
+                            'id': vendor.id,
+                            'name': vendor.name,
+                            'price': vendor.price,
+                            'main_image': vendor.main_image if vendor.main_image else None,
+                            'rating': round(float(avg_rating), 1),
+                            'rating_count': rating_count
+                        })
+                    recommendations[alloc.category] = processed_vendors
         
         # Generate cost-saving tips
         tips = generate_cost_saving_tips(wedding_budget, allocations)
@@ -4516,6 +4558,7 @@ def budget_analytics(request):
             'days_to_wedding': days_to_wedding,
             'recommendations': recommendations,
             'tips': tips,
+            'category_spent': category_spent,
         }
         
         return render(request, 'dreamknot1/budget_analytics.html', context)
@@ -4558,3 +4601,127 @@ def generate_cost_saving_tips(wedding_budget, allocations):
         })
     
     return tips
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
+
+@require_POST
+def update_priority(request):
+    if not request.session.get('user_id'):
+        return JsonResponse({'error': 'Not authenticated'}, status=401)
+    
+    try:
+        allocation_id = request.POST.get('allocation_id')
+        new_priority = int(request.POST.get('priority_level'))
+        
+        # Get the allocation
+        allocation = BudgetAllocation.objects.get(id=allocation_id)
+        
+        # Verify user owns this allocation
+        if allocation.wedding_budget.user_id != request.session['user_id']:
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+        # Update priority
+        allocation.priority_level = new_priority
+        allocation.save()
+        
+        # Recalculate budget allocations based on new priorities
+        wedding_budget = allocation.wedding_budget
+        total_budget = wedding_budget.total_budget.quantize(Decimal('1.'))  # Round to whole number
+        
+        # Get all allocations for this budget
+        allocations = BudgetAllocation.objects.filter(wedding_budget=wedding_budget)
+        
+        # Define base percentages by priority
+        priority_multipliers = {
+            1: Decimal('1.2'),
+            2: Decimal('1.0'),
+            3: Decimal('0.8'),
+        }
+        
+        # Calculate new allocations
+        total_weighted = sum(
+            priority_multipliers[a.priority_level] * a.allocated_amount 
+            for a in allocations
+        )
+        
+        # Update allocated amounts, ensuring whole numbers
+        remaining_budget = total_budget
+        allocations_list = list(allocations)
+        
+        # Process all but the last allocation
+        for alloc in allocations_list[:-1]:
+            weight = priority_multipliers[alloc.priority_level]
+            new_amount = (total_budget * weight * alloc.allocated_amount / total_weighted).quantize(Decimal('1.'), rounding=ROUND_DOWN)
+            alloc.allocated_amount = new_amount
+            remaining_budget -= new_amount
+            alloc.save()
+        
+        # Last allocation gets the remaining budget to ensure exact total
+        last_alloc = allocations_list[-1]
+        last_alloc.allocated_amount = remaining_budget
+        last_alloc.save()
+        
+        messages.success(request, f'Priority updated for {allocation.category}')
+        return redirect('optimize_budget')
+        
+    except (BudgetAllocation.DoesNotExist, ValueError) as e:
+        messages.error(request, f'Error updating priority: {str(e)}')
+        return redirect('optimize_budget')
+
+from django.http import HttpResponse
+from .utils.budget_dataset import BudgetReportGenerator
+
+def export_budget_report(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+    
+    try:
+        wedding_budget = WeddingBudget.objects.get(user_id=request.session['user_id'])
+        allocations = BudgetAllocation.objects.filter(wedding_budget=wedding_budget)
+        
+        # Calculate metrics
+        total_spent = allocations.aggregate(Sum('actual_spent'))['actual_spent__sum'] or 0
+        total_savings = sum(alloc.calculate_savings() for alloc in allocations)
+        
+        # Get recommendations and tips
+        recommendations = {}
+        for alloc in allocations:
+            if alloc.status in ['planning', 'in_progress']:
+                recommended_vendors = alloc.get_recommended_vendors()[:3]
+                if recommended_vendors:
+                    recommendations[alloc.category] = recommended_vendors
+        
+        tips = generate_cost_saving_tips(wedding_budget, allocations)
+        
+        try:
+            # Generate PDF
+            generator = BudgetReportGenerator(
+                wedding_budget,
+                allocations,
+                total_spent,
+                total_savings,
+                recommendations,
+                tips
+            )
+            pdf = generator.generate_pdf()
+            
+            # Create response with PDF
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="wedding_budget_report.pdf"'
+            response.write(pdf)
+            return response
+            
+        except Exception as e:
+            print(f"PDF Generation Error: {str(e)}")
+            messages.error(request, 'Error generating PDF report. Please try again.')
+            return redirect('budget_analytics')
+        
+    except WeddingBudget.DoesNotExist:
+        messages.error(request, 'Wedding budget not found')
+        return redirect('optimize_budget')
+    except Exception as e:
+        messages.error(request, f'Error accessing budget data: {str(e)}')
+        return redirect('budget_analytics')

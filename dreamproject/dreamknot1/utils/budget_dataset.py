@@ -2,6 +2,15 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from io import BytesIO
+import datetime
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.fonts import addMapping
 
 class WeddingBudgetDataset:
     def __init__(self):
@@ -20,7 +29,7 @@ class WeddingBudgetDataset:
             'attire_allocation': [],
             'entertainment_allocation': [],
             'mehendi_allocation': [],
-            'makeup_allocation': []
+            'makeup_hair_allocation': []  # Changed from makeup_allocation to makeup_hair_allocation
         }
         
     def generate_synthetic_data(self, num_samples=1000):
@@ -62,43 +71,45 @@ class WeddingBudgetDataset:
             
             for category, allocation in zip(
                 ['venue', 'catering', 'decoration', 'photography', 
-                 'attire', 'entertainment', 'mehendi', 'makeup'],
+                 'attire', 'entertainment', 'mehendi', 'makeup_hair'],
                 allocations
             ):
                 self.data[f'{category}_allocation'].append(allocation)
     
     def _generate_allocations(self, budget, guests, is_destination, season, location, wedding_type):
-        """Generate realistic budget allocations based on wedding characteristics"""
+        """Generate realistic budget allocations based on wedding characteristics and priorities"""
+        # Define base allocations with priorities (1: High, 2: Medium, 3: Low)
         base_allocations = {
-            'venue': 0.25,
-            'catering': 0.30,
-            'decoration': 0.15,
-            'photography': 0.10,
-            'attire': 0.10,
-            'entertainment': 0.05,
-            'mehendi': 0.025,
-            'makeup': 0.025
+            'venue': {'percentage': 0.25, 'priority': 1},
+            'catering': {'percentage': 0.30, 'priority': 1},
+            'decoration': {'percentage': 0.15, 'priority': 2},
+            'photography': {'percentage': 0.10, 'priority': 2},
+            'attire': {'percentage': 0.10, 'priority': 2},
+            'entertainment': {'percentage': 0.05, 'priority': 3},
+            'mehendi': {'percentage': 0.025, 'priority': 3},
+            'makeup_hair': {'percentage': 0.025, 'priority': 3}  # Changed from makeup to makeup_hair
         }
         
-        # Adjust allocations based on features
+        # Adjust allocations based on features and priorities
         if is_destination:
-            base_allocations['venue'] += 0.10
-            base_allocations['catering'] -= 0.05
-            base_allocations['decoration'] -= 0.05
+            base_allocations['venue']['percentage'] += 0.10
+            base_allocations['catering']['percentage'] -= 0.05
+            base_allocations['decoration']['percentage'] -= 0.05
             
         if season == 1:  # Peak season
-            base_allocations['venue'] += 0.05
-            base_allocations['catering'] -= 0.05
+            for category in base_allocations:
+                if base_allocations[category]['priority'] == 1:
+                    base_allocations[category]['percentage'] += 0.02
+                elif base_allocations[category]['priority'] == 3:
+                    base_allocations[category]['percentage'] -= 0.01
             
-        if location == 1:  # Tier 1 city
-            base_allocations['venue'] += 0.05
-            base_allocations['catering'] += 0.05
-            base_allocations['decoration'] -= 0.10
-            
+        # Extract just the percentages for final calculation
+        allocations = [item['percentage'] for item in base_allocations.values()]
+        
         # Add some random variation (±5%)
         allocations = [
             max(0.05, min(0.5, alloc + np.random.uniform(-0.05, 0.05)))
-            for alloc in base_allocations.values()
+            for alloc in allocations
         ]
         
         # Normalize to ensure sum is 1
@@ -122,4 +133,132 @@ class WeddingBudgetDataset:
             X_scaled, y, test_size=0.2, random_state=42
         )
         
-        return X_train, X_test, y_train, y_test, scaler 
+        return X_train, X_test, y_train, y_test, scaler
+
+class BudgetReportGenerator:
+    def __init__(self, wedding_budget, allocations, total_spent, total_savings, recommendations, tips):
+        self.wedding_budget = wedding_budget
+        self.allocations = allocations
+        self.total_spent = total_spent
+        self.total_savings = total_savings
+        self.recommendations = recommendations
+        self.tips = tips
+        self.buffer = BytesIO()
+        
+        # Register a Unicode-compatible font
+        try:
+            # Try to register DejaVuSans (which has good Unicode support)
+            pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
+        except:
+            pass  # If font registration fails, we'll fall back to a simpler solution
+        
+    def format_currency(self, amount):
+        """Format currency with 'Rs.' instead of ₹ symbol"""
+        return f"Rs. {amount:,.2f}"
+        
+    def generate_pdf(self):
+        doc = SimpleDocTemplate(
+            self.buffer,
+            pagesize=letter,
+            rightMargin=72,
+            leftMargin=72,
+            topMargin=72,
+            bottomMargin=72
+        )
+        
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Use DejaVuSans if registered, otherwise use default font
+        try:
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                spaceAfter=30,
+                fontName='DejaVuSans'
+            )
+        except:
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                spaceAfter=30
+            )
+        
+        # Add title
+        elements.append(Paragraph("Wedding Budget Report", title_style))
+        elements.append(Spacer(1, 12))
+        
+        # Create overview table with Rs. instead of ₹
+        overview_data = [
+            ["Total Budget", self.format_currency(self.wedding_budget.total_budget)],
+            ["Total Spent", self.format_currency(self.total_spent)],
+            ["Total Savings", self.format_currency(self.total_savings)],
+            ["Wedding Date", self.wedding_budget.wedding_date.strftime("%B %d, %Y")],
+            ["Guest Count", str(self.wedding_budget.guest_count)]
+        ]
+        
+        # Rest of the table styling remains the same
+        overview_table = Table(overview_data, colWidths=[200, 200])
+        overview_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(overview_table)
+        elements.append(Spacer(1, 20))
+        
+        # Add allocations section with Rs. instead of ₹
+        elements.append(Paragraph("Budget Allocations", styles['Heading2']))
+        elements.append(Spacer(1, 12))
+        
+        allocations_data = [["Category", "Allocated", "Spent", "Remaining"]]
+        for alloc in self.allocations:
+            remaining = alloc.allocated_amount - alloc.actual_spent
+            allocations_data.append([
+                alloc.category,
+                self.format_currency(alloc.allocated_amount),
+                self.format_currency(alloc.actual_spent),
+                self.format_currency(remaining)
+            ])
+        
+        # Rest of the code remains the same...
+        alloc_table = Table(allocations_data, colWidths=[100, 100, 100, 100])
+        alloc_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(alloc_table)
+        elements.append(Spacer(1, 20))
+        
+        # Add cost-saving tips
+        if self.tips:
+            elements.append(Paragraph("Cost-Saving Tips", styles['Heading2']))
+            elements.append(Spacer(1, 12))
+            for tip in self.tips:
+                # Replace ₹ with Rs. in the potential savings text if present
+                potential_savings = tip['potential_savings']
+                if '₹' in potential_savings:
+                    potential_savings = potential_savings.replace('₹', 'Rs. ')
+                
+                elements.append(Paragraph(
+                    f"• {tip['category']}: {tip['tip']} (Potential Savings: {potential_savings})",
+                    styles['Normal']
+                ))
+                elements.append(Spacer(1, 6))
+        
+        # Build PDF
+        doc.build(elements)
+        pdf = self.buffer.getvalue()
+        self.buffer.close()
+        return pdf 

@@ -93,6 +93,8 @@ urlpatterns = [
     path('budget/optimize/', views.optimize_budget, name='optimize_budget'),
     path('budget/view/', views.view_budget, name='view_budget'),
     path('budget/analytics/', views.budget_analytics, name='budget_analytics'),
+    path('update-priority/', views.update_priority, name='update_priority'),
+    path('budget/export-report/', views.export_budget_report, name='export_budget_report'),
 
 ]
 if settings.DEBUG:
