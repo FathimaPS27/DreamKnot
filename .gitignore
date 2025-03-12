@@ -1,6 +1,4 @@
 .env
 dreamproject/.env
 wedenv/
-wedenv/Lib/site-packages/pip-24.3.1.dist-info/
-wedenv/Lib/site-packages/pip/
-.qodo
+
