@@ -11,6 +11,9 @@ import datetime
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.fonts import addMapping
+# Import TensorFlow Lite instead of full TensorFlow
+import tensorflow as tf
+from tensorflow import lite
 
 class WeddingBudgetDataset:
     def __init__(self):
@@ -29,7 +32,7 @@ class WeddingBudgetDataset:
             'attire_allocation': [],
             'entertainment_allocation': [],
             'mehendi_allocation': [],
-            'makeup_hair_allocation': []  # Changed from makeup_allocation to makeup_hair_allocation
+            'makeup_hair_allocation': []
         }
         
     def generate_synthetic_data(self, num_samples=1000):
@@ -87,7 +90,7 @@ class WeddingBudgetDataset:
             'attire': {'percentage': 0.10, 'priority': 2},
             'entertainment': {'percentage': 0.05, 'priority': 3},
             'mehendi': {'percentage': 0.025, 'priority': 3},
-            'makeup_hair': {'percentage': 0.025, 'priority': 3}  # Changed from makeup to makeup_hair
+            'makeup_hair': {'percentage': 0.025, 'priority': 3}
         }
         
         # Adjust allocations based on features and priorities
@@ -134,6 +137,12 @@ class WeddingBudgetDataset:
         )
         
         return X_train, X_test, y_train, y_test, scaler
+
+    def convert_model_to_tflite(self, model):
+        """Convert the trained model to TensorFlow Lite format"""
+        converter = lite.TFLiteConverter.from_keras_model(model)
+        tflite_model = converter.convert()
+        return tflite_model
 
 class BudgetReportGenerator:
     def __init__(self, wedding_budget, allocations, total_spent, total_savings, recommendations, tips):

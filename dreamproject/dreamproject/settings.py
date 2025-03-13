@@ -100,32 +100,32 @@ WSGI_APPLICATION = 'dreamproject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': os.getenv('DATABASE_NAME'),
-#         'USER': os.getenv('DATABASE_USER'),
-#         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
-#         'HOST': 'localhost',
-#         'PORT': '3306',
-#     }
-# }
-
-
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'newdreamknot_facestarby',
-        'USER': 'newdreamknot_facestarby',
-        'PASSWORD': 'c3820151cbb05acfd7c2d592ae518f88d89034e2',
-        'HOST': 'ka8i1.h.filess.io',
-        'PORT': '3307',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-    }  
+        'NAME': os.getenv('DATABASE_NAME'),
+        'USER': os.getenv('DATABASE_USER'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
 }
+
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'newdreamknot_facestarby',
+#         'USER': 'newdreamknot_facestarby',
+#         'PASSWORD': 'c3820151cbb05acfd7c2d592ae518f88d89034e2',
+#         'HOST': 'ka8i1.h.filess.io',
+#         'PORT': '3307',
+#         'OPTIONS': {
+#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+#         },
+#     }  
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

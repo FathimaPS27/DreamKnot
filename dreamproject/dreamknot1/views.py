@@ -4470,9 +4470,11 @@ def view_budget(request):
         return redirect('optimize_budget')
 
 from .utils.budget_dataset import WeddingBudgetDataset
+import tensorflow as tf
+from tensorflow import lite
 
 def train_budget_model():
-    """Train the budget optimization model"""
+    """Train the budget optimization model and convert to TensorFlow Lite."""
     dataset = WeddingBudgetDataset()
     dataset.generate_synthetic_data()
     X_train, X_test, y_train, y_test, scaler = dataset.get_training_data()
@@ -4486,6 +4488,14 @@ def train_budget_model():
     
     model.compile(optimizer='adam', loss='mse', metrics=['mae'])
     model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.2)
+    
+    # Convert the model to TensorFlow Lite
+    converter = lite.TFLiteConverter.from_keras_model(model)
+    tflite_model = converter.convert()
+    
+    # Save the TensorFlow Lite model
+    with open('model.tflite', 'wb') as f:
+        f.write(tflite_model)
     
     return model, scaler
 
