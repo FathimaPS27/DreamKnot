@@ -95,6 +95,7 @@ urlpatterns = [
     path('budget/analytics/', views.budget_analytics, name='budget_analytics'),
     path('update-priority/', views.update_priority, name='update_priority'),
     path('budget/export-report/', views.export_budget_report, name='export_budget_report'),
+    path('budget/update-actual-spent/', views.update_actual_spent, name='update_actual_spent'),
 
 ]
 if settings.DEBUG:

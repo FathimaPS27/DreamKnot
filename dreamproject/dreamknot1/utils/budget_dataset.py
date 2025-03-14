@@ -185,7 +185,7 @@ class BudgetReportGenerator:
                 parent=styles['Heading1'],
                 fontSize=24,
                 spaceAfter=30,
-                fontName='DejaVuSans'
+                fontName='Helvetica-Bold'
             )
         except:
             title_style = ParagraphStyle(
